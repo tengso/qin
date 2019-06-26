@@ -3,16 +3,16 @@ export function createUser(
   userName: string,
   creatorId: string
 ) {
-  return `
-  {
-    "msgType": "createUser",
-    "payLoad": {
-        "userId": ${JSON.stringify(userId)},
-        "userName": ${JSON.stringify(userName)},
-        "creatorId": ${JSON.stringify(creatorId)}
+  const msg = {
+    msgType: "createUser",
+    payLoad: {
+        userId: userId,
+        userName: userName,
+        creatorId: creatorId,
     } 
   }
- `;
+
+  return JSON.stringify(msg)
 }
 
 export function createTable(
@@ -21,17 +21,17 @@ export function createTable(
   columns: string[],
   creatorId: string
 ) {
-  return `
-  {
-    "msgType": "createTable",
-    "payLoad": {
-      "tableId": ${JSON.stringify(tableId)},
-      "tableName": ${JSON.stringify(tableName)},
-      "columns": ${JSON.stringify(columns)},
-      "creatorId": ${JSON.stringify(creatorId)}
+  const msg = {
+    msgType: "createTable",
+    payLoad: {
+      tableId: tableId,
+      tableName: tableName,
+      columns: columns,
+      creatorId: creatorId
     }
   }
-  `;
+
+  return JSON.stringify(msg)
 }
 
 export function appendTableRow(
@@ -39,26 +39,26 @@ export function appendTableRow(
   values: string[],
   appenderId: string
 ) {
-  return `
-  {
-    "msgType": "appendRow",
-    "payLoad": {
-      "rowId": ${JSON.stringify(rowId)},
-      "values": ${JSON.stringify(values)},
-      "appenderId": ${JSON.stringify(appenderId)}
+  const msg = {
+    msgType: "appendRow",
+    payLoad: {
+      rowId: rowId,
+      values: values,
+      appenderId: appenderId
     }
   }
-  `;
+
+  return JSON.stringify(msg)
 }
 
 export function removeTableRow(rowId: string, removerId: string) {
-  return `
-  {
-    "msgType": "removeRow",
-    "payLoad": {
-      "rowId": ${JSON.stringify(rowId)},
-      "removerId": ${JSON.stringify(removerId)}
+  const msg = {
+    msgType: "removeRow",
+    payLoad: {
+      rowId: rowId,
+      removerId: removerId
     }
   }
-  `;
+
+  return JSON.stringify(msg)
 }
