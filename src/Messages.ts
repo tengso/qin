@@ -9,7 +9,12 @@ export enum MsgType {
   CreateTableFailure = 'createTableFailure',
 
   AppendRow = 'appendRow',
+  AppendRowSuccess = 'appendRowSuccess',
+  AppendRowFailure = 'appendRowFailure',
+
   RemoveRow = 'removeRow',
+  RemoveRowSuccess = 'removeRowSuccess',
+  RemoveRowFailure = 'removeRowFailure',
 
   Login = 'login',
   LoginSuccess = 'loginSuccess',
@@ -90,6 +95,7 @@ export function appendTableRow(
     msgType: MsgType.AppendRow,
     payLoad: {
       sessionId: sessionId,
+      tableId: tableId,
       rowId: rowId,
       values: values,
       updatorId: updatorId
@@ -104,7 +110,7 @@ export function removeTableRow(sessionId: SessionId, tableId: TableId, rowId: Ro
     msgType: MsgType.RemoveRow,
     payLoad: {
       sessionId: sessionId,
-      talbeId: tableId,
+      tableId: tableId,
       rowId: rowId,
       updatorId: updatorId
     }
@@ -212,6 +218,52 @@ export function createTableFailure(tableId: TableId, reason: string) {
     msgType: MsgType.CreateTableFailure,
     payLoad: {
       tableId: tableId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function appendTableRowSuccess(rowId: RowId) { 
+  const msg = {
+    msgType: MsgType.AppendRowSuccess,
+    payLoad: {
+      rowId: rowId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function appendTableRowFailure(rowId: RowId, reason: string) {
+  const msg = {
+    msgType: MsgType.AppendRowFailure,
+    payLoad: {
+      rowId: rowId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeTableRowSuccess(rowId: RowId) { 
+  const msg = {
+    msgType: MsgType.RemoveRowSuccess,
+    payLoad: {
+      rowId: rowId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeTableRowFailure(rowId: RowId, reason: string) {
+  const msg = {
+    msgType: MsgType.RemoveRowFailure,
+    payLoad: {
+      rowId: rowId,
       reason: reason
     }
   }

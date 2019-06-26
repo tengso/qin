@@ -1,5 +1,6 @@
 // FIXME: use import
-import { MsgType, createUser, login, logout, loginSuccess, SessionId, createTable } from './Messages';
+import { MsgType, createUser, login, logout, loginSuccess, SessionId, createTable, appendTableRow,
+removeTableRow } from './Messages';
 
 const uuid = require('uuid/v4')
 
@@ -13,9 +14,12 @@ let newUserPassword = 'java'
 // let userId = newUserId
 // let password = newUserPassword
 
-let tableId = uuid()
-let tableName = 'table_name'
-let columns = ['col_1', 'col_2', 'col_3']
+const tableId = uuid()
+const tableName = 'table_name'
+const columns = ['col_1', 'col_2', 'col_3']
+
+const rowId = uuid()
+const values = ['val_1', 'val_2', 'val_3']
 
 import WebSocket = require('ws');
 
@@ -69,6 +73,24 @@ connection.onmessage = (e) => {
     }
     case MsgType.CreateTableSuccess: {
       console.log(`create table success`)
+      connection.send(appendTableRow(sessionId, tableId, rowId, values, userId))
+      break
+    }
+    case MsgType.AppendRowFailure: {
+      console.error(`appennd row failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.AppendRowSuccess: {
+      console.log(`append row success`)
+      connection.send(removeTableRow(sessionId, tableId, rowId, userId))
+      break
+    }
+    case MsgType.RemoveRowFailure: {
+      console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.RemoveRowSuccess: {
+      console.log(`remove row success`)
       break
     }
     default:
