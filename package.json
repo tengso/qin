@@ -2,7 +2,7 @@
   "name": "qin",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "client.ts",
   "scripts": {
     "test": "mocha --require ts-node/register test/**/*.ts"
   },
@@ -12,11 +12,15 @@
   "devDependencies": {
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.7",
+    "@types/uuid": "^3.4.4",
     "@types/ws": "^6.0.1",
     "chai": "^4.2.0",
     "mocha": "^6.1.4",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.2",
     "ws": "^7.0.1"
+  },
+  "dependencies": {
+    "uuid": "^3.3.2"
   }
 }
