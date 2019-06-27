@@ -22,7 +22,7 @@ const userIdToSessionId = new Map<UserId, SessionId>()
 
 const users = new Map<UserId, UserInfo>()
 
-const tableUpdates = new Map<TableId, Map<Version, Object>>()
+const tableUpdates = new Map<TableId, Map<Version, any>>()
 
 const tables = new Map<TableId, Table>() 
 
@@ -230,7 +230,7 @@ function handleCreateTable(message) {
 
   if (checkSessionId(creatorId, sessionId)) {
     if (!tableUpdates.has(tableId)) {
-      tableUpdates.set(tableId, new Map<Version, Object>())
+      tableUpdates.set(tableId, new Map<Version, any>())
 
       const version = 0
       tableUpdates.get(tableId).set(version, message)
