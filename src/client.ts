@@ -1,6 +1,6 @@
 // FIXME: use import
 import { MsgType, createUser, login, logout, loginSuccess, SessionId, createTable, appendTableRow,
-removeTableRow, updateCell, updateCellSuccess, updateCellFailure } from './Messages';
+removeTableRow, updateCell, updateCellSuccess, updateCellFailure, subscribeTables } from './Messages';
 
 const uuid = require('uuid/v4')
 
@@ -47,46 +47,23 @@ connection.onmessage = (e) => {
       connection.send(createTable(sessionId, tableId, tableName, columns, userId))
       break
     }
-    case MsgType.LoginFailure: {
-      console.error(`login failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.LogoutFailure: {
-      console.error(`logout failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.LogoutSuccess: {
-      console.log(`logout success`)
-      break
-    }
-    case MsgType.CreateUserFailure: {
-      console.error(`create user failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
     case MsgType.CreateUserSuccess: {
       console.log(`create user success`)
       break
     }
-    case MsgType.CreateTableFailure: {
-      console.error(`create table failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
     case MsgType.CreateTableSuccess: {
       console.log(`create table success`)
-      connection.send(appendTableRow(sessionId, tableId, rowId, values, userId))
+      connection.send(subscribeTables(sessionId, userId))
       break
     }
-    case MsgType.AppendRowFailure: {
-      console.error(`append row failure: ${returnMsg.payLoad.reason}`)
+    case MsgType.SubscribeTablesSuccess: {
+      console.log(`subscribe table success`)
+      connection.send(appendTableRow(sessionId, tableId, rowId, values, userId))
       break
     }
     case MsgType.AppendRowSuccess: {
       console.log(`append row success`)
-      connection.send(updateCell(sessionId, tableId, rowId, 'col_4', 'new_vaue', userId))
-      break
-    }
-    case MsgType.UpdateCellFailure: {
-      console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
+      connection.send(updateCell(sessionId, tableId, rowId, 'col_3', 'new_vaue', userId))
       break
     }
     case MsgType.UpdateCellSuccess: {
@@ -94,12 +71,50 @@ connection.onmessage = (e) => {
       connection.send(removeTableRow(sessionId, tableId, rowId, userId))
       break
     }
+    case MsgType.RemoveRowSuccess: {
+      console.log(`remove row success`)
+      break
+    }
+    case MsgType.TableSnap: {
+      console.log(`table snap`)
+      console.log(`${JSON.stringify(returnMsg)}`)
+      break
+    }
+    case MsgType.TableUpdate: {
+      console.log(`table update`)
+      console.log(`${JSON.stringify(returnMsg)}`)
+      break
+    }
+    case MsgType.AppendRowFailure: {
+      console.error(`append row failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.LogoutSuccess: {
+      console.log(`logout success`)
+      break
+    }
+    case MsgType.LoginFailure: {
+      console.error(`login failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.CreateUserFailure: {
+      console.error(`create user failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.CreateTableFailure: {
+      console.error(`create table failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.UpdateCellFailure: {
+      console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
     case MsgType.RemoveRowFailure: {
       console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
       break
     }
-    case MsgType.RemoveRowSuccess: {
-      console.log(`remove row success`)
+    case MsgType.LogoutFailure: {
+      console.error(`logout failure: ${returnMsg.payLoad.reason}`)
       break
     }
     default:

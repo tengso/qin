@@ -2,7 +2,8 @@ import { Server } from 'ws'
 import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSuccess, logoutSuccess, logoutFailure,
          createUserFailure, createUserSuccess, TableId, TableName, CreatorId, ColumnName, RowId,
          createTableSuccess, createTableFailure, appendTableRowFailure, appendTableRowSuccess,
-         removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure } from './Messages'
+         removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure,
+         SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate } from './Messages'
 
 const uuid = require('uuid/v4')
 
@@ -12,29 +13,9 @@ const root_id = 'root'
 const root_name = 'super'
 const root_password = 'root'
 
-type Version = number
 
-interface UserInfo {
-  userId: UserId,
-  userName: UserName,
-  password: Password
-}
 
-interface Row {
-  rowId: RowId
-  values: Object[]
-}
-
-interface Table {
-  tableId: TableId
-  tableName: TableName
-  version: Version
-  columns: ColumnName[]
-  rows:  Row[]
-  creatorId: CreatorId
-}
-
-// State
+// Persistent State
 const sessionIdToUserId = new Map<SessionId, UserId>()
 
 const userIdToSessionId = new Map<UserId, SessionId>()
@@ -46,7 +27,13 @@ const tableUpdates = new Map<TableId, Map<Version, Object>>()
 const tables = new Map<TableId, Table>() 
 
 const rowIdToRowIndex = new Map<RowId, number>()
-// State
+
+const subscribers = new Map<SessionId, UserId>()
+// 
+
+// Transient State
+const sessionIdToSocket = new Map<SessionId, WebSocket>()
+// 
 
 users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
 
@@ -59,15 +46,26 @@ function authenticate(userId: UserId, password: Password) {
   }
 }
 
-function handleLogin(userId: UserId, password: Password) {
+function updateSubscribers(update) {
+  subscribers.forEach((userId, sessionId) => {
+    if (sessionIdToSocket.has(sessionId)) {
+      sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
+    }
+  })
+}
+
+function handleLogin(ws, userId: UserId, password: Password) {
   if (authenticate(userId, password)) {
     if (userIdToSessionId.has(userId)) {
-      return loginSuccess(userIdToSessionId.get(userId))
+      const sessionId = userIdToSessionId.get(userId)
+      sessionIdToSocket.set(sessionId, ws)
+      return loginSuccess(sessionId)
     }
     else {
       const sessionId = uuid()
       sessionIdToUserId.set(sessionId, userId)
       userIdToSessionId.set(userId, sessionId)
+      sessionIdToSocket.set(sessionId, ws)
       return loginSuccess(sessionId)
     }
   }
@@ -127,9 +125,10 @@ function handleAppendRow(message) {
 
       tableUpdates.get(tableId).set(table.version, message)
 
-      console.log(tableUpdates)
-      console.log(tables)
+      // console.log(tableUpdates)
+      // console.log(tables)
 
+      updateSubscribers(message)
       return appendTableRowSuccess(rowId)
     }
   }
@@ -160,9 +159,10 @@ function handleRemoveRow(message) {
         tables.set(tableId, table)
         tableUpdates.get(tableId).set(table.version, message)
 
-        console.log(tableUpdates)
-        console.log(tables)
+        // console.log(tableUpdates)
+        // console.log(tables)
 
+        updateSubscribers(message)
         return removeTableRowSuccess(rowId)
       }
     }
@@ -203,11 +203,12 @@ function handleUpdateCell(message) {
           tables.set(tableId, table)
           tableUpdates.get(tableId).set(table.version, message)
 
-          console.log(tableUpdates)
-          console.log(tables)
+          // console.log(tableUpdates)
+          // console.log(tables)
 
-          console.log(tables.get(tableId).rows[0].values)
+          // console.log(tables.get(tableId).rows[0].values)
 
+          updateSubscribers(message)
           return updateCellSuccess(tableId, rowId, columnName)
         }
       }
@@ -245,8 +246,8 @@ function handleCreateTable(message) {
 
       tables.set(tableId, table)
 
-      console.log(tableUpdates)
-      console.log(tables)
+      // console.log(tableUpdates)
+      // console.log(tables)
 
       return createTableSuccess(tableId)
     }
@@ -259,14 +260,33 @@ function handleCreateTable(message) {
   }
 }
 
+function handleSubscribeTables(ws, message) {
+  const pl = message.payLoad
+  const sessionId = pl.sessionId
+  const subscriberId = pl.subscriberId
+
+  subscribers.set(sessionId, subscriberId)
+
+  const wws: WebSocket = sessionIdToSocket.get(sessionId)
+
+  tables.forEach((table, _) =>{
+    console.log(table)
+    wws.send(sendTableSnap(sessionId, subscriberId, table))
+  })
+
+  // FIXME: should send response before sending table
+  return subscribeTablesSuccess(sessionId, subscriberId)
+}
+
+
 function checkSessionId(userId: UserId, sessionId: SessionId) {
   return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
 }
 
-function handleMessage(message) {
+function handleMessage(ws, message) {
   switch (message.msgType) {
     case MsgType.Login:
-      return handleLogin(message.payLoad.userId, message.payLoad.password)
+      return handleLogin(ws, message.payLoad.userId, message.payLoad.password)
     case MsgType.Logout:
       return handleLogout(message.payLoad.userId)
     case MsgType.CreateUser:
@@ -279,6 +299,8 @@ function handleMessage(message) {
       return handleRemoveRow(message)
     case MsgType.UpdateCell:
       return handleUpdateCell(message)
+    case MsgType.SubscribeTables:
+      return handleSubscribeTables(ws, message)
     default:
       console.log(`Unknown Msg`)
       break
@@ -288,7 +310,7 @@ function handleMessage(message) {
 function handleConnection(ws) {
   ws.on('message', msg => {
     const message = JSON.parse(msg.toString())
-    const return_message = handleMessage(message)
+    const return_message = handleMessage(ws, message)
     ws.send(return_message)
   })
 }

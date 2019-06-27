@@ -1,3 +1,44 @@
+export type Version = number
+
+export type UserId = string
+export type UserName = string
+export type Password = string
+
+export type CreatorId = string
+export type UpdatorId = string
+
+export type TableId = string
+export type TableName = string
+
+export type ColumnName = string
+export type ColumnValue = String
+
+export type SessionId = string
+
+export type RowId = string
+
+export type SubscriberId = string
+
+export interface UserInfo {
+  userId: UserId,
+  userName: UserName,
+  password: Password
+}
+
+export interface Row {
+  rowId: RowId
+  values: Object[]
+}
+
+export interface Table {
+  tableId: TableId
+  tableName: TableName
+  version: Version
+  columns: ColumnName[]
+  rows:  Row[]
+  creatorId: CreatorId
+}
+
 export enum MsgType {
 
   CreateUser = 'createUser',
@@ -27,24 +68,15 @@ export enum MsgType {
   Logout = 'logout',
   LogoutSuccess = 'logoutSuccess',
   LogoutFailure = 'logoutFailure',
+
+  SubscribeTables = 'subscribeTables',
+  SubscribeTablesSuccess = 'subscribeTablesSuccess',
+  SubscribeTablesFailure = 'subscribeTablesFailure',
+
+  TableUpdate = 'tableUpdate',
+  TableSnap = 'tableSnap',
 }
 
-export type UserId = string
-export type UserName = string
-export type Password = string
-
-export type CreatorId = string
-export type UpdatorId = string
-
-export type TableId = string
-export type TableName = string
-
-export type ColumnName = string
-export type ColumnValue = String
-
-export type SessionId = string
-
-export type RowId = string
 
 export function createUser(
   sessionId: SessionId,
@@ -140,6 +172,33 @@ export function updateCell(
       columnName: columnName,
       value: value,
       updatorId: updatorId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function subscribeTables(
+  sessionId: SessionId,
+  subscriberId: SubscriberId
+) {
+  const msg = {
+    msgType: MsgType.SubscribeTables,
+    payLoad: {
+      sessionId: sessionId,
+      subscriberId: subscriberId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function subscribeTablesSuccess(sessionId: SessionId, subscriberId: SubscriberId) {
+  const msg = {
+    msgType: MsgType.SubscribeTablesSuccess,
+    payLoad: {
+      sessionId: sessionId,
+      subscriberId: subscriberId
     }
   }
 
@@ -322,5 +381,29 @@ export function updateCellFailure(tableId: TableId, rowId: RowId, columnName: Co
     }
   }
 
+  return JSON.stringify(msg)
+}
+
+export function sendTableSnap(sessionId: SessionId, subscriberId: SubscriberId, table: Table) {
+  const msg = {
+    msgType: MsgType.TableSnap,
+    payLoad: {
+      sessionId: sessionId,
+      subscriberId: subscriberId,
+      table: table
+    }
+  }
+  return JSON.stringify(msg)
+}
+
+export function sendTableUpdate(sessionId: SessionId, subscriberId: SubscriberId, update) {
+  const msg = {
+    msgType: MsgType.TableUpdate,
+    payLoad: {
+      sessionId: sessionId,
+      subscriberId: subscriberId,
+      update: update
+    }
+  }
   return JSON.stringify(msg)
 }
