@@ -2,7 +2,7 @@ import { Server } from 'ws'
 import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSuccess, logoutSuccess, logoutFailure,
          createUserFailure, createUserSuccess, TableId, TableName, CreatorId, ColumnName, RowId,
          createTableSuccess, createTableFailure, appendTableRowFailure, appendTableRowSuccess,
-         removeTableRowFailure, removeTableRowSuccess } from './Messages'
+         removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure } from './Messages'
 
 const uuid = require('uuid/v4')
 
@@ -172,6 +172,52 @@ function handleRemoveRow(message) {
   }
 }
 
+function handleUpdateCell(message) {
+  const pl = message.payLoad
+  const sessionId = pl.sessionId
+  const tableId = pl.tableId 
+  const rowId = pl.rowId
+  const columnName = pl.columnName
+  const value = pl.value
+  const updatorId = pl.updatorId
+
+  if (checkSessionId(updatorId, sessionId)) {
+    if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
+      return updateCellFailure(tableId, rowId, columnName, `table ${tableId} not exists`)
+    }
+    else {
+      if (!rowIdToRowIndex.has(rowId)) {
+        return updateCellFailure(tableId, rowId, columnName, `row ${rowId} not exists`)
+      }
+      else {
+        const table = tables.get(tableId)
+        const columnIndex = table.columns.indexOf(columnName)
+        if (columnIndex === -1) {
+          return updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`)
+        }
+        else {
+          table.version = table.version + 1
+          const row = table.rows[rowIdToRowIndex.get(rowId)]
+          row.values[columnIndex] = value
+
+          tables.set(tableId, table)
+          tableUpdates.get(tableId).set(table.version, message)
+
+          console.log(tableUpdates)
+          console.log(tables)
+
+          console.log(tables.get(tableId).rows[0].values)
+
+          return updateCellSuccess(tableId, rowId, columnName)
+        }
+      }
+    }
+  }
+  else {
+    return updateCellFailure(tableId, rowId, columnName, 'unknown session')
+  }
+}
+
 
 function handleCreateTable(message) {
   const pl = message.payLoad
@@ -217,7 +263,7 @@ function checkSessionId(userId: UserId, sessionId: SessionId) {
   return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
 }
 
-function handle_message(message) {
+function handleMessage(message) {
   switch (message.msgType) {
     case MsgType.Login:
       return handleLogin(message.payLoad.userId, message.payLoad.password)
@@ -231,18 +277,20 @@ function handle_message(message) {
       return handleAppendRow(message)
     case MsgType.RemoveRow:
       return handleRemoveRow(message)
+    case MsgType.UpdateCell:
+      return handleUpdateCell(message)
     default:
       console.log(`Unknown Msg`)
       break
   }
 }
 
-function handle_connection(ws) {
+function handleConnection(ws) {
   ws.on('message', msg => {
     const message = JSON.parse(msg.toString())
-    const return_message = handle_message(message)
+    const return_message = handleMessage(message)
     ws.send(return_message)
   })
 }
 
-wss.on('connection', handle_connection)
+wss.on('connection', handleConnection)

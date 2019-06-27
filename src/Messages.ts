@@ -16,6 +16,10 @@ export enum MsgType {
   RemoveRowSuccess = 'removeRowSuccess',
   RemoveRowFailure = 'removeRowFailure',
 
+  UpdateCell = 'updateCell',
+  UpdateCellSuccess = 'updateCellSuccess',
+  UpdateCellFailure = 'updateCellFailure',
+
   Login = 'login',
   LoginSuccess = 'loginSuccess',
   LoginFailure = 'loginFailure',
@@ -112,6 +116,29 @@ export function removeTableRow(sessionId: SessionId, tableId: TableId, rowId: Ro
       sessionId: sessionId,
       tableId: tableId,
       rowId: rowId,
+      updatorId: updatorId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function updateCell(
+  sessionId: SessionId,
+  tableId: TableId,
+  rowId: RowId,
+  columnName: ColumnName,
+  value: ColumnValue,
+  updatorId: UpdatorId
+) {
+  const msg = {
+    msgType: MsgType.UpdateCell,
+    payLoad: {
+      sessionId: sessionId,
+      tableId: tableId,
+      rowId: rowId,
+      columnName: columnName,
+      value: value,
       updatorId: updatorId
     }
   }
@@ -264,6 +291,33 @@ export function removeTableRowFailure(rowId: RowId, reason: string) {
     msgType: MsgType.RemoveRowFailure,
     payLoad: {
       rowId: rowId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function updateCellSuccess(tableId: TableId, rowId: RowId, columnName: ColumnName) { 
+  const msg = {
+    msgType: MsgType.UpdateCellSuccess,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      columnName: columnName
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function updateCellFailure(tableId: TableId, rowId: RowId, columnName: ColumnName, reason: string) {
+  const msg = {
+    msgType: MsgType.UpdateCellFailure,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      columnName: columnName,
       reason: reason
     }
   }

@@ -1,6 +1,6 @@
 // FIXME: use import
 import { MsgType, createUser, login, logout, loginSuccess, SessionId, createTable, appendTableRow,
-removeTableRow } from './Messages';
+removeTableRow, updateCell, updateCellSuccess, updateCellFailure } from './Messages';
 
 const uuid = require('uuid/v4')
 
@@ -77,11 +77,20 @@ connection.onmessage = (e) => {
       break
     }
     case MsgType.AppendRowFailure: {
-      console.error(`appennd row failure: ${returnMsg.payLoad.reason}`)
+      console.error(`append row failure: ${returnMsg.payLoad.reason}`)
       break
     }
     case MsgType.AppendRowSuccess: {
       console.log(`append row success`)
+      connection.send(updateCell(sessionId, tableId, rowId, 'col_4', 'new_vaue', userId))
+      break
+    }
+    case MsgType.UpdateCellFailure: {
+      console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
+      break
+    }
+    case MsgType.UpdateCellSuccess: {
+      console.log(`update cell success`)
       connection.send(removeTableRow(sessionId, tableId, rowId, userId))
       break
     }
