@@ -41,7 +41,7 @@ connection.onmessage = (e) => {
 
   switch (returnMsg.msgType) {
     case MsgType.LoginSuccess: {
-      const sessionId = returnMsg.payLoad.sessionId
+      sessionId = returnMsg.payLoad.sessionId
       console.log(`login success: ${returnMsg.payLoad.sessionId}`)
       // connection.send(createUser(sessionId, newUserId, newUserName, newUserPassword, userId))
       connection.send(createTable(sessionId, tableId, tableName, columns, userId))

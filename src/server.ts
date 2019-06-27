@@ -109,9 +109,9 @@ function handleAppendRow(message) {
   const tableId = pl.tableId 
   const rowId = pl.rowId
   const values = pl.values
-  const updator = pl.updatorId
+  const updatorId = pl.updatorId
 
-  if (checkSessionId(sessionId)) {
+  if (checkSessionId(updatorId, sessionId)) {
     if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
       return appendTableRowFailure(rowId, `table ${tableId} not exists`)
     }
@@ -143,9 +143,9 @@ function handleRemoveRow(message) {
   const sessionId = pl.sessionId
   const tableId = pl.tableId 
   const rowId = pl.rowId
-  const updator = pl.updatorId
+  const updatorId = pl.updatorId
 
-  if (checkSessionId(sessionId)) {
+  if (checkSessionId(updatorId, sessionId)) {
     if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
       return removeTableRowFailure(rowId, `table ${tableId} not exists`)
     }
@@ -181,7 +181,7 @@ function handleCreateTable(message) {
   const columns = pl.columns
   const creatorId = pl.creatorId
 
-  if (checkSessionId(sessionId)) {
+  if (checkSessionId(creatorId, sessionId)) {
     if (!tableUpdates.has(tableId)) {
       tableUpdates.set(tableId, new Map<Version, Object>())
 
@@ -213,8 +213,8 @@ function handleCreateTable(message) {
   }
 }
 
-function checkSessionId(sessionId: SessionId) {
-  return true
+function checkSessionId(userId: UserId, sessionId: SessionId) {
+  return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
 }
 
 function handle_message(message) {
