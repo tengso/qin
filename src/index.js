@@ -142,5 +142,4 @@ function getClient(host, port, userId, password) {
     }
 }
 exports.getClient = getClient;
-window.getClient = getClient;
 //# sourceMappingURL=client.js.map

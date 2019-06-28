@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <head>QIN Client Sim</head>
+<script src='../dist/main.js'>
+</script>
 <body>
     <p>
-        <button>login</button>
+        <script>
+    console.log('import get client')
+            </script>
+        <button onclick="getClient('localhost', 8080, 'root', 'root').login();">login</button>
         user id: <input type='text' id='userId'></input> 
         password: <input type='text' id='password'></input>
     </p>

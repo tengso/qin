@@ -23,6 +23,11 @@ var MsgType;
     MsgType["Logout"] = "logout";
     MsgType["LogoutSuccess"] = "logoutSuccess";
     MsgType["LogoutFailure"] = "logoutFailure";
+    MsgType["SubscribeTables"] = "subscribeTables";
+    MsgType["SubscribeTablesSuccess"] = "subscribeTablesSuccess";
+    MsgType["SubscribeTablesFailure"] = "subscribeTablesFailure";
+    MsgType["TableUpdate"] = "tableUpdate";
+    MsgType["TableSnap"] = "tableSnap";
 })(MsgType = exports.MsgType || (exports.MsgType = {}));
 function createUser(sessionId, userId, userName, password, creatorId) {
     var msg = {
@@ -94,6 +99,28 @@ function updateCell(sessionId, tableId, rowId, columnName, value, updatorId) {
     return JSON.stringify(msg);
 }
 exports.updateCell = updateCell;
+function subscribeTables(sessionId, subscriberId) {
+    var msg = {
+        msgType: MsgType.SubscribeTables,
+        payLoad: {
+            sessionId: sessionId,
+            subscriberId: subscriberId
+        }
+    };
+    return JSON.stringify(msg);
+}
+exports.subscribeTables = subscribeTables;
+function subscribeTablesSuccess(sessionId, subscriberId) {
+    var msg = {
+        msgType: MsgType.SubscribeTablesSuccess,
+        payLoad: {
+            sessionId: sessionId,
+            subscriberId: subscriberId
+        }
+    };
+    return JSON.stringify(msg);
+}
+exports.subscribeTablesSuccess = subscribeTablesSuccess;
 function login(userId, password) {
     var msg = {
         msgType: MsgType.Login,
@@ -257,4 +284,28 @@ function updateCellFailure(tableId, rowId, columnName, reason) {
     return JSON.stringify(msg);
 }
 exports.updateCellFailure = updateCellFailure;
+function sendTableSnap(sessionId, subscriberId, table) {
+    var msg = {
+        msgType: MsgType.TableSnap,
+        payLoad: {
+            sessionId: sessionId,
+            subscriberId: subscriberId,
+            table: table
+        }
+    };
+    return JSON.stringify(msg);
+}
+exports.sendTableSnap = sendTableSnap;
+function sendTableUpdate(sessionId, subscriberId, update) {
+    var msg = {
+        msgType: MsgType.TableUpdate,
+        payLoad: {
+            sessionId: sessionId,
+            subscriberId: subscriberId,
+            update: update
+        }
+    };
+    return JSON.stringify(msg);
+}
+exports.sendTableUpdate = sendTableUpdate;
 //# sourceMappingURL=Messages.js.map

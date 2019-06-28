@@ -1,13 +1,13 @@
-// FIXME: use import
-const uuid = require('uuid/v4')
-import WebSocket = require('ws');
-
 import { MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue 
   } from './Messages';
 
+
+// FIXME: use import
+const uuid = require('uuid/v4')
+// const WebSocket = require('ws');
     
-class Client {
+class ClientWrapper {
   userId: UserId
   password: Password
   sessionId: SessionId
@@ -150,7 +150,20 @@ class Client {
   }
 }
 
-const host = 'localhost'
-const port = 8080
+let client: ClientWrapper
+
+export function getClient(host: string, port: number, userId: UserId, password: Password) {
+
+  console.log(typeof(ClientWrapper))
+  if (!client) {
+    client = new ClientWrapper(host, port, userId, password)
+    return client
+  }
+  else {
+    return client
+  }
+}
+
+window.getClient = getClient
 
 

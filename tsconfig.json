@@ -3,7 +3,7 @@
         "outDir": "./built",
         "allowJs": true,
         "target": "es5",
-        "noEmitOnError": true,
+        "noEmitOnError": false,
         "noImplicitAny": false,
         "sourceMap": true,
     },

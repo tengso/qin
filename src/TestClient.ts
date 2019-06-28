@@ -21,7 +21,7 @@ const columns = ['col_1', 'col_2', 'col_3']
 const rowId = uuid()
 const values = ['val_1', 'val_2', 'val_3']
 
-import WebSocket = require('ws');
+const WebSocket = require('ws');
 
 const url = 'ws://localhost:8080'
 const connection = new WebSocket(url)
