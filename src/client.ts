@@ -1,128 +1,156 @@
 // FIXME: use import
-import { MsgType, createUser, login, logout, loginSuccess, SessionId, createTable, appendTableRow,
-removeTableRow, updateCell, updateCellSuccess, updateCellFailure, subscribeTables } from './Messages';
-
 const uuid = require('uuid/v4')
-
-let userId = 'root'
-let password = 'root'
-
-let newUserId = 'song'
-let newUserName = 'Song Teng' 
-let newUserPassword = 'java' 
-
-// let userId = newUserId
-// let password = newUserPassword
-
-const tableId = uuid()
-const tableName = 'table_name'
-const columns = ['col_1', 'col_2', 'col_3']
-
-const rowId = uuid()
-const values = ['val_1', 'val_2', 'val_3']
-
 import WebSocket = require('ws');
 
-const url = 'ws://localhost:8080'
-const connection = new WebSocket(url)
+import { MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
+  updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue 
+  } from './Messages';
 
-connection.onopen = () => {
-  connection.send(login(userId, password))
-}
+    
+class Client {
+  userId: UserId
+  password: Password
+  sessionId: SessionId
 
-connection.onerror = (error) => {
-  console.log(`WebSocket error: ${error}`)
-}
+  connection: WebSocket
 
-let sessionId: SessionId
+  constructor(host: string, port: number, userId: string, password: string) {
+    const url = `ws://${host}:${port}`
 
-connection.onmessage = (e) => {
-  const returnMsg = JSON.parse(e.data.toString())
+    this.connection = new WebSocket(url)
+    this.userId = userId
+    this.password = password
 
-  switch (returnMsg.msgType) {
-    case MsgType.LoginSuccess: {
-      sessionId = returnMsg.payLoad.sessionId
-      console.log(`login success: ${returnMsg.payLoad.sessionId}`)
-      // connection.send(createUser(sessionId, newUserId, newUserName, newUserPassword, userId))
-      connection.send(createTable(sessionId, tableId, tableName, columns, userId))
-      break
+    this.connection.onopen = () => {
+      this.listen()
+      console.log('connected')
     }
-    case MsgType.CreateUserSuccess: {
-      console.log(`create user success`)
-      break
+
+    this.connection.onerror = (error) => {
+      console.log(`WebSocket error: ${error}`)
     }
-    case MsgType.CreateTableSuccess: {
-      console.log(`create table success`)
-      connection.send(subscribeTables(sessionId, userId))
-      break
-    }
-    case MsgType.SubscribeTablesSuccess: {
-      console.log(`subscribe table success`)
-      connection.send(appendTableRow(sessionId, tableId, rowId, values, userId))
-      break
-    }
-    case MsgType.AppendRowSuccess: {
-      console.log(`append row success`)
-      connection.send(updateCell(sessionId, tableId, rowId, 'col_3', 'new_vaue', userId))
-      break
-    }
-    case MsgType.UpdateCellSuccess: {
-      console.log(`update cell success`)
-      connection.send(removeTableRow(sessionId, tableId, rowId, userId))
-      break
-    }
-    case MsgType.RemoveRowSuccess: {
-      console.log(`remove row success`)
-      break
-    }
-    case MsgType.TableSnap: {
-      console.log(`table snap`)
-      console.log(`${JSON.stringify(returnMsg)}`)
-      break
-    }
-    case MsgType.TableUpdate: {
-      console.log(`table update`)
-      console.log(`${JSON.stringify(returnMsg)}`)
-      break
-    }
-    case MsgType.AppendRowFailure: {
-      console.error(`append row failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.LogoutSuccess: {
-      console.log(`logout success`)
-      break
-    }
-    case MsgType.LoginFailure: {
-      console.error(`login failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.CreateUserFailure: {
-      console.error(`create user failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.CreateTableFailure: {
-      console.error(`create table failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.UpdateCellFailure: {
-      console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.RemoveRowFailure: {
-      console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    case MsgType.LogoutFailure: {
-      console.error(`logout failure: ${returnMsg.payLoad.reason}`)
-      break
-    }
-    default:
-      // console.log(typeof returnMsg)
-      // console.log(returnMsg['msgType'])
-      // console.log(MsgType.LoginSuccess)
-      console.error(`unknown msg: ${returnMsg}`)
-      break
   }
-  // console.log(e.data)
+
+  login() {
+    this.connection.send(login(this.userId, this.password))
+  }
+
+  logout() {
+    this.connection.send(logout(this.userId))
+  }
+
+  createUser(userId: string, userName: string, password: string) {
+    this.connection.send(createUser(this.sessionId, userId, userName, password, this.userId))
+  }
+
+  createTable(tableName: string, columns: ColumnName[]) {
+    const tableId = uuid()
+    this.connection.send(createTable(this.sessionId, tableId, tableName, columns, this.userId))
+  }
+
+  subscribeTables() {
+    this.connection.send(subscribeTables(this.sessionId, this.userId))
+  }
+
+  appendRow(tableId: TableId, values: ColumnValue[]) {
+    const rowId = uuid()
+    this.connection.send(appendTableRow(this.sessionId, tableId, rowId, values, this.userId))
+  }
+
+  removeRow(tableId: TableId, rowId: RowId) {
+    this.connection.send(removeTableRow(this.sessionId, tableId, rowId, this.userId))
+  }
+
+  updateCell(tableId: TableId, rowId: RowId, columnName: ColumnName, newValue: ColumnValue) {
+    this.connection.send(updateCell(this.sessionId, tableId, rowId, columnName, newValue, this.userId))
+  }
+
+  listen() {
+    this.connection.onmessage = (e) => {
+      const returnMsg = JSON.parse(e.data.toString())
+
+      switch (returnMsg.msgType) {
+        case MsgType.LoginSuccess: {
+          this.sessionId = returnMsg.payLoad.sessionId
+          console.log(`login success: ${returnMsg.payLoad.sessionId}`)
+          break
+        }
+        case MsgType.CreateUserSuccess: {
+          console.log(`create user success`)
+          break
+        }
+        case MsgType.CreateTableSuccess: {
+          console.log(`create table success`)
+          break
+        }
+        case MsgType.SubscribeTablesSuccess: {
+          console.log(`subscribe table success`)
+          break
+        }
+        case MsgType.AppendRowSuccess: {
+          console.log(`append row success`)
+          break
+        }
+        case MsgType.UpdateCellSuccess: {
+          console.log(`update cell success`)
+          break
+        }
+        case MsgType.RemoveRowSuccess: {
+          console.log(`remove row success`)
+          break
+        }
+        case MsgType.TableSnap: {
+          console.log(`table snap`)
+          console.log(`${JSON.stringify(returnMsg)}`)
+          break
+        }
+        case MsgType.TableUpdate: {
+          console.log(`table update`)
+          console.log(`${JSON.stringify(returnMsg)}`)
+          break
+        }
+        case MsgType.AppendRowFailure: {
+          console.error(`append row failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.LogoutSuccess: {
+          console.log(`logout success`)
+          break
+        }
+        case MsgType.LoginFailure: {
+          console.error(`login failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.CreateUserFailure: {
+          console.error(`create user failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.CreateTableFailure: {
+          console.error(`create table failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.UpdateCellFailure: {
+          console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.RemoveRowFailure: {
+          console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.LogoutFailure: {
+          console.error(`logout failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        default: {
+          console.error(`unknown msg: ${returnMsg}`)
+          break
+        }
+      }
+    }
+  }
 }
+
+const host = 'localhost'
+const port = 8080
+
+
