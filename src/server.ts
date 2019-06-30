@@ -180,10 +180,15 @@ function handleRemoveRow(message) {
         tables.set(tableId, table)
         tableUpdates.get(tableId).set(table.version, message)
 
+        rowIdToRowIndex.delete(rowId)
         // console.log(tableUpdates)
         // console.log(tables)
 
-        publishTableUpdate(message)
+        publishTableUpdate({
+          updateType: message.msgType,
+          tableId: tableId,
+          rowId: rowId,
+        })
         return removeTableRowSuccess(rowId)
       }
     }
@@ -229,7 +234,14 @@ function handleUpdateCell(message) {
 
           // console.log(tables.get(tableId).rows[0].values)
 
-          publishTableUpdate(message)
+          publishTableUpdate({
+            updateType: message.msgType,
+            tableId: tableId,
+            rowId: rowId,
+            columnIndex: columnIndex,
+            value: value,
+          })
+          // FIXME: pass column index instead
           return updateCellSuccess(tableId, rowId, columnName)
         }
       }

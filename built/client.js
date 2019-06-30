@@ -96,6 +96,13 @@ var Client = /** @class */ (function () {
                     switch (update.updateType) {
                         case Messages_1.MsgType.AppendRow:
                             _this.callback.appendRow(update.tableId, update.rowId, update.values);
+                            break;
+                        case Messages_1.MsgType.RemoveRow:
+                            _this.callback.removeRow(update.rowId);
+                            break;
+                        case Messages_1.MsgType.UpdateCell:
+                            _this.callback.updateCell(update.rowId, update.columnIndex, update.value);
+                            break;
                         default:
                             console.log("unknown update type: " + update.updateType);
                     }

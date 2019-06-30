@@ -3,29 +3,40 @@
 <script>
 
     function createTable(tableId, tableName, columns) {
-        var tables = document.getElementById("tables");
-        table = document.createElement("table");   
-        table.setAttribute("id", tableId);
-        table.border = '1';
-        tables.appendChild(table); 
+        var tables = document.getElementById("tables")
+        table = document.createElement("table")   
+        table.setAttribute("id", tableId)
+        table.border = '1'
+        tables.appendChild(table) 
 
-        var header = table.createTHead();
+        var header = table.createTHead()
 
         for (const column of columns ) {
-            var c = table.tHead.appendChild(document.createElement("th"));
-            c.innerHTML = column;
+            var c = table.tHead.appendChild(document.createElement("th"))
+            c.innerHTML = column
         }
     }
 
     function appendRowUtil(tableId, rowId, values) {
-        var table = document.getElementById(tableId);
+        var table = document.getElementById(tableId)
 
-        var rowCount = table.rows.length;
-        var row = table.insertRow(rowCount);
+        var rowCount = table.rows.length
+        var row = table.insertRow(rowCount)
+        row.setAttribute("id", rowId)
 
         values.forEach((value, i)=> {
-            row.insertCell(i).innerHTML = value;
-        });
+            row.insertCell(i).innerHTML = value
+        })
+    }
+
+    function removeRowUtil(rowId) {
+        var row = document.getElementById(rowId)
+        row.parentNode.removeChild(row)
+    }
+
+    function updateCellUtil(rowId, columnIndex, value) {
+        row = document.getElementById(rowId)
+        row.childNodes[columnIndex].innerHTML = value 
     }
 
     var client
@@ -71,12 +82,27 @@
                 appendRowUtil(table.tableId, row.rowId, row.values)
             })
         },
-        tableUpdate: function(update) {
-            var t = document.getElementById("tableUpdate")
-            t.value += `${JSON.stringify(update)}\n`
-        },
+        // tableUpdate: function(update) {
+        //     var t = document.getElementById("tableUpdate")
+        //     t.value += `${JSON.stringify(update)}\n`
+        // },
         appendRow: function(tableId, rowId, values) {
+            var t = document.getElementById("tableUpdate")
+            t.value += `append row - tableId [${tableId}] rowId [${rowId}] value [${values}]\n`
+
             appendRowUtil(tableId, rowId, values)
+        },
+        removeRow: function(rowId) {
+            var t = document.getElementById("tableUpdate")
+            t.value += `remove row - rowId [${rowId}]\n`
+
+            removeRowUtil(rowId)
+        },
+        updateCell: function(rowId, columnIndex, value) {
+            var t = document.getElementById("tableUpdate")
+            t.value += `update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]\n`
+
+            updateCellUtil(rowId, columnIndex, value)
         }
     }
 
@@ -121,6 +147,24 @@
     function getAppendRowValues() {
         return JSON.parse(document.getElementById('valuesAR').value)
     }
+    function getRemoveRowTableId() {
+        return document.getElementById('tableIdDR').value
+    }
+    function getRemoveRowRowId() {
+        return document.getElementById('rowIdDR').value
+    }
+    function getUpdateCellTableId() {
+        return document.getElementById('tableIdUC').value
+    }
+    function getUpdateCellRowId() {
+        return document.getElementById('rowIdUC').value
+    }
+    function getUpdateCellColumnName() {
+        return document.getElementById('columnUC').value
+    }
+    function getUpdateCellValue() {
+        return document.getElementById('valueUC').value
+    }
 </script>
 <head>QIN Client Sim</head>
 <body>
@@ -149,15 +193,16 @@
         values: <input type='text' id='valuesAR'></input> 
     </p>
     <p>
-        <button>delete row</button>
+        <button onClick="client.removeRow(getRemoveRowTableId(), getRemoveRowRowId())">remove row</button>
         table id: <input type='text' id='tableIdDR'></input> 
         row id: <input type='text' id='rowIdDR'></input> 
     </p>
     <p>
-        <button>update cell</button>
+        <button onclick="client.updateCell(getUpdateCellTableId(), getUpdateCellRowId(), getUpdateCellColumnName(), getUpdateCellValue())">update cell</button>
         table id: <input type='text' id='tableIdUC'></input> 
         column: <input type='text' id='columnUC'></input> 
         row id: <input type='text' id='rowIdUC'></input> 
+        value: <input type='text' id='valueUC'></input> 
     </p>
     <p>
         <button id='subscribeTables' onClick="client.subscribeTables()">subscribe tables</button>

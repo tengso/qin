@@ -121,6 +121,12 @@ class Client {
             case MsgType.AppendRow:
               this.callback.appendRow(update.tableId, update.rowId, update.values)
               break
+            case MsgType.RemoveRow:
+              this.callback.removeRow(update.rowId)
+              break
+            case MsgType.UpdateCell:
+              this.callback.updateCell(update.rowId, update.columnIndex, update.value)
+              break
             default:
               console.log(`unknown update type: ${update.updateType}`)
           }
