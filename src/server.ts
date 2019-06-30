@@ -3,7 +3,8 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          createUserFailure, createUserSuccess, TableId, TableName, CreatorId, ColumnName, RowId,
          createTableSuccess, createTableFailure, appendTableRowFailure, appendTableRowSuccess,
          removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure,
-         SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate } from './Messages'
+         SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
+         subscribeTablesFailure } from './Messages'
 
 const uuid = require('uuid/v4')
 
@@ -46,7 +47,7 @@ function authenticate(userId: UserId, password: Password) {
   }
 }
 
-function updateSubscribers(update) {
+function publishTableUpdate(update) {
   subscribers.forEach((userId, sessionId) => {
     if (sessionIdToSocket.has(sessionId)) {
       sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
@@ -54,7 +55,17 @@ function updateSubscribers(update) {
   })
 }
 
+function publishTableSnap(table) {
+  subscribers.forEach((userId, sessionId) => {
+    if (sessionIdToSocket.has(sessionId)) {
+      sessionIdToSocket.get(sessionId).send(sendTableSnap(sessionId, userId, table))
+    }
+  })
+}
+
 function handleLogin(ws, userId: UserId, password: Password) {
+  console.log(`login: ${userId} ${password}`)
+
   if (authenticate(userId, password)) {
     if (userIdToSessionId.has(userId)) {
       const sessionId = userIdToSessionId.get(userId)
@@ -86,18 +97,23 @@ function handleLogout(userId: UserId) {
     }
 }
 
-function handleCreateUser(userId: UserId, userName: UserName, password: Password) {
-  if (users.has(userId)) {
-      return createUserFailure(`user ${userId} exists`)
+function handleCreateUser(sessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
+  if (checkSessionId(creatorId, sessionId)) {
+    if (users.has(userId)) {
+        return createUserFailure(`user ${userId} exists`)
+    }
+    else {
+      users.set(userId, {
+        userId: userId,
+        userName: userName,
+        password: password
+      })
+
+      return createUserSuccess()
+    }
   }
   else {
-    users.set(userId, {
-      userId: userId,
-      userName: userName,
-      password: password
-    })
-
-    return createUserSuccess()
+      return createUserFailure(`unknown user ${creatorId}`)
   }
 }
 
@@ -123,12 +139,17 @@ function handleAppendRow(message) {
       tables.set(tableId, table)
       rowIdToRowIndex.set(rowId, table.rows.length - 1)
 
-      tableUpdates.get(tableId).set(table.version, message)
+      const tableUpdate = tableUpdates.get(tableId)
+      tableUpdate.set(table.version, message)
 
-      // console.log(tableUpdates)
-      // console.log(tables)
+      console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
 
-      updateSubscribers(message)
+      publishTableUpdate({
+        updateType: message.msgType,
+        tableId: tableId,
+        rowId: rowId,
+        values: values
+      })
       return appendTableRowSuccess(rowId)
     }
   }
@@ -162,7 +183,7 @@ function handleRemoveRow(message) {
         // console.log(tableUpdates)
         // console.log(tables)
 
-        updateSubscribers(message)
+        publishTableUpdate(message)
         return removeTableRowSuccess(rowId)
       }
     }
@@ -208,7 +229,7 @@ function handleUpdateCell(message) {
 
           // console.log(tables.get(tableId).rows[0].values)
 
-          updateSubscribers(message)
+          publishTableUpdate(message)
           return updateCellSuccess(tableId, rowId, columnName)
         }
       }
@@ -218,7 +239,6 @@ function handleUpdateCell(message) {
     return updateCellFailure(tableId, rowId, columnName, 'unknown session')
   }
 }
-
 
 function handleCreateTable(message) {
   const pl = message.payLoad
@@ -233,7 +253,8 @@ function handleCreateTable(message) {
       tableUpdates.set(tableId, new Map<Version, any>())
 
       const version = 0
-      tableUpdates.get(tableId).set(version, message)
+      const tableUpdate = tableUpdates.get(tableId)
+      tableUpdate.set(version, message)
 
       const table: Table = {
         tableId: tableId,
@@ -246,9 +267,10 @@ function handleCreateTable(message) {
 
       tables.set(tableId, table)
 
-      // console.log(tableUpdates)
-      // console.log(tables)
+      console.log(`create table\n${JSON.stringify(table)}\n${tableUpdate}`)
 
+      publishTableUpdate(message)
+      publishTableSnap(table)
       return createTableSuccess(tableId)
     }
     else {
@@ -265,17 +287,27 @@ function handleSubscribeTables(ws, message) {
   const sessionId = pl.sessionId
   const subscriberId = pl.subscriberId
 
-  subscribers.set(sessionId, subscriberId)
+  if (checkSessionId(subscriberId, sessionId)) {
+    if (sessionIdToSocket.has(sessionId)) {
+      const wws: WebSocket = sessionIdToSocket.get(sessionId)
 
-  const wws: WebSocket = sessionIdToSocket.get(sessionId)
+      subscribers.set(sessionId, subscriberId)
 
-  tables.forEach((table, _) =>{
-    console.log(table)
-    wws.send(sendTableSnap(sessionId, subscriberId, table))
-  })
+      tables.forEach((table, _) =>{
+        console.log(table)
+        wws.send(sendTableSnap(sessionId, subscriberId, table))
+      })
 
-  // FIXME: should send response before sending table
-  return subscribeTablesSuccess(sessionId, subscriberId)
+      // FIXME: should send response before sending table
+      return subscribeTablesSuccess(sessionId, subscriberId)
+    }
+    else {
+      return subscribeTablesFailure(sessionId, subscriberId, `${subscriberId} sessionId: ${sessionId} socket not found`)
+    }
+  }
+  else {
+    return subscribeTablesFailure(sessionId, subscriberId, `subscriberId: ${subscriberId} not login`)
+  }
 }
 
 
@@ -290,7 +322,8 @@ function handleMessage(ws, message) {
     case MsgType.Logout:
       return handleLogout(message.payLoad.userId)
     case MsgType.CreateUser:
-      return handleCreateUser(message.payLoad.userId, message.payLoad.userName, message.payLoad.password)
+      return handleCreateUser(message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password,
+        message.payLoad.creatorId)
     case MsgType.CreateTable:
       return handleCreateTable(message)
     case MsgType.AppendRow:

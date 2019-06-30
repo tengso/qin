@@ -7,19 +7,20 @@ import { MsgType, createUser, login, logout, SessionId, createTable, appendTable
 const uuid = require('uuid/v4')
 // const WebSocket = require('ws');
     
-class ClientWrapper {
-  userId: UserId
-  password: Password
-  sessionId: SessionId
+class Client {
+  userId: UserId | undefined
+  password: Password | undefined
+  sessionId: SessionId | undefined
 
   connection: WebSocket
 
-  constructor(host: string, port: number, userId: string, password: string) {
+  callback: any
+
+  constructor(host: string, port: number, callback: any) {
     const url = `ws://${host}:${port}`
 
     this.connection = new WebSocket(url)
-    this.userId = userId
-    this.password = password
+    this.callback = callback
 
     this.connection.onopen = () => {
       this.listen()
@@ -31,7 +32,10 @@ class ClientWrapper {
     }
   }
 
-  login() {
+  login(userId: string, password: string) {
+    this.userId = userId
+    this.password = password
+
     this.connection.send(login(this.userId, this.password))
   }
 
@@ -72,49 +76,58 @@ class ClientWrapper {
       switch (returnMsg.msgType) {
         case MsgType.LoginSuccess: {
           this.sessionId = returnMsg.payLoad.sessionId
-          console.log(`login success: ${returnMsg.payLoad.sessionId}`)
+          this.callback.loginSuccess(this.sessionId)
           break
         }
         case MsgType.CreateUserSuccess: {
-          console.log(`create user success`)
+          this.callback.createUserSuccess()
           break
         }
         case MsgType.CreateTableSuccess: {
-          console.log(`create table success`)
+          this.callback.createTableSuccess(returnMsg.payLoad.tableId)
           break
         }
         case MsgType.SubscribeTablesSuccess: {
-          console.log(`subscribe table success`)
+          this.callback.subscribeTablesSuccess()
           break
         }
         case MsgType.AppendRowSuccess: {
-          console.log(`append row success`)
-          break
-        }
-        case MsgType.UpdateCellSuccess: {
-          console.log(`update cell success`)
+          this.callback.appendRowSuccess(returnMsg.payLoad.rowId)
           break
         }
         case MsgType.RemoveRowSuccess: {
-          console.log(`remove row success`)
+          this.callback.removeRowSuccess(returnMsg.payLoad.rowId)
+          break
+        }
+        case MsgType.UpdateCellSuccess: {
+          this.callback.updateCellSuccess(returnMsg.payLoad.tableId, returnMsg.payLoad.rowId,
+            returnMsg.payLoad.columnName)
+          break
+        }
+        case MsgType.LogoutSuccess: {
+          this.sessionId = undefined
+          this.userId = undefined
+          this.password = undefined
+          this.callback.logoutSuccess()
           break
         }
         case MsgType.TableSnap: {
-          console.log(`table snap`)
-          console.log(`${JSON.stringify(returnMsg)}`)
+          this.callback.tableSnap(returnMsg.payLoad.table)
           break
         }
         case MsgType.TableUpdate: {
-          console.log(`table update`)
-          console.log(`${JSON.stringify(returnMsg)}`)
+          let update = returnMsg.payLoad.update
+          switch (update.updateType) {
+            case MsgType.AppendRow:
+              this.callback.appendRow(update.tableId, update.rowId, update.values)
+              break
+            default:
+              console.log(`unknown update type: ${update.updateType}`)
+          }
           break
         }
         case MsgType.AppendRowFailure: {
           console.error(`append row failure: ${returnMsg.payLoad.reason}`)
-          break
-        }
-        case MsgType.LogoutSuccess: {
-          console.log(`logout success`)
           break
         }
         case MsgType.LoginFailure: {
@@ -141,6 +154,10 @@ class ClientWrapper {
           console.error(`logout failure: ${returnMsg.payLoad.reason}`)
           break
         }
+        case MsgType.SubscribeTablesFailure: {
+          console.error(`subscribe table failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
         default: {
           console.error(`unknown msg: ${returnMsg}`)
           break
@@ -150,20 +167,7 @@ class ClientWrapper {
   }
 }
 
-let client: ClientWrapper
-
-export function getClient(host: string, port: number, userId: UserId, password: Password) {
-
-  console.log(typeof(ClientWrapper))
-  if (!client) {
-    client = new ClientWrapper(host, port, userId, password)
-    return client
-  }
-  else {
-    return client
-  }
-}
-
-window.getClient = getClient
+// @ts-ignore
+window.Client = Client
 
 

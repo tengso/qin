@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var ws_1 = require("ws");
 var Messages_1 = require("./Messages");
 var uuid = require('uuid/v4');
@@ -28,17 +28,10 @@ function authenticate(userId, password) {
         return false;
     }
 }
-function publishTableUpdate(update) {
+function updateSubscribers(update) {
     subscribers.forEach(function (userId, sessionId) {
         if (sessionIdToSocket.has(sessionId)) {
             sessionIdToSocket.get(sessionId).send(Messages_1.sendTableUpdate(sessionId, userId, update));
-        }
-    });
-}
-function publishTableSnap(table) {
-    subscribers.forEach(function (userId, sessionId) {
-        if (sessionIdToSocket.has(sessionId)) {
-            sessionIdToSocket.get(sessionId).send(Messages_1.sendTableSnap(sessionId, userId, table));
         }
     });
 }
@@ -65,30 +58,25 @@ function handleLogin(ws, userId, password) {
 function handleLogout(userId) {
     if (userIdToSessionId.has(userId)) {
         var sessionId = userIdToSessionId.get(userId);
-        sessionIdToUserId.delete(sessionId);
-        userIdToSessionId.delete(userId);
+        sessionIdToUserId["delete"](sessionId);
+        userIdToSessionId["delete"](userId);
         return Messages_1.logoutSuccess();
     }
     else {
         return Messages_1.logoutFailure("unknown user: " + userId);
     }
 }
-function handleCreateUser(sessionId, userId, userName, password, creatorId) {
-    if (checkSessionId(creatorId, sessionId)) {
-        if (users.has(userId)) {
-            return Messages_1.createUserFailure("user " + userId + " exists");
-        }
-        else {
-            users.set(userId, {
-                userId: userId,
-                userName: userName,
-                password: password
-            });
-            return Messages_1.createUserSuccess();
-        }
+function handleCreateUser(userId, userName, password) {
+    if (users.has(userId)) {
+        return Messages_1.createUserFailure("user " + userId + " exists");
     }
     else {
-        return Messages_1.createUserFailure("unknown user " + creatorId);
+        users.set(userId, {
+            userId: userId,
+            userName: userName,
+            password: password
+        });
+        return Messages_1.createUserSuccess();
     }
 }
 function handleAppendRow(message) {
@@ -111,15 +99,10 @@ function handleAppendRow(message) {
             });
             tables.set(tableId, table);
             rowIdToRowIndex.set(rowId, table.rows.length - 1);
-            var tableUpdate = tableUpdates.get(tableId);
-            tableUpdate.set(table.version, message);
-            console.log("append row\n" + JSON.stringify(table) + "\n" + tableUpdate);
-            publishTableUpdate({
-                updateType: message.msgType,
-                tableId: tableId,
-                rowId: rowId,
-                values: values
-            });
+            tableUpdates.get(tableId).set(table.version, message);
+            // console.log(tableUpdates)
+            // console.log(tables)
+            updateSubscribers(message);
             return Messages_1.appendTableRowSuccess(rowId);
         }
     }
@@ -149,7 +132,7 @@ function handleRemoveRow(message) {
                 tableUpdates.get(tableId).set(table.version, message);
                 // console.log(tableUpdates)
                 // console.log(tables)
-                publishTableUpdate(message);
+                updateSubscribers(message);
                 return Messages_1.removeTableRowSuccess(rowId);
             }
         }
@@ -189,7 +172,7 @@ function handleUpdateCell(message) {
                     // console.log(tableUpdates)
                     // console.log(tables)
                     // console.log(tables.get(tableId).rows[0].values)
-                    publishTableUpdate(message);
+                    updateSubscribers(message);
                     return Messages_1.updateCellSuccess(tableId, rowId, columnName);
                 }
             }
@@ -210,20 +193,18 @@ function handleCreateTable(message) {
         if (!tableUpdates.has(tableId)) {
             tableUpdates.set(tableId, new Map());
             var version = 0;
-            var tableUpdate = tableUpdates.get(tableId);
-            tableUpdate.set(version, message);
+            tableUpdates.get(tableId).set(version, message);
             var table = {
                 tableId: tableId,
                 tableName: tableName,
                 version: version,
                 columns: columns,
                 rows: new Array(),
-                creatorId: creatorId,
+                creatorId: creatorId
             };
             tables.set(tableId, table);
-            console.log("create table\n" + JSON.stringify(table) + "\n" + tableUpdate);
-            publishTableUpdate(message);
-            publishTableSnap(table);
+            // console.log(tableUpdates)
+            // console.log(tables)
             return Messages_1.createTableSuccess(tableId);
         }
         else {
@@ -238,24 +219,14 @@ function handleSubscribeTables(ws, message) {
     var pl = message.payLoad;
     var sessionId = pl.sessionId;
     var subscriberId = pl.subscriberId;
-    if (checkSessionId(subscriberId, sessionId)) {
-        if (sessionIdToSocket.has(sessionId)) {
-            var wws_1 = sessionIdToSocket.get(sessionId);
-            subscribers.set(sessionId, subscriberId);
-            tables.forEach(function (table, _) {
-                console.log(table);
-                wws_1.send(Messages_1.sendTableSnap(sessionId, subscriberId, table));
-            });
-            // FIXME: should send response before sending table
-            return Messages_1.subscribeTablesSuccess(sessionId, subscriberId);
-        }
-        else {
-            return Messages_1.subscribeTablesFailure(sessionId, subscriberId, subscriberId + " sessionId: " + sessionId + " socket not found");
-        }
-    }
-    else {
-        return Messages_1.subscribeTablesFailure(sessionId, subscriberId, "subscriberId: " + subscriberId + " not login");
-    }
+    subscribers.set(sessionId, subscriberId);
+    var wws = sessionIdToSocket.get(sessionId);
+    tables.forEach(function (table, _) {
+        console.log(table);
+        wws.send(Messages_1.sendTableSnap(sessionId, subscriberId, table));
+    });
+    // FIXME: should send response before sending table
+    return Messages_1.subscribeTablesSuccess(sessionId, subscriberId);
 }
 function checkSessionId(userId, sessionId) {
     return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId);
@@ -267,7 +238,7 @@ function handleMessage(ws, message) {
         case Messages_1.MsgType.Logout:
             return handleLogout(message.payLoad.userId);
         case Messages_1.MsgType.CreateUser:
-            return handleCreateUser(message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId);
+            return handleCreateUser(message.payLoad.userId, message.payLoad.userName, message.payLoad.password);
         case Messages_1.MsgType.CreateTable:
             return handleCreateTable(message);
         case Messages_1.MsgType.AppendRow:
@@ -291,4 +262,3 @@ function handleConnection(ws) {
     });
 }
 wss.on('connection', handleConnection);
-//# sourceMappingURL=server.js.map

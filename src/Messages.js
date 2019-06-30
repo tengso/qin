@@ -1,5 +1,5 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+exports.__esModule = true;
 var MsgType;
 (function (MsgType) {
     MsgType["CreateUser"] = "createUser";
@@ -37,7 +37,7 @@ function createUser(sessionId, userId, userName, password, creatorId) {
             userId: userId,
             password: password,
             userName: userName,
-            creatorId: creatorId,
+            creatorId: creatorId
         }
     };
     return JSON.stringify(msg);
@@ -121,18 +121,6 @@ function subscribeTablesSuccess(sessionId, subscriberId) {
     return JSON.stringify(msg);
 }
 exports.subscribeTablesSuccess = subscribeTablesSuccess;
-function subscribeTablesFailure(sessionId, subscriberId, reason) {
-    var msg = {
-        msgType: MsgType.SubscribeTablesFailure,
-        payLoad: {
-            sessionId: sessionId,
-            subscriberId: subscriberId,
-            reason: reason
-        }
-    };
-    return JSON.stringify(msg);
-}
-exports.subscribeTablesFailure = subscribeTablesFailure;
 function login(userId, password) {
     var msg = {
         msgType: MsgType.Login,
@@ -176,7 +164,7 @@ function loginFailure(reason) {
 exports.loginFailure = loginFailure;
 function logoutSuccess() {
     var msg = {
-        msgType: MsgType.LogoutSuccess,
+        msgType: MsgType.LogoutSuccess
     };
     return JSON.stringify(msg);
 }
@@ -193,7 +181,7 @@ function logoutFailure(reason) {
 exports.logoutFailure = logoutFailure;
 function createUserSuccess() {
     var msg = {
-        msgType: MsgType.CreateUserSuccess,
+        msgType: MsgType.CreateUserSuccess
     };
     return JSON.stringify(msg);
 }
@@ -320,4 +308,3 @@ function sendTableUpdate(sessionId, subscriberId, update) {
     return JSON.stringify(msg);
 }
 exports.sendTableUpdate = sendTableUpdate;
-//# sourceMappingURL=Messages.js.map

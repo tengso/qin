@@ -205,6 +205,19 @@ export function subscribeTablesSuccess(sessionId: SessionId, subscriberId: Subsc
   return JSON.stringify(msg)
 }
 
+export function subscribeTablesFailure(sessionId: SessionId, subscriberId: SubscriberId, reason: string) {
+  const msg = {
+    msgType: MsgType.SubscribeTablesFailure,
+    payLoad: {
+      sessionId: sessionId,
+      subscriberId: subscriberId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
 export function login(userId: UserId, password: Password) {
   const msg = {
     msgType: MsgType.Login,
