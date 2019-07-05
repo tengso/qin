@@ -2,19 +2,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ws_1 = require("ws");
 var Messages_1 = require("./Messages");
+var Storage_1 = require("./Storage");
+// FIXME: enforce one user one session
 var uuid = require('uuid/v4');
 var wss = new ws_1.Server({ port: 8080 });
 var root_id = 'root';
 var root_name = 'super';
 var root_password = 'root';
 // Persistent State
-var sessionIdToUserId = new Map();
+// const sessionIdToUserId = new Map<SessionId, UserId>()
 var userIdToSessionId = new Map();
 var users = new Map();
+var subscribers = new Map();
 var tableUpdates = new Map();
 var tables = new Map();
 var rowIdToRowIndex = new Map();
-var subscribers = new Map();
 // 
 // Transient State
 var sessionIdToSocket = new Map();
@@ -27,6 +29,24 @@ function authenticate(userId, password) {
     else {
         return false;
     }
+}
+function publish(msg, callback) {
+    db.getSubscribers(function (sessionIds) {
+        if (sessionIds) {
+            sessionIds.forEach(function (sessionId) {
+                if (sessionIdToSocket.has(sessionId)) {
+                    sessionIdToSocket.get(sessionId).send(msg);
+                    callback();
+                }
+                else {
+                    console.log("can't find socket for " + sessionId);
+                }
+            });
+        }
+        else {
+            console.log("empty subscribers");
+        }
+    });
 }
 function publishTableUpdate(update) {
     subscribers.forEach(function (userId, sessionId) {
@@ -42,54 +62,80 @@ function publishTableSnap(table) {
         }
     });
 }
-function handleLogin(ws, userId, password) {
+var db = new Storage_1.RedisStorage();
+function Reply(ws) {
+    return function (msg) {
+        console.log(msg);
+        ws.send(msg);
+    };
+}
+function isRoot(userId, password) {
+    return (userId === 'root') && (password === 'root');
+}
+function handleLogin(ws, reply, userId, password) {
     console.log("login: " + userId + " " + password);
-    if (authenticate(userId, password)) {
-        if (userIdToSessionId.has(userId)) {
-            var sessionId = userIdToSessionId.get(userId);
-            sessionIdToSocket.set(sessionId, ws);
-            return Messages_1.loginSuccess(sessionId);
+    db.getUser(userId, function (user) {
+        if (!user && !isRoot(userId, password)) {
+            reply(Messages_1.loginFailure("user " + userId + " not found"));
         }
-        else {
-            var sessionId = uuid();
-            sessionIdToUserId.set(sessionId, userId);
-            userIdToSessionId.set(userId, sessionId);
-            sessionIdToSocket.set(sessionId, ws);
-            return Messages_1.loginSuccess(sessionId);
-        }
-    }
-    else {
-        return Messages_1.loginFailure('wrong user or password');
-    }
-}
-function handleLogout(userId) {
-    if (userIdToSessionId.has(userId)) {
-        var sessionId = userIdToSessionId.get(userId);
-        sessionIdToUserId.delete(sessionId);
-        userIdToSessionId.delete(userId);
-        return Messages_1.logoutSuccess();
-    }
-    else {
-        return Messages_1.logoutFailure("unknown user: " + userId);
-    }
-}
-function handleCreateUser(sessionId, userId, userName, password, creatorId) {
-    if (checkSessionId(creatorId, sessionId)) {
-        if (users.has(userId)) {
-            return Messages_1.createUserFailure("user " + userId + " exists");
-        }
-        else {
-            users.set(userId, {
-                userId: userId,
-                userName: userName,
-                password: password
+        else if (isRoot(userId, password) || (user.password === password)) {
+            db.getSessionId(userId, function (sessionId) {
+                if (!sessionId) {
+                    var sessionId_1 = uuid();
+                    sessionIdToSocket.set(sessionId_1, ws);
+                    db.setSessionId(userId, sessionId_1, function () {
+                        reply(Messages_1.loginSuccess(sessionId_1));
+                    });
+                }
+                else {
+                    reply(Messages_1.loginFailure("user " + userId + " already login"));
+                }
             });
-            return Messages_1.createUserSuccess();
         }
-    }
-    else {
-        return Messages_1.createUserFailure("unknown user " + creatorId);
-    }
+        else {
+            reply(Messages_1.loginFailure("user " + userId + " wrong password"));
+        }
+    });
+}
+function handleLogout(reply, userId) {
+    console.log("logout: " + userId);
+    db.removeSessionId(userId, function (res) {
+        if (res === 1) {
+            // FIXME: remove socket
+            reply(Messages_1.logoutSuccess());
+        }
+        else {
+            reply(Messages_1.logoutFailure("unknown user: " + userId));
+        }
+    });
+}
+function handleCreateUser(reply, sessionId, userId, userName, password, creatorId) {
+    db.getSessionId(creatorId, function (sessionId) {
+        if (sessionId) {
+            db.getUser(userId, function (user) {
+                if (user) {
+                    reply(Messages_1.createUserFailure("user " + userId + " exists"));
+                }
+                else {
+                    // users.set(userId, {
+                    //   userId: userId,
+                    //   userName: userName,
+                    //   password: password
+                    // })
+                    db.setUser(userId, {
+                        userId: userId,
+                        userName: userName,
+                        password: password
+                    }, function () {
+                        reply(Messages_1.createUserSuccess());
+                    });
+                }
+            });
+        }
+        else {
+            reply(Messages_1.createUserFailure("unknown creator " + creatorId));
+        }
+    });
 }
 function handleAppendRow(message) {
     var pl = message.payLoad;
@@ -211,40 +257,80 @@ function handleUpdateCell(message) {
         return Messages_1.updateCellFailure(tableId, rowId, columnName, 'unknown session');
     }
 }
-function handleCreateTable(message) {
+function handleCreateTable(reply, message) {
     var pl = message.payLoad;
     var sessionId = pl.sessionId;
     var tableId = pl.tableId;
     var tableName = pl.tableName;
     var columns = pl.columns;
     var creatorId = pl.creatorId;
-    if (checkSessionId(creatorId, sessionId)) {
-        if (!tableUpdates.has(tableId)) {
-            tableUpdates.set(tableId, new Map());
-            var version = 0;
-            var tableUpdate = tableUpdates.get(tableId);
-            tableUpdate.set(version, message);
-            var table = {
-                tableId: tableId,
-                tableName: tableName,
-                version: version,
-                columns: columns,
-                rows: new Array(),
-                creatorId: creatorId,
-            };
-            tables.set(tableId, table);
-            console.log("create table\n" + JSON.stringify(table) + "\n" + tableUpdate);
-            publishTableUpdate(message);
-            publishTableSnap(table);
-            return Messages_1.createTableSuccess(tableId);
+    db.getSessionId(creatorId, function (storedSessionId) {
+        if (storedSessionId != sessionId) {
+            db.getTableSnap(tableId, function (tableSnap) {
+                if (!tableSnap) {
+                    db.setTableUpdate(tableId, 0, JSON.stringify(message), function (_) {
+                        var table = {
+                            tableId: tableId,
+                            tableName: tableName,
+                            version: 0,
+                            columns: columns,
+                            rows: new Array(),
+                            creatorId: creatorId,
+                        };
+                        db.setTableSnap(tableId, table, function () {
+                            var userId = null;
+                            var tableUpdate = Messages_1.sendTableUpdate(sessionId, userId, message);
+                            publish(tableUpdate, function () {
+                                publish(table, function () {
+                                    reply(Messages_1.createTableSuccess(tableId));
+                                });
+                            });
+                        });
+                    });
+                }
+                else {
+                    reply(Messages_1.createTableFailure(tableId, "table " + tableId + " exists"));
+                }
+            });
         }
         else {
-            return Messages_1.createTableFailure(tableId, "table " + tableId + " exists");
+            reply(Messages_1.createTableFailure(tableId, sessionId + " unknown session"));
         }
+    });
+    /*
+    if (checkSessionId(creatorId, sessionId)) {
+      if (!tableUpdates.has(tableId)) {
+        tableUpdates.set(tableId, new Map<Version, any>())
+  
+        const version = 0
+        const tableUpdate = tableUpdates.get(tableId)
+        tableUpdate.set(version, message)
+  
+        const table: Table = {
+          tableId: tableId,
+          tableName: tableName,
+          version: version,
+          columns: columns,
+          rows:  new Array<Row>(),
+          creatorId: creatorId,
+        }
+  
+        tables.set(tableId, table)
+  
+        console.log(`create table\n${JSON.stringify(table)}\n${tableUpdate}`)
+  
+        publishTableUpdate(message)
+        publishTableSnap(table)
+        return createTableSuccess(tableId)
+      }
+      else {
+        return createTableFailure(tableId, `table ${tableId} exists`)
+      }
     }
     else {
-        return Messages_1.createTableFailure(tableId, 'unknown session');
+      return createTableFailure(tableId, 'unknown session')
     }
+    */
 }
 function handleSubscribeTables(ws, message) {
     var pl = message.payLoad;
@@ -273,15 +359,20 @@ function checkSessionId(userId, sessionId) {
     return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId);
 }
 function handleMessage(ws, message) {
+    var reply = Reply(ws);
     switch (message.msgType) {
         case Messages_1.MsgType.Login:
-            return handleLogin(ws, message.payLoad.userId, message.payLoad.password);
+            handleLogin(ws, reply, message.payLoad.userId, message.payLoad.password);
+            break;
         case Messages_1.MsgType.Logout:
-            return handleLogout(message.payLoad.userId);
+            handleLogout(reply, message.payLoad.userId);
+            break;
         case Messages_1.MsgType.CreateUser:
-            return handleCreateUser(message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId);
+            handleCreateUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId);
+            break;
         case Messages_1.MsgType.CreateTable:
-            return handleCreateTable(message);
+            handleCreateTable(reply, message);
+            break;
         case Messages_1.MsgType.AppendRow:
             return handleAppendRow(message);
         case Messages_1.MsgType.RemoveRow:
@@ -299,7 +390,9 @@ function handleConnection(ws) {
     ws.on('message', function (msg) {
         var message = JSON.parse(msg.toString());
         var return_message = handleMessage(ws, message);
-        ws.send(return_message);
+        // if (!return_message) {
+        //   ws.send(return_message)
+        // }
     });
 }
 wss.on('connection', handleConnection);

@@ -6,6 +6,13 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure } from './Messages'
 
+import {RedisStorage} from './Storage'
+
+import { setupMaster } from 'cluster';
+import { version } from 'punycode';
+
+// FIXME: enforce one user one session
+
 const uuid = require('uuid/v4')
 
 const wss = new Server({ port: 8080 })
@@ -14,22 +21,18 @@ const root_id = 'root'
 const root_name = 'super'
 const root_password = 'root'
 
-
-
 // Persistent State
-const sessionIdToUserId = new Map<SessionId, UserId>()
-
+// const sessionIdToUserId = new Map<SessionId, UserId>()
 const userIdToSessionId = new Map<UserId, SessionId>()
 
 const users = new Map<UserId, UserInfo>()
+const subscribers = new Map<SessionId, UserId>()
 
 const tableUpdates = new Map<TableId, Map<Version, any>>()
-
 const tables = new Map<TableId, Table>() 
 
 const rowIdToRowIndex = new Map<RowId, number>()
 
-const subscribers = new Map<SessionId, UserId>()
 // 
 
 // Transient State
@@ -45,6 +48,25 @@ function authenticate(userId: UserId, password: Password) {
   else {
     return false
   }
+}
+
+function publish(msg, callback): void {
+  db.getSubscribers(sessionIds => {
+    if (sessionIds) {
+      sessionIds.forEach(sessionId => {
+        if (sessionIdToSocket.has(sessionId)) {
+          sessionIdToSocket.get(sessionId).send(msg)
+          callback()
+        }
+        else {
+          console.log(`can't find socket for ${sessionId}`)
+        }
+      })
+    }
+    else {
+      console.log(`empty subscribers`)
+    }
+  })
 }
 
 function publishTableUpdate(update) {
@@ -63,58 +85,87 @@ function publishTableSnap(table) {
   })
 }
 
-function handleLogin(ws, userId: UserId, password: Password) {
+const db = new RedisStorage()
+
+function Reply(ws) {
+  return msg => {
+    console.log(msg)
+    ws.send(msg)
+  }
+}
+
+function isRoot(userId: UserId, password: Password) {
+  return (userId === 'root') && (password === 'root')
+}
+
+function handleLogin(ws, reply, userId: UserId, password: Password) {
   console.log(`login: ${userId} ${password}`)
 
-  if (authenticate(userId, password)) {
-    if (userIdToSessionId.has(userId)) {
-      const sessionId = userIdToSessionId.get(userId)
-      sessionIdToSocket.set(sessionId, ws)
-      return loginSuccess(sessionId)
+  db.getUser(userId, (user: UserInfo | undefined) => {
+    if (!user && !isRoot(userId, password)) {
+      reply(loginFailure(`user ${userId} not found`))
     }
-    else {
-      const sessionId = uuid()
-      sessionIdToUserId.set(sessionId, userId)
-      userIdToSessionId.set(userId, sessionId)
-      sessionIdToSocket.set(sessionId, ws)
-      return loginSuccess(sessionId)
-    }
-  }
-  else {
-    return loginFailure('wrong user or password')
-  }
-}
-
-function handleLogout(userId: UserId) {
-    if (userIdToSessionId.has(userId)) {
-      const sessionId = userIdToSessionId.get(userId)
-      sessionIdToUserId.delete(sessionId)
-      userIdToSessionId.delete(userId)
-      return logoutSuccess()
-    }
-    else {
-      return logoutFailure(`unknown user: ${userId}`)
-    }
-}
-
-function handleCreateUser(sessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
-  if (checkSessionId(creatorId, sessionId)) {
-    if (users.has(userId)) {
-        return createUserFailure(`user ${userId} exists`)
-    }
-    else {
-      users.set(userId, {
-        userId: userId,
-        userName: userName,
-        password: password
+    else if (isRoot(userId, password) || (user.password === password)) {
+      db.getSessionId(userId, (sessionId: SessionId) => {
+        if (!sessionId) {
+          const sessionId = uuid()
+          sessionIdToSocket.set(sessionId, ws)
+          db.setSessionId(userId, sessionId, () => {
+            reply(loginSuccess(sessionId))
+          })
+        }
+        else {
+          reply(loginFailure(`user ${userId} already login`))
+        }
       })
-
-      return createUserSuccess()
     }
-  }
-  else {
-      return createUserFailure(`unknown user ${creatorId}`)
-  }
+    else {
+      reply(loginFailure(`user ${userId} wrong password`))
+    }
+  })
+}
+
+function handleLogout(reply, userId: UserId) {
+  console.log(`logout: ${userId}`)
+
+  db.removeSessionId(userId, (res) => {
+    if (res === 1) {
+      // FIXME: remove socket
+      reply(logoutSuccess())
+    }
+    else {
+      reply(logoutFailure(`unknown user: ${userId}`))
+    }
+  })
+}
+
+function handleCreateUser(reply, sessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
+  db.getSessionId(creatorId, (sessionId: SessionId | undefined) => {
+    if (sessionId) {
+      db.getUser(userId, user => {
+        if (user) {
+          reply(createUserFailure(`user ${userId} exists`))
+        }
+        else {
+          // users.set(userId, {
+          //   userId: userId,
+          //   userName: userName,
+          //   password: password
+          // })
+          db.setUser(userId, {
+            userId: userId,
+            userName: userName,
+            password: password
+          }, () => {
+            reply(createUserSuccess())
+          })
+        }
+      })
+    }
+    else {
+      reply(createUserFailure(`unknown creator ${creatorId}`))
+    }
+  })
 }
 
 function handleAppendRow(message) {
@@ -252,7 +303,7 @@ function handleUpdateCell(message) {
   }
 }
 
-function handleCreateTable(message) {
+function handleCreateTable(reply, message) {
   const pl = message.payLoad
   const sessionId = pl.sessionId
   const tableId = pl.tableId 
@@ -260,6 +311,40 @@ function handleCreateTable(message) {
   const columns = pl.columns
   const creatorId = pl.creatorId
 
+  db.getSessionId(creatorId, (storedSessionId) => {
+    if (storedSessionId != sessionId) {
+      db.getTableSnap(tableId, (tableSnap) => {
+        if (!tableSnap) {
+          db.setTableUpdate(tableId, 0, JSON.stringify(message), (_) => {
+            const table: Table = {
+              tableId: tableId,
+              tableName: tableName,
+              version: 0,
+              columns: columns,
+              rows:  new Array<Row>(),
+              creatorId: creatorId,
+            }
+            db.setTableSnap(tableId, table, () => {
+              const userId = null
+              const tableUpdate = sendTableUpdate(sessionId, userId, message)
+              publish(tableUpdate, () => {
+                publish(table, () => {
+                  reply(createTableSuccess(tableId))
+                })
+              })
+            })
+          })
+        }
+        else {
+          reply(createTableFailure(tableId, `table ${tableId} exists`))
+        }
+      })
+    }
+    else {
+      reply(createTableFailure(tableId, `${sessionId} unknown session`))
+    }
+  })
+  /*
   if (checkSessionId(creatorId, sessionId)) {
     if (!tableUpdates.has(tableId)) {
       tableUpdates.set(tableId, new Map<Version, any>())
@@ -292,6 +377,7 @@ function handleCreateTable(message) {
   else {
     return createTableFailure(tableId, 'unknown session')
   }
+  */
 }
 
 function handleSubscribeTables(ws, message) {
@@ -328,16 +414,20 @@ function checkSessionId(userId: UserId, sessionId: SessionId) {
 }
 
 function handleMessage(ws, message) {
+  const reply = Reply(ws)
   switch (message.msgType) {
     case MsgType.Login:
-      return handleLogin(ws, message.payLoad.userId, message.payLoad.password)
+      handleLogin(ws, reply, message.payLoad.userId, message.payLoad.password)
+      break
     case MsgType.Logout:
-      return handleLogout(message.payLoad.userId)
+      handleLogout(reply, message.payLoad.userId)
+      break
     case MsgType.CreateUser:
-      return handleCreateUser(message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password,
-        message.payLoad.creatorId)
+      handleCreateUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId)
+      break
     case MsgType.CreateTable:
-      return handleCreateTable(message)
+      handleCreateTable(reply, message)
+      break
     case MsgType.AppendRow:
       return handleAppendRow(message)
     case MsgType.RemoveRow:
@@ -356,7 +446,9 @@ function handleConnection(ws) {
   ws.on('message', msg => {
     const message = JSON.parse(msg.toString())
     const return_message = handleMessage(ws, message)
-    ws.send(return_message)
+    // if (!return_message) {
+    //   ws.send(return_message)
+    // }
   })
 }
 
