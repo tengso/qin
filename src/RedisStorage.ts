@@ -1,5 +1,5 @@
 import { Storage } from './Storage'
-import { TableId, UserId, SessionId, UserInfo, Table, Version } from './Messages'
+import { TableId, UserId, RowId, SessionId, UserInfo, Table, Version } from './Messages'
 
 const redis = require('redis')
 
@@ -11,6 +11,7 @@ class Hash {
   Subscribers = `${this.namespace}.Subscribers`
   Tables = `${this.namespace}.Tables`
   TableUpdates = `${this.namespace}.TableUpdates`
+  RowIdIndex = `${this.namespace}.RowIdIndex`
 }
 
 export class RedisStorage implements Storage {
@@ -24,6 +25,10 @@ export class RedisStorage implements Storage {
     this.hash = new Hash(namespace)
   }
  
+  close(): void {
+    this.client.quit()
+  }
+
   beginTransaction(callback: any): void {
       throw new Error("Method not implemented.")
   }      
@@ -92,6 +97,18 @@ export class RedisStorage implements Storage {
     })
   }
 
+  removeUser(userId: UserId, callback: any): void {
+    this.client.hdel(this.hash.Users, userId, (err, res) => {
+      if (!err) {
+        callback(res)
+      }
+      else {
+        console.log(`failed to remove ${userId} ${err}`)
+        callback(undefined)
+      }
+    })
+  }
+
   setSubscriber(sessionId: string, userId: string, callback: any): void {
     this.client.hset(this.hash.Subscribers, sessionId, userId, (err, res) => {
       if (!err) {
@@ -99,17 +116,19 @@ export class RedisStorage implements Storage {
       }
       else {
         console.log(`failed to set subscriber ${sessionId} ${userId}`)
+        callback(undefined)
       }
     })
   }
 
-  removeSubscriber(sessionId: string, userId: string, callback: any): void {
+  removeSubscriber(sessionId: string, callback: any): void {
     this.client.hdel(this.hash.Subscribers, sessionId, (err, res) => {
       if (!err) {
         callback(res)
       }
       else {
-        console.log(`failed to remove subscriber ${sessionId} ${userId}`)
+        console.log(`failed to remove subscriber ${sessionId}`)
+        callback(undefined)
       }
     })
   }
@@ -117,21 +136,28 @@ export class RedisStorage implements Storage {
   getSubscribers(callback: any): void {
     this.client.hgetall(this.hash.Subscribers, (err, res) => {
       if (!err) {
-        callback(res)
+        if (res) {
+          callback(Object.keys(res))
+        }
+        else {
+          callback(null)
+        }
       }
       else {
         console.log(`failed to get subscribers`)
+        callback(undefined)
       }
     })
   }
 
   setTableSnap(tableId: string, table: Table, callback: any): void {
-    this.client.hset(this.hash.Tables, tableId, table, (err, res) => {
+    this.client.hset(this.hash.Tables, tableId, JSON.stringify(table), (err, res) => {
       if (!err) {
         callback(res)
       }
       else {
-        console.log(`failed to set table snap ${table}`)
+        console.log(`failed to set table snap ${tableId}`)
+        callback(undefined)
       }
     })
   }
@@ -141,14 +167,41 @@ export class RedisStorage implements Storage {
       if (!err) {
         callback(JSON.parse(res))
       }
+      else {
+        console.log(`failed to get table snap ${tableId}`)
+        callback(undefined)
+      }
+    })
+  }
+
+  removeTableSnap(tableId: string, callback: any): void {
+    this.client.hdel(this.hash.Tables, tableId, (err, res) => {
+      if (!err) {
+        callback(res)
+      }
+      else {
+        console.log(`failed to remove table snap ${tableId}`)
+        callback(undefined)
+      }
     })
   }
 
   getTables(callback): void {
     this.client.hgetall(this.hash.Tables, (err, res) => {
       if (!err) {
-        // FIXME: parse result
-        callback(res)
+        if (res) {
+          Object.keys(res).forEach(key => {
+            res[key] = JSON.parse(res[key])
+          })
+          callback(res)
+        }
+        else {
+          callback(null)
+        }
+      }
+      else {
+        console.log(`failed to get tables`)
+        callback(undefined)
       }
     })
   }
@@ -165,15 +218,61 @@ export class RedisStorage implements Storage {
     })
   }
 
-  // getTableUpdate(tableId: string, callback: any): Map<number, any> {
-  //     throw new Error("Method not implemented.");
-  // }
-
-  setRowIndex(rowId: string, rowIndex: number, callback: any): void {
-      throw new Error("Method not implemented.");
+  getTableUpdate(tableId: string, version: Version, callback: any): void {
+    this.client.hget(this.hash.TableUpdates, JSON.stringify([tableId, version]), (err, res) => {
+      if (!err) {
+        if (res) {
+          callback(JSON.parse(res))
+        }
+        else {
+          callback(null)
+        }
+      }
+      else {
+        console.log(`failed to get for ${tableId} ${version}`)
+        callback(undefined)
+      }
+    })
   }
 
-  getRowIndex(rowId: string, callback: any): number {
-      throw new Error("Method not implemented.");
+  setRowIndex(rowId: RowId, rowIndex: number, callback: any): void {
+    this.client.hset(this.hash.RowIdIndex, rowId, rowIndex, (err, res) => {
+      if (!err) {
+        callback(res)
+      }
+      else {
+        console.log(`failed to set row index for ${rowId} ${rowIndex}`)
+        callback(undefined)
+      }
+    })
+  }
+
+  getRowIndex(rowId: RowId, callback: any): void {
+    this.client.hget(this.hash.RowIdIndex, rowId, (err, res) => {
+      if (!err) {
+        if (res) {
+          callback(Number(res))
+        }
+        else {
+          callback(null)
+        }
+      }
+      else {
+        console.log(`failed to set row index for ${rowId}`)
+        callback(undefined)
+      }
+    })
+  }
+
+  removeRowIndex(rowId: string, callback: any): void {
+    this.client.hdel(this.hash.RowIdIndex, rowId, (err, res) => {
+      if (!err) {
+        callback(res)
+      }
+      else {
+        console.log(`failed to set row index for ${rowId}`)
+        callback(undefined)
+      }
+    })
   }
 }

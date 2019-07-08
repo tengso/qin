@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var ws_1 = require("ws");
 var Messages_1 = require("./Messages");
-var Storage_1 = require("./Storage");
+var RedisStorage_1 = require("./RedisStorage");
 // FIXME: enforce one user one session
 var uuid = require('uuid/v4');
 var wss = new ws_1.Server({ port: 8080 });
@@ -22,14 +22,14 @@ var rowIdToRowIndex = new Map();
 var sessionIdToSocket = new Map();
 // 
 users.set(root_id, { userId: root_id, userName: root_name, password: root_password });
-function authenticate(userId, password) {
-    if (users.has(userId)) {
-        return users.get(userId).password === password;
-    }
-    else {
-        return false;
-    }
-}
+// function authenticate(userId: UserId, password: Password) {
+//   if (users.has(userId)) {
+//       return users.get(userId).password === password
+//   }
+//   else {
+//     return false
+//   }
+// }
 function publish(msg, callback) {
     db.getSubscribers(function (sessionIds) {
         if (sessionIds) {
@@ -62,7 +62,7 @@ function publishTableSnap(table) {
         }
     });
 }
-var db = new Storage_1.RedisStorage();
+var db = new RedisStorage_1.RedisStorage();
 function Reply(ws) {
     return function (msg) {
         console.log(msg);

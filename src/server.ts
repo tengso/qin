@@ -6,10 +6,8 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure } from './Messages'
 
-import {RedisStorage} from './Storage'
-
-import { setupMaster } from 'cluster';
-import { version } from 'punycode';
+import {Storage} from './Storage'
+import {RedisStorage} from './RedisStorage'
 
 // FIXME: enforce one user one session
 
@@ -41,14 +39,14 @@ const sessionIdToSocket = new Map<SessionId, WebSocket>()
 
 users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
 
-function authenticate(userId: UserId, password: Password) {
-  if (users.has(userId)) {
-      return users.get(userId).password === password
-  }
-  else {
-    return false
-  }
-}
+// function authenticate(userId: UserId, password: Password) {
+//   if (users.has(userId)) {
+//       return users.get(userId).password === password
+//   }
+//   else {
+//     return false
+//   }
+// }
 
 function publish(msg, callback): void {
   db.getSubscribers(sessionIds => {
@@ -69,23 +67,23 @@ function publish(msg, callback): void {
   })
 }
 
-function publishTableUpdate(update) {
-  subscribers.forEach((userId, sessionId) => {
-    if (sessionIdToSocket.has(sessionId)) {
-      sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
-    }
-  })
-}
+// function publishTableUpdate(update) {
+//   subscribers.forEach((userId, sessionId) => {
+//     if (sessionIdToSocket.has(sessionId)) {
+//       sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
+//     }
+//   })
+// }
 
-function publishTableSnap(table) {
-  subscribers.forEach((userId, sessionId) => {
-    if (sessionIdToSocket.has(sessionId)) {
-      sessionIdToSocket.get(sessionId).send(sendTableSnap(sessionId, userId, table))
-    }
-  })
-}
+// function publishTableSnap(table) {
+//   subscribers.forEach((userId, sessionId) => {
+//     if (sessionIdToSocket.has(sessionId)) {
+//       sessionIdToSocket.get(sessionId).send(sendTableSnap(sessionId, userId, table))
+//     }
+//   })
+// }
 
-const db = new RedisStorage()
+const db: Storage = new RedisStorage()
 
 function Reply(ws) {
   return msg => {
@@ -127,11 +125,12 @@ function handleLogin(ws, reply, userId: UserId, password: Password) {
 
 function handleLogout(reply, userId: UserId) {
   console.log(`logout: ${userId}`)
-
-  db.removeSessionId(userId, (res) => {
-    if (res === 1) {
-      // FIXME: remove socket
-      reply(logoutSuccess())
+  db.getSessionId(userId, (sessionId) => {
+    if (sessionId) {
+      db.removeSessionId(userId, (res) => {
+          sessionIdToSocket.delete(sessionId)
+          reply(logoutSuccess())
+      })
     }
     else {
       reply(logoutFailure(`unknown user: ${userId}`))
@@ -140,7 +139,7 @@ function handleLogout(reply, userId: UserId) {
 }
 
 function handleCreateUser(reply, sessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
-  db.getSessionId(creatorId, (sessionId: SessionId | undefined) => {
+  db.getSessionId(creatorId, (sessionId) => {
     if (sessionId) {
       db.getUser(userId, user => {
         if (user) {
@@ -168,45 +167,52 @@ function handleCreateUser(reply, sessionId: SessionId, userId: UserId, userName:
   })
 }
 
-function handleAppendRow(message) {
+function handleAppendRow(reply, message) {
   const pl = message.payLoad
-  const sessionId = pl.sessionId
+  const uncheckedSessionId = pl.sessionId
   const tableId = pl.tableId 
   const rowId = pl.rowId
   const values = pl.values
   const updatorId = pl.updatorId
 
-  if (checkSessionId(updatorId, sessionId)) {
-    if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-      return appendTableRowFailure(rowId, `table ${tableId} not exists`)
+  // console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
+
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId == uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          table.version = table.version + 1
+          table.rows.push({
+            rowId: rowId,
+            values: values
+          })
+
+          db.setTableSnap(tableId, table, () => {
+            db.setRowIndex(rowId, table.rows.length -1, () => {
+              db.setTableUpdate(tableId, table.version, message, () => {
+                const update = {
+                  updateType: message.msgType,
+                  tableId: tableId,
+                  rowId: rowId,
+                  values: values
+                }
+                const msg = sendTableUpdate(sessionId, updatorId, update)
+                publish(msg, () => {
+                  reply.send(appendTableRowSuccess(rowId))
+                })
+              })
+            })
+          })
+        }
+        else {
+          reply.send(appendTableRowFailure(rowId, `table ${tableId} not exists`))
+        }
+      })
     }
     else {
-      const table = tables.get(tableId)
-      table.version = table.version + 1
-      table.rows.push({
-        rowId: rowId,
-        values: values
-      })
-      tables.set(tableId, table)
-      rowIdToRowIndex.set(rowId, table.rows.length - 1)
-
-      const tableUpdate = tableUpdates.get(tableId)
-      tableUpdate.set(table.version, message)
-
-      console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
-
-      publishTableUpdate({
-        updateType: message.msgType,
-        tableId: tableId,
-        rowId: rowId,
-        values: values
-      })
-      return appendTableRowSuccess(rowId)
+      reply.send(appendTableRowFailure(rowId, 'unknown session'))
     }
-  }
-  else {
-    return appendTableRowFailure(rowId, 'unknown session')
-  }
+  })
 }
 
 function handleRemoveRow(message) {
@@ -429,7 +435,8 @@ function handleMessage(ws, message) {
       handleCreateTable(reply, message)
       break
     case MsgType.AppendRow:
-      return handleAppendRow(message)
+      return handleAppendRow(reply, message)
+      break
     case MsgType.RemoveRow:
       return handleRemoveRow(message)
     case MsgType.UpdateCell:
