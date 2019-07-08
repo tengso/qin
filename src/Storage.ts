@@ -26,4 +26,5 @@ export interface Storage {
 
   setRowIndex(rowId: RowId, rowIndex: number, callback): void
   getRowIndex(rowId: RowId, callback): void
+  removeRowIndex(rowId: RowId, callback): void
 }

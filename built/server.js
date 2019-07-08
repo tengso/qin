@@ -11,17 +11,17 @@ var root_name = 'super';
 var root_password = 'root';
 // Persistent State
 // const sessionIdToUserId = new Map<SessionId, UserId>()
-var userIdToSessionId = new Map();
-var users = new Map();
-var subscribers = new Map();
-var tableUpdates = new Map();
-var tables = new Map();
-var rowIdToRowIndex = new Map();
-// 
+// const userIdToSessionId = new Map<UserId, SessionId>()
+// const users = new Map<UserId, UserInfo>()
+// const subscribers = new Map<SessionId, UserId>()
+// const tableUpdates = new Map<TableId, Map<Version, any>>()
+// const tables = new Map<TableId, Table>() 
+// const rowIdToRowIndex = new Map<RowId, number>()
+// // 
 // Transient State
 var sessionIdToSocket = new Map();
 // 
-users.set(root_id, { userId: root_id, userName: root_name, password: root_password });
+// users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
 // function authenticate(userId: UserId, password: Password) {
 //   if (users.has(userId)) {
 //       return users.get(userId).password === password
@@ -48,20 +48,20 @@ function publish(msg, callback) {
         }
     });
 }
-function publishTableUpdate(update) {
-    subscribers.forEach(function (userId, sessionId) {
-        if (sessionIdToSocket.has(sessionId)) {
-            sessionIdToSocket.get(sessionId).send(Messages_1.sendTableUpdate(sessionId, userId, update));
-        }
-    });
-}
-function publishTableSnap(table) {
-    subscribers.forEach(function (userId, sessionId) {
-        if (sessionIdToSocket.has(sessionId)) {
-            sessionIdToSocket.get(sessionId).send(Messages_1.sendTableSnap(sessionId, userId, table));
-        }
-    });
-}
+// function publishTableUpdate(update) {
+//   subscribers.forEach((userId, sessionId) => {
+//     if (sessionIdToSocket.has(sessionId)) {
+//       sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
+//     }
+//   })
+// }
+// function publishTableSnap(table) {
+//   subscribers.forEach((userId, sessionId) => {
+//     if (sessionIdToSocket.has(sessionId)) {
+//       sessionIdToSocket.get(sessionId).send(sendTableSnap(sessionId, userId, table))
+//     }
+//   })
+// }
 var db = new RedisStorage_1.RedisStorage();
 function Reply(ws) {
     return function (msg) {
@@ -99,10 +99,12 @@ function handleLogin(ws, reply, userId, password) {
 }
 function handleLogout(reply, userId) {
     console.log("logout: " + userId);
-    db.removeSessionId(userId, function (res) {
-        if (res === 1) {
-            // FIXME: remove socket
-            reply(Messages_1.logoutSuccess());
+    db.getSessionId(userId, function (sessionId) {
+        if (sessionId) {
+            db.removeSessionId(userId, function (res) {
+                sessionIdToSocket.delete(sessionId);
+                reply(Messages_1.logoutSuccess());
+            });
         }
         else {
             reply(Messages_1.logoutFailure("unknown user: " + userId));
@@ -137,125 +139,148 @@ function handleCreateUser(reply, sessionId, userId, userName, password, creatorI
         }
     });
 }
-function handleAppendRow(message) {
+function handleAppendRow(reply, message) {
     var pl = message.payLoad;
-    var sessionId = pl.sessionId;
+    var uncheckedSessionId = pl.sessionId;
     var tableId = pl.tableId;
     var rowId = pl.rowId;
     var values = pl.values;
     var updatorId = pl.updatorId;
-    if (checkSessionId(updatorId, sessionId)) {
-        if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-            return Messages_1.appendTableRowFailure(rowId, "table " + tableId + " not exists");
+    // console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
+    db.getSessionId(updatorId, function (sessionId) {
+        if (sessionId && sessionId == uncheckedSessionId) {
+            db.getTableSnap(tableId, function (table) {
+                if (table) {
+                    table.version = table.version + 1;
+                    table.rows.push({
+                        rowId: rowId,
+                        values: values
+                    });
+                    db.setTableSnap(tableId, table, function () {
+                        db.setRowIndex(rowId, table.rows.length - 1, function () {
+                            db.setTableUpdate(tableId, table.version, message, function () {
+                                var update = {
+                                    updateType: message.msgType,
+                                    tableId: tableId,
+                                    rowId: rowId,
+                                    values: values
+                                };
+                                var msg = Messages_1.sendTableUpdate(sessionId, updatorId, update);
+                                publish(msg, function () {
+                                    reply(Messages_1.appendTableRowSuccess(rowId));
+                                });
+                            });
+                        });
+                    });
+                }
+                else {
+                    reply(Messages_1.appendTableRowFailure(rowId, "table " + tableId + " not exists"));
+                }
+            });
         }
         else {
-            var table = tables.get(tableId);
-            table.version = table.version + 1;
-            table.rows.push({
-                rowId: rowId,
-                values: values
-            });
-            tables.set(tableId, table);
-            rowIdToRowIndex.set(rowId, table.rows.length - 1);
-            var tableUpdate = tableUpdates.get(tableId);
-            tableUpdate.set(table.version, message);
-            console.log("append row\n" + JSON.stringify(table) + "\n" + tableUpdate);
-            publishTableUpdate({
-                updateType: message.msgType,
-                tableId: tableId,
-                rowId: rowId,
-                values: values
-            });
-            return Messages_1.appendTableRowSuccess(rowId);
+            reply(Messages_1.appendTableRowFailure(rowId, 'unknown session'));
         }
-    }
-    else {
-        return Messages_1.appendTableRowFailure(rowId, 'unknown session');
-    }
+    });
 }
-function handleRemoveRow(message) {
+function handleRemoveRow(reply, message) {
     var pl = message.payLoad;
-    var sessionId = pl.sessionId;
+    var uncheckedSessionId = pl.sessionId;
     var tableId = pl.tableId;
     var rowId = pl.rowId;
     var updatorId = pl.updatorId;
-    if (checkSessionId(updatorId, sessionId)) {
-        if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-            return Messages_1.removeTableRowFailure(rowId, "table " + tableId + " not exists");
+    db.getSessionId(updatorId, function (sessionId) {
+        if (sessionId && sessionId === uncheckedSessionId) {
+            db.getTableSnap(tableId, function (table) {
+                if (table) {
+                    db.getRowIndex(rowId, function (rowIndex) {
+                        if (rowIndex != null) {
+                            table.rows.splice(rowIndex, 1);
+                            table.version = table.version + 1;
+                            db.setTableSnap(tableId, table, function () {
+                                db.setTableUpdate(tableId, table.version, message, function () {
+                                    db.removeRowIndex(rowId, function () {
+                                        var update = {
+                                            updateType: message.msgType,
+                                            tableId: tableId,
+                                            rowId: rowId,
+                                        };
+                                        var msg = Messages_1.sendTableUpdate(sessionId, updatorId, update);
+                                        publish(msg, function () {
+                                            reply(Messages_1.removeTableRowSuccess(rowId));
+                                        });
+                                    });
+                                });
+                            });
+                        }
+                        else {
+                            reply(Messages_1.removeTableRowFailure(rowId, "table " + rowId + " not exists"));
+                        }
+                    });
+                }
+                else {
+                    reply(Messages_1.removeTableRowFailure(rowId, "table " + tableId + " not exists"));
+                }
+            });
         }
         else {
-            if (!rowIdToRowIndex.has(rowId)) {
-                return Messages_1.removeTableRowFailure(rowId, "row " + rowId + " not exists");
-            }
-            else {
-                var table = tables.get(tableId);
-                table.rows.splice(rowIdToRowIndex.get(rowId), 1);
-                table.version = table.version + 1;
-                tables.set(tableId, table);
-                tableUpdates.get(tableId).set(table.version, message);
-                rowIdToRowIndex.delete(rowId);
-                // console.log(tableUpdates)
-                // console.log(tables)
-                publishTableUpdate({
-                    updateType: message.msgType,
-                    tableId: tableId,
-                    rowId: rowId,
-                });
-                return Messages_1.removeTableRowSuccess(rowId);
-            }
+            reply(Messages_1.appendTableRowFailure(rowId, 'unknown session'));
         }
-    }
-    else {
-        return Messages_1.appendTableRowFailure(rowId, 'unknown session');
-    }
+    });
 }
-function handleUpdateCell(message) {
+function handleUpdateCell(reply, message) {
     var pl = message.payLoad;
-    var sessionId = pl.sessionId;
+    var uncheckedSessionId = pl.sessionId;
     var tableId = pl.tableId;
     var rowId = pl.rowId;
     var columnName = pl.columnName;
     var value = pl.value;
     var updatorId = pl.updatorId;
-    if (checkSessionId(updatorId, sessionId)) {
-        if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-            return Messages_1.updateCellFailure(tableId, rowId, columnName, "table " + tableId + " not exists");
-        }
-        else {
-            if (!rowIdToRowIndex.has(rowId)) {
-                return Messages_1.updateCellFailure(tableId, rowId, columnName, "row " + rowId + " not exists");
-            }
-            else {
-                var table = tables.get(tableId);
-                var columnIndex = table.columns.indexOf(columnName);
-                if (columnIndex === -1) {
-                    return Messages_1.updateCellFailure(tableId, rowId, columnName, "column " + columnName + " not exists");
+    db.getSessionId(updatorId, function (sessionId) {
+        if (sessionId && sessionId === uncheckedSessionId) {
+            db.getTableSnap(tableId, function (table) {
+                if (table) {
+                    db.getRowIndex(rowId, function (rowIndex) {
+                        if (rowIndex != null) {
+                            var columnIndex_1 = table.columns.indexOf(columnName);
+                            if (columnIndex_1 === -1) {
+                                reply(Messages_1.updateCellFailure(tableId, rowId, columnName, "column " + columnName + " not exists"));
+                            }
+                            else {
+                                table.version = table.version + 1;
+                                var row = table.rows[rowIndex];
+                                row.values[columnIndex_1] = value;
+                                db.setTableSnap(tableId, table, function () {
+                                    db.setTableUpdate(tableId, table.version, message, function () {
+                                        var update = {
+                                            updateType: message.msgType,
+                                            tableId: tableId,
+                                            rowId: rowId,
+                                            columnIndex: columnIndex_1,
+                                            value: value,
+                                        };
+                                        var msg = Messages_1.sendTableUpdate(sessionId, updatorId, update);
+                                        publish(msg, function () {
+                                            reply(Messages_1.updateCellSuccess(tableId, rowId, columnName));
+                                        });
+                                    });
+                                });
+                            }
+                        }
+                        else {
+                            reply(Messages_1.updateCellFailure(tableId, rowId, columnName, "row " + rowId + " not exists"));
+                        }
+                    });
                 }
                 else {
-                    table.version = table.version + 1;
-                    var row = table.rows[rowIdToRowIndex.get(rowId)];
-                    row.values[columnIndex] = value;
-                    tables.set(tableId, table);
-                    tableUpdates.get(tableId).set(table.version, message);
-                    // console.log(tableUpdates)
-                    // console.log(tables)
-                    // console.log(tables.get(tableId).rows[0].values)
-                    publishTableUpdate({
-                        updateType: message.msgType,
-                        tableId: tableId,
-                        rowId: rowId,
-                        columnIndex: columnIndex,
-                        value: value,
-                    });
-                    // FIXME: pass column index instead
-                    return Messages_1.updateCellSuccess(tableId, rowId, columnName);
+                    reply(Messages_1.updateCellFailure(tableId, rowId, columnName, "table " + tableId + " not exists"));
                 }
-            }
+            });
         }
-    }
-    else {
-        return Messages_1.updateCellFailure(tableId, rowId, columnName, 'unknown session');
-    }
+        else {
+            reply(Messages_1.updateCellFailure(tableId, rowId, columnName, 'unknown session'));
+        }
+    });
 }
 function handleCreateTable(reply, message) {
     var pl = message.payLoad;
@@ -332,32 +357,32 @@ function handleCreateTable(reply, message) {
     }
     */
 }
-function handleSubscribeTables(ws, message) {
+function handleSubscribeTables(reply, message) {
     var pl = message.payLoad;
-    var sessionId = pl.sessionId;
+    var uncheckedSessionId = pl.sessionId;
     var subscriberId = pl.subscriberId;
-    if (checkSessionId(subscriberId, sessionId)) {
-        if (sessionIdToSocket.has(sessionId)) {
-            var wws_1 = sessionIdToSocket.get(sessionId);
-            subscribers.set(sessionId, subscriberId);
-            tables.forEach(function (table, _) {
-                console.log(table);
-                wws_1.send(Messages_1.sendTableSnap(sessionId, subscriberId, table));
+    db.getSessionId(subscriberId, function (sessionId) {
+        if (sessionId && sessionId === uncheckedSessionId) {
+            db.setSubscriber(sessionId, subscriberId, function () {
+                db.getTables(function (tables) {
+                    if (tables) {
+                        tables.forEach(function (table, _) {
+                            console.log(table);
+                            reply(Messages_1.sendTableSnap(sessionId, subscriberId, table));
+                            reply(Messages_1.subscribeTablesSuccess(sessionId, subscriberId));
+                        });
+                    }
+                });
             });
-            // FIXME: should send response before sending table
-            return Messages_1.subscribeTablesSuccess(sessionId, subscriberId);
         }
         else {
-            return Messages_1.subscribeTablesFailure(sessionId, subscriberId, subscriberId + " sessionId: " + sessionId + " socket not found");
+            reply(Messages_1.subscribeTablesFailure(sessionId, subscriberId, "subscriberId: " + subscriberId + " not login"));
         }
-    }
-    else {
-        return Messages_1.subscribeTablesFailure(sessionId, subscriberId, "subscriberId: " + subscriberId + " not login");
-    }
+    });
 }
-function checkSessionId(userId, sessionId) {
-    return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId);
-}
+// function checkSessionId(userId: UserId, sessionId: SessionId) {
+//   return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
+// }
 function handleMessage(ws, message) {
     var reply = Reply(ws);
     switch (message.msgType) {
@@ -374,13 +399,16 @@ function handleMessage(ws, message) {
             handleCreateTable(reply, message);
             break;
         case Messages_1.MsgType.AppendRow:
-            return handleAppendRow(message);
+            handleAppendRow(reply, message);
+            break;
         case Messages_1.MsgType.RemoveRow:
-            return handleRemoveRow(message);
+            handleRemoveRow(reply, message);
+            break;
         case Messages_1.MsgType.UpdateCell:
-            return handleUpdateCell(message);
+            handleUpdateCell(reply, message);
+            break;
         case Messages_1.MsgType.SubscribeTables:
-            return handleSubscribeTables(ws, message);
+            handleSubscribeTables(reply, message);
         default:
             console.log("Unknown Msg");
             break;

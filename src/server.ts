@@ -21,23 +21,23 @@ const root_password = 'root'
 
 // Persistent State
 // const sessionIdToUserId = new Map<SessionId, UserId>()
-const userIdToSessionId = new Map<UserId, SessionId>()
+// const userIdToSessionId = new Map<UserId, SessionId>()
 
-const users = new Map<UserId, UserInfo>()
-const subscribers = new Map<SessionId, UserId>()
+// const users = new Map<UserId, UserInfo>()
+// const subscribers = new Map<SessionId, UserId>()
 
-const tableUpdates = new Map<TableId, Map<Version, any>>()
-const tables = new Map<TableId, Table>() 
+// const tableUpdates = new Map<TableId, Map<Version, any>>()
+// const tables = new Map<TableId, Table>() 
 
-const rowIdToRowIndex = new Map<RowId, number>()
+// const rowIdToRowIndex = new Map<RowId, number>()
 
-// 
+// // 
 
 // Transient State
 const sessionIdToSocket = new Map<SessionId, WebSocket>()
 // 
 
-users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
+// users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
 
 // function authenticate(userId: UserId, password: Password) {
 //   if (users.has(userId)) {
@@ -198,115 +198,125 @@ function handleAppendRow(reply, message) {
                 }
                 const msg = sendTableUpdate(sessionId, updatorId, update)
                 publish(msg, () => {
-                  reply.send(appendTableRowSuccess(rowId))
+                  reply(appendTableRowSuccess(rowId))
                 })
               })
             })
           })
         }
         else {
-          reply.send(appendTableRowFailure(rowId, `table ${tableId} not exists`))
+          reply(appendTableRowFailure(rowId, `table ${tableId} not exists`))
         }
       })
     }
     else {
-      reply.send(appendTableRowFailure(rowId, 'unknown session'))
+      reply(appendTableRowFailure(rowId, 'unknown session'))
     }
   })
 }
 
-function handleRemoveRow(message) {
+function handleRemoveRow(reply, message) {
   const pl = message.payLoad
-  const sessionId = pl.sessionId
+  const uncheckedSessionId = pl.sessionId
   const tableId = pl.tableId 
   const rowId = pl.rowId
   const updatorId = pl.updatorId
 
-  if (checkSessionId(updatorId, sessionId)) {
-    if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-      return removeTableRowFailure(rowId, `table ${tableId} not exists`)
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          db.getRowIndex(rowId, rowIndex => {
+            if (rowIndex != null) {
+              table.rows.splice(rowIndex, 1)
+              table.version = table.version + 1
+              db.setTableSnap(tableId, table, () => {
+                db.setTableUpdate(tableId, table.version, message, () => {
+                  db.removeRowIndex(rowId, () => {
+                    const update = {
+                      updateType: message.msgType,
+                      tableId: tableId,
+                      rowId: rowId,
+                    }
+                    const msg = sendTableUpdate(sessionId, updatorId, update)
+                    publish(msg, () => {
+                      reply(removeTableRowSuccess(rowId))
+                    })
+                  })
+                }) 
+              })
+            }
+            else {
+              reply(removeTableRowFailure(rowId, `table ${rowId} not exists`))
+            }
+          })
+        }
+        else {
+          reply(removeTableRowFailure(rowId, `table ${tableId} not exists`))
+        }
+      })
     }
     else {
-      if (!rowIdToRowIndex.has(rowId)) {
-        return removeTableRowFailure(rowId, `row ${rowId} not exists`)
-      }
-      else {
-        const table = tables.get(tableId)
-        table.rows.splice(rowIdToRowIndex.get(rowId), 1)
-        table.version = table.version + 1
-        tables.set(tableId, table)
-        tableUpdates.get(tableId).set(table.version, message)
-
-        rowIdToRowIndex.delete(rowId)
-        // console.log(tableUpdates)
-        // console.log(tables)
-
-        publishTableUpdate({
-          updateType: message.msgType,
-          tableId: tableId,
-          rowId: rowId,
-        })
-        return removeTableRowSuccess(rowId)
-      }
+      reply(appendTableRowFailure(rowId, 'unknown session'))
     }
-  }
-  else {
-    return appendTableRowFailure(rowId, 'unknown session')
-  }
+  }) 
 }
 
-function handleUpdateCell(message) {
+function handleUpdateCell(reply, message) {
   const pl = message.payLoad
-  const sessionId = pl.sessionId
+  const uncheckedSessionId = pl.sessionId
   const tableId = pl.tableId 
   const rowId = pl.rowId
   const columnName = pl.columnName
   const value = pl.value
   const updatorId = pl.updatorId
 
-  if (checkSessionId(updatorId, sessionId)) {
-    if (!tableUpdates.has(tableId) || !tables.has(tableId)) {
-      return updateCellFailure(tableId, rowId, columnName, `table ${tableId} not exists`)
-    }
-    else {
-      if (!rowIdToRowIndex.has(rowId)) {
-        return updateCellFailure(tableId, rowId, columnName, `row ${rowId} not exists`)
-      }
-      else {
-        const table = tables.get(tableId)
-        const columnIndex = table.columns.indexOf(columnName)
-        if (columnIndex === -1) {
-          return updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`)
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          db.getRowIndex(rowId, rowIndex => {
+            if (rowIndex != null) {
+              const columnIndex = table.columns.indexOf(columnName)
+              if (columnIndex === -1) {
+                reply(updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`))
+              }
+              else {
+                table.version = table.version + 1
+                const row = table.rows[rowIndex]
+                row.values[columnIndex] = value
+
+                db.setTableSnap(tableId, table, () => {
+                  db.setTableUpdate(tableId, table.version, message, () => {
+                    const update = {
+                      updateType: message.msgType,
+                      tableId: tableId,
+                      rowId: rowId,
+                      columnIndex: columnIndex,
+                      value: value,
+                    }
+                    const msg = sendTableUpdate(sessionId, updatorId, update)
+                    publish(msg, () => {
+                      reply(updateCellSuccess(tableId, rowId, columnName))
+                    })
+                  })
+                })
+              }
+            }
+            else {
+              reply(updateCellFailure(tableId, rowId, columnName, `row ${rowId} not exists`))
+            }
+          })
         }
         else {
-          table.version = table.version + 1
-          const row = table.rows[rowIdToRowIndex.get(rowId)]
-          row.values[columnIndex] = value
-
-          tables.set(tableId, table)
-          tableUpdates.get(tableId).set(table.version, message)
-
-          // console.log(tableUpdates)
-          // console.log(tables)
-
-          // console.log(tables.get(tableId).rows[0].values)
-
-          publishTableUpdate({
-            updateType: message.msgType,
-            tableId: tableId,
-            rowId: rowId,
-            columnIndex: columnIndex,
-            value: value,
-          })
-          // FIXME: pass column index instead
-          return updateCellSuccess(tableId, rowId, columnName)
+          reply(updateCellFailure(tableId, rowId, columnName, `table ${tableId} not exists`))
         }
-      }
+      })
     }
-  }
-  else {
-    return updateCellFailure(tableId, rowId, columnName, 'unknown session')
-  }
+    else {
+      reply(updateCellFailure(tableId, rowId, columnName, 'unknown session'))
+    }
+  }) 
 }
 
 function handleCreateTable(reply, message) {
@@ -386,38 +396,34 @@ function handleCreateTable(reply, message) {
   */
 }
 
-function handleSubscribeTables(ws, message) {
+function handleSubscribeTables(reply, message) {
   const pl = message.payLoad
-  const sessionId = pl.sessionId
+  const uncheckedSessionId = pl.sessionId
   const subscriberId = pl.subscriberId
 
-  if (checkSessionId(subscriberId, sessionId)) {
-    if (sessionIdToSocket.has(sessionId)) {
-      const wws: WebSocket = sessionIdToSocket.get(sessionId)
-
-      subscribers.set(sessionId, subscriberId)
-
-      tables.forEach((table, _) =>{
-        console.log(table)
-        wws.send(sendTableSnap(sessionId, subscriberId, table))
+  db.getSessionId(subscriberId, sessionId => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.setSubscriber(sessionId, subscriberId, () => {
+        db.getTables(tables => {
+          if (tables) {
+            tables.forEach((table, _) =>{
+              console.log(table)
+              reply(sendTableSnap(sessionId, subscriberId, table))
+              reply(subscribeTablesSuccess(sessionId, subscriberId))
+            })
+          }
+        })
       })
-
-      // FIXME: should send response before sending table
-      return subscribeTablesSuccess(sessionId, subscriberId)
     }
     else {
-      return subscribeTablesFailure(sessionId, subscriberId, `${subscriberId} sessionId: ${sessionId} socket not found`)
+      reply(subscribeTablesFailure(sessionId, subscriberId, `subscriberId: ${subscriberId} not login`))
     }
-  }
-  else {
-    return subscribeTablesFailure(sessionId, subscriberId, `subscriberId: ${subscriberId} not login`)
-  }
+  }) 
 }
 
-
-function checkSessionId(userId: UserId, sessionId: SessionId) {
-  return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
-}
+// function checkSessionId(userId: UserId, sessionId: SessionId) {
+//   return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
+// }
 
 function handleMessage(ws, message) {
   const reply = Reply(ws)
@@ -435,14 +441,16 @@ function handleMessage(ws, message) {
       handleCreateTable(reply, message)
       break
     case MsgType.AppendRow:
-      return handleAppendRow(reply, message)
+      handleAppendRow(reply, message)
       break
     case MsgType.RemoveRow:
-      return handleRemoveRow(message)
+      handleRemoveRow(reply, message)
+      break
     case MsgType.UpdateCell:
-      return handleUpdateCell(message)
+      handleUpdateCell(reply, message)
+      break
     case MsgType.SubscribeTables:
-      return handleSubscribeTables(ws, message)
+      handleSubscribeTables(reply, message)
     default:
       console.log(`Unknown Msg`)
       break
