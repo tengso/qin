@@ -13,8 +13,6 @@ import {RedisStorage} from './RedisStorage'
 
 const uuid = require('uuid/v4')
 
-const wss = new Server({ port: 8080 })
-
 const root_id = 'root'
 const root_name = 'super'
 const root_password = 'root'
@@ -421,50 +419,46 @@ function handleSubscribeTables(reply, message) {
   }) 
 }
 
-// function checkSessionId(userId: UserId, sessionId: SessionId) {
-//   return (userIdToSessionId.has(userId) && userIdToSessionId.get(userId) === sessionId)
-// }
+export class TableFlowServer {
+  constructor() {
+    const wss = new Server({ port: 8080 })
+    wss.on('connection',  ws => {
+      ws.on('message', msg => {
+        const message = JSON.parse(msg.toString())
+        this.handleMessage(ws, message)
+      })
+    })
+  }
 
-function handleMessage(ws, message) {
-  const reply = Reply(ws)
-  switch (message.msgType) {
-    case MsgType.Login:
-      handleLogin(ws, reply, message.payLoad.userId, message.payLoad.password)
-      break
-    case MsgType.Logout:
-      handleLogout(reply, message.payLoad.userId)
-      break
-    case MsgType.CreateUser:
-      handleCreateUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId)
-      break
-    case MsgType.CreateTable:
-      handleCreateTable(reply, message)
-      break
-    case MsgType.AppendRow:
-      handleAppendRow(reply, message)
-      break
-    case MsgType.RemoveRow:
-      handleRemoveRow(reply, message)
-      break
-    case MsgType.UpdateCell:
-      handleUpdateCell(reply, message)
-      break
-    case MsgType.SubscribeTables:
-      handleSubscribeTables(reply, message)
-    default:
-      console.log(`Unknown Msg`)
-      break
+  handleMessage = (ws, message) => {
+    const reply = Reply(ws)
+    switch (message.msgType) {
+      case MsgType.Login:
+        handleLogin(ws, reply, message.payLoad.userId, message.payLoad.password)
+        break
+      case MsgType.Logout:
+        handleLogout(reply, message.payLoad.userId)
+        break
+      case MsgType.CreateUser:
+        handleCreateUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId)
+        break
+      case MsgType.CreateTable:
+        handleCreateTable(reply, message)
+        break
+      case MsgType.AppendRow:
+        handleAppendRow(reply, message)
+        break
+      case MsgType.RemoveRow:
+        handleRemoveRow(reply, message)
+        break
+      case MsgType.UpdateCell:
+        handleUpdateCell(reply, message)
+        break
+      case MsgType.SubscribeTables:
+        handleSubscribeTables(reply, message)
+      default:
+        console.log(`Unknown Msg`)
+        break
+    }
   }
 }
-
-function handleConnection(ws) {
-  ws.on('message', msg => {
-    const message = JSON.parse(msg.toString())
-    const return_message = handleMessage(ws, message)
-    // if (!return_message) {
-    //   ws.send(return_message)
-    // }
-  })
-}
-
-wss.on('connection', handleConnection)

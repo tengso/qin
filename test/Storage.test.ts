@@ -5,11 +5,11 @@ import { UserInfo, Table } from '../src/Messages';
 
 let s
 
-beforeEach(() => {
+before(() => {
   s = new RedisStorage('test')
 })
 
-afterEach(() => {
+after(() => {
   s.close()
 })
 

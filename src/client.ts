@@ -5,9 +5,9 @@ import { MsgType, createUser, login, logout, SessionId, createTable, appendTable
 
 // FIXME: use import
 const uuid = require('uuid/v4')
-// const WebSocket = require('ws');
+const WebSocket = require('ws');
     
-class Client {
+export class Client {
   userId: UserId | undefined
   password: Password | undefined
   sessionId: SessionId | undefined
@@ -174,6 +174,6 @@ class Client {
 }
 
 // @ts-ignore
-window.Client = Client
+// window.Client = Client
 
 
