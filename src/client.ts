@@ -1,5 +1,6 @@
-import { MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
-  updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue 
+import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
+  updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
+  removeUser, removeTable
   } from './Messages';
 
 
@@ -7,6 +8,71 @@ import { MsgType, createUser, login, logout, SessionId, createTable, appendTable
 const uuid = require('uuid/v4')
 const WebSocket = require('ws');
     
+export interface ClientCallback {
+  connectSuccess: (client: Client) => void
+  connectFailure: () => void
+
+  loginSuccess: (sessionId: SessionId) => void
+  loginFailure: (errorCode: ErrorCode, reason: string) => void
+
+  logoutSuccess: () => void
+  logoutFailure: (reason: string) => void
+
+  createUserSuccess: () => void
+  createUserFailure: (errorCode: ErrorCode, reason: string) => void
+
+  removeUserSuccess: () => void
+  removeUserFailure: (errorCode: ErrorCode, reason: string) => void
+
+  createTableSuccess: (tableId: TableId) => void
+  createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void
+
+  removeTableSuccess: (tableId: TableId) => void
+  removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void
+
+  subscribeTablesSuccess: () => void
+  appendRowSuccess: (rowId: RowId) => void
+  removeRowSuccess: (rowId: RowId) => void
+  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
+  tableSnap: (table: Table) => void
+  appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void 
+  removeRow: (rowId: RowId) => void
+  updateCell: (rowId: RowId, columnIndex: number, value: Object) => void
+}
+
+export class DefaultClientCallback {
+  connectSuccess: (client: Client) => void = (client) => {}
+  connectFailure: () => void = () => {}
+
+  loginSuccess: (sessionId: SessionId) => void  = sessionId => {}
+  loginFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+
+  logoutSuccess: () => void = () => {}
+  logoutFailure: (reason: string) => void = reason => {}
+
+  createUserSuccess: () => void = () => {}
+  createUserFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+
+  removeUserSuccess: () => void = () => {}
+  removeUserFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+
+  createTableSuccess: (tableId: TableId) => void = tableId => {}
+  createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = tableId => {}
+
+  removeTableSuccess: (tableId: TableId) => void = tableId => {}
+  removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = tableId => {}
+
+  subscribeTablesSuccess: () => void = () => {}
+
+  appendRowSuccess: (rowId: RowId) => void = rowId => {}
+  removeRowSuccess: (rowId: RowId) => void = rowId => {}
+  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
+  tableSnap: (table: Table) => void = table => {}
+  appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {}
+  removeRow: (rowId: RowId) => void = rowId => {}
+  updateCell: (rowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
+}
+
 export class Client {
   userId: UserId | undefined
   password: Password | undefined
@@ -14,22 +80,31 @@ export class Client {
 
   connection: WebSocket
 
-  callback: any
+  callback: ClientCallback
 
-  constructor(host: string, port: number, callback: any) {
-    const url = `ws://${host}:${port}`
+  constructor() {}
 
-    this.connection = new WebSocket(url)
+  addCallback(callback: ClientCallback) {
     this.callback = callback
+  }
+
+  connect(host: string, port: number) {
+    const url = `ws://${host}:${port}`
+    this.connection = new WebSocket(url)
 
     this.connection.onopen = () => {
       this.listen()
-      console.log('connected')
+      this.callback.connectSuccess(this)
     }
 
     this.connection.onerror = (error) => {
-      console.log(`WebSocket error: ${error}`)
+      this.callback.connectFailure()
+      console.log(`connect error: ${error}`)
     }
+  }
+
+  disconnect() {
+    this.connection.close()
   }
 
   login(userId: string, password: string) {
@@ -44,12 +119,24 @@ export class Client {
   }
 
   createUser(userId: string, userName: string, password: string) {
-    this.connection.send(createUser(this.sessionId, userId, userName, password, this.userId))
+    const msg = createUser(this.sessionId, userId, userName, password, this.userId)
+    console.log(msg)
+    this.connection.send(msg)
+  }
+
+  removeUser(userId: string) {
+    const msg = removeUser(this.sessionId, userId, this.userId)
+    console.log(msg)
+    this.connection.send(msg)
   }
 
   createTable(tableName: string, columns: ColumnName[]) {
     const tableId = uuid()
     this.connection.send(createTable(this.sessionId, tableId, tableName, columns, this.userId))
+  }
+
+  removeTable(tableId: TableId) {
+    this.connection.send(removeTable(this.sessionId, tableId, this.userId))
   }
 
   subscribeTables() {
@@ -73,18 +160,67 @@ export class Client {
     this.connection.onmessage = (e) => {
       const returnMsg = JSON.parse(e.data.toString())
 
+      console.log(`ret: ${e.data.toString()}`)
+
       switch (returnMsg.msgType) {
         case MsgType.LoginSuccess: {
           this.sessionId = returnMsg.payLoad.sessionId
           this.callback.loginSuccess(this.sessionId)
           break
         }
+        case MsgType.LoginFailure: {
+          // console.error(`login failure: ${returnMsg.payLoad.reason}`)
+          this.callback.loginFailure(returnMsg.payLoad.errorCode, returnMsg.payLoad.reason)
+          break
+        }
+        case MsgType.LogoutSuccess: {
+          this.callback.logoutSuccess()
+          this.sessionId = undefined
+          break
+        }
+        case MsgType.LogoutFailure: {
+          console.error(`logout failure: ${returnMsg.payLoad.reason}`)
+          this.callback.logoutFailure(returnMsg.payLoad.reason)
+          break
+        }
         case MsgType.CreateUserSuccess: {
           this.callback.createUserSuccess()
           break
         }
+        case MsgType.CreateUserFailure: {
+          const reason = returnMsg.payLoad.reason
+          const errorCode = returnMsg.payLoad.errorCode
+          this.callback.createUserFailure(errorCode, reason)
+          break
+        }
+        case MsgType.RemoveUserSuccess: {
+          this.callback.removeUserSuccess()
+          break
+        }
+        case MsgType.RemoveUserFailure: {
+          const reason = returnMsg.payLoad.reason
+          const errorCode = returnMsg.payLoad.errorCode
+          this.callback.removeUserFailure(errorCode, reason)
+          break
+        }
         case MsgType.CreateTableSuccess: {
           this.callback.createTableSuccess(returnMsg.payLoad.tableId)
+          break
+        }
+        case MsgType.CreateTableFailure: {
+          const reason = returnMsg.payLoad.reason
+          const errorCode = returnMsg.payLoad.errorCode
+          this.callback.createTableFailure(returnMsg.payLoad.tableId, errorCode, reason)
+          break
+        }
+        case MsgType.RemoveTableSuccess: {
+          this.callback.removeTableSuccess(returnMsg.payLoad.tableId)
+          break
+        }
+        case MsgType.RemoveTableFailure: {
+          const reason = returnMsg.payLoad.reason
+          const errorCode = returnMsg.payLoad.errorCode
+          this.callback.removeTableFailure(returnMsg.payLoad.tableId, errorCode, reason)
           break
         }
         case MsgType.SubscribeTablesSuccess: {
@@ -102,13 +238,6 @@ export class Client {
         case MsgType.UpdateCellSuccess: {
           this.callback.updateCellSuccess(returnMsg.payLoad.tableId, returnMsg.payLoad.rowId,
             returnMsg.payLoad.columnName)
-          break
-        }
-        case MsgType.LogoutSuccess: {
-          this.sessionId = undefined
-          this.userId = undefined
-          this.password = undefined
-          this.callback.logoutSuccess()
           break
         }
         case MsgType.TableSnap: {
@@ -136,14 +265,6 @@ export class Client {
           console.error(`append row failure: ${returnMsg.payLoad.reason}`)
           break
         }
-        case MsgType.LoginFailure: {
-          console.error(`login failure: ${returnMsg.payLoad.reason}`)
-          break
-        }
-        case MsgType.CreateUserFailure: {
-          console.error(`create user failure: ${returnMsg.payLoad.reason}`)
-          break
-        }
         case MsgType.CreateTableFailure: {
           console.error(`create table failure: ${returnMsg.payLoad.reason}`)
           break
@@ -154,10 +275,6 @@ export class Client {
         }
         case MsgType.RemoveRowFailure: {
           console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
-          break
-        }
-        case MsgType.LogoutFailure: {
-          console.error(`logout failure: ${returnMsg.payLoad.reason}`)
           break
         }
         case MsgType.SubscribeTablesFailure: {

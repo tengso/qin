@@ -4,7 +4,9 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          createTableSuccess, createTableFailure, appendTableRowFailure, appendTableRowSuccess,
          removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure,
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
-         subscribeTablesFailure } from './Messages'
+         subscribeTablesFailure, ErrorCode, RemoverId,
+         removeUserFailure, removeUserSuccess,
+         removeTableSuccess, removeTableFailure } from './Messages'
 
 import {Storage} from './Storage'
 import {RedisStorage} from './RedisStorage'
@@ -17,34 +19,10 @@ const root_id = 'root'
 const root_name = 'super'
 const root_password = 'root'
 
-// Persistent State
-// const sessionIdToUserId = new Map<SessionId, UserId>()
-// const userIdToSessionId = new Map<UserId, SessionId>()
-
-// const users = new Map<UserId, UserInfo>()
-// const subscribers = new Map<SessionId, UserId>()
-
-// const tableUpdates = new Map<TableId, Map<Version, any>>()
-// const tables = new Map<TableId, Table>() 
-
-// const rowIdToRowIndex = new Map<RowId, number>()
-
-// // 
-
 // Transient State
 const sessionIdToSocket = new Map<SessionId, WebSocket>()
-// 
 
-// users.set(root_id, {userId: root_id, userName: root_name, password: root_password})
-
-// function authenticate(userId: UserId, password: Password) {
-//   if (users.has(userId)) {
-//       return users.get(userId).password === password
-//   }
-//   else {
-//     return false
-//   }
-// }
+const db: Storage = new RedisStorage()
 
 function publish(msg, callback): void {
   db.getSubscribers(sessionIds => {
@@ -65,27 +43,9 @@ function publish(msg, callback): void {
   })
 }
 
-// function publishTableUpdate(update) {
-//   subscribers.forEach((userId, sessionId) => {
-//     if (sessionIdToSocket.has(sessionId)) {
-//       sessionIdToSocket.get(sessionId).send(sendTableUpdate(sessionId, userId, update))
-//     }
-//   })
-// }
-
-// function publishTableSnap(table) {
-//   subscribers.forEach((userId, sessionId) => {
-//     if (sessionIdToSocket.has(sessionId)) {
-//       sessionIdToSocket.get(sessionId).send(sendTableSnap(sessionId, userId, table))
-//     }
-//   })
-// }
-
-const db: Storage = new RedisStorage()
-
 function Reply(ws) {
   return msg => {
-    console.log(msg)
+    console.log(`reply: ${msg}`)
     ws.send(msg)
   }
 }
@@ -99,7 +59,7 @@ function handleLogin(ws, reply, userId: UserId, password: Password) {
 
   db.getUser(userId, (user: UserInfo | undefined) => {
     if (!user && !isRoot(userId, password)) {
-      reply(loginFailure(`user ${userId} not found`))
+      reply(loginFailure(ErrorCode.UnknownUser, `user ${userId} not found`))
     }
     else if (isRoot(userId, password) || (user.password === password)) {
       db.getSessionId(userId, (sessionId: SessionId) => {
@@ -111,16 +71,17 @@ function handleLogin(ws, reply, userId: UserId, password: Password) {
           })
         }
         else {
-          reply(loginFailure(`user ${userId} already login`))
+          reply(loginFailure(ErrorCode.UserAlreadyLogin, `user ${userId} already login`))
         }
       })
     }
     else {
-      reply(loginFailure(`user ${userId} wrong password`))
+      reply(loginFailure(ErrorCode.InvalidPassword, `user ${userId} wrong password`))
     }
   })
 }
 
+// FIXME: check sessionId
 function handleLogout(reply, userId: UserId) {
   console.log(`logout: ${userId}`)
   db.getSessionId(userId, (sessionId) => {
@@ -136,19 +97,14 @@ function handleLogout(reply, userId: UserId) {
   })
 }
 
-function handleCreateUser(reply, sessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
+function handleCreateUser(reply, uncheckedSessionId: SessionId, userId: UserId, userName: UserName, password: Password, creatorId: CreatorId) {
   db.getSessionId(creatorId, (sessionId) => {
-    if (sessionId) {
+    if (sessionId && sessionId === uncheckedSessionId) {
       db.getUser(userId, user => {
         if (user) {
-          reply(createUserFailure(`user ${userId} exists`))
+          reply(createUserFailure(ErrorCode.UserExists, `user ${userId} exists`))
         }
         else {
-          // users.set(userId, {
-          //   userId: userId,
-          //   userName: userName,
-          //   password: password
-          // })
           db.setUser(userId, {
             userId: userId,
             userName: userName,
@@ -160,7 +116,27 @@ function handleCreateUser(reply, sessionId: SessionId, userId: UserId, userName:
       })
     }
     else {
-      reply(createUserFailure(`unknown creator ${creatorId}`))
+      reply(createUserFailure(ErrorCode.UnknownUser, `unknown creator ${creatorId}`))
+    }
+  })
+}
+
+function handleRemoveUser(reply, uncheckedSessionId: SessionId, userId: UserId, removerId: RemoverId) {
+  db.getSessionId(removerId, (sessionId) => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getUser(userId, user => {
+        if (!user) {
+          reply(removeUserFailure(ErrorCode.UserNotExists, `unknown user ${userId}`))
+        }
+        else {
+          db.removeUser(userId, () => {
+            reply(removeUserSuccess())
+          })
+        }
+      })
+    }
+    else {
+      reply(removeUserFailure(ErrorCode.UnknownUser, `unknown remover ${removerId}`))
     }
   })
 }
@@ -394,6 +370,34 @@ function handleCreateTable(reply, message) {
   */
 }
 
+function handleRemoveTable(reply, message) {
+  const pl = message.payLoad
+  const uncheckedSessionId = pl.sessionId
+  const tableId = pl.tableId 
+  const removerId = pl.removerId
+
+  db.getSessionId(removerId, (sessionId) => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getTableSnap(tableId, (tableSnap) => {
+        if (tableSnap) {
+          db.setTableUpdate(tableId, tableSnap.version + 1, JSON.stringify(message), (_) => {
+            const tableUpdate = sendTableUpdate(sessionId, removerId, message)
+            publish(tableUpdate, () => {
+              reply(removeTableSuccess(tableId))
+            })
+          })
+        }
+        else {
+          reply(removeTableFailure(tableId, ErrorCode.TableNoExists, `table ${tableId} not exists`))
+        }
+      })
+    }
+    else {
+      reply(removeTableFailure(tableId, ErrorCode.UnknownUser, `${sessionId} unknown session`))
+    }
+  })
+}
+
 function handleSubscribeTables(reply, message) {
   const pl = message.payLoad
   const uncheckedSessionId = pl.sessionId
@@ -431,6 +435,8 @@ export class TableFlowServer {
   }
 
   handleMessage = (ws, message) => {
+    console.log(message)
+
     const reply = Reply(ws)
     switch (message.msgType) {
       case MsgType.Login:
@@ -442,8 +448,14 @@ export class TableFlowServer {
       case MsgType.CreateUser:
         handleCreateUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.userName, message.payLoad.password, message.payLoad.creatorId)
         break
+      case MsgType.RemoveUser:
+        handleRemoveUser(reply, message.payLoad.sessionId, message.payLoad.userId, message.payLoad.removerId)
+        break
       case MsgType.CreateTable:
         handleCreateTable(reply, message)
+        break
+      case MsgType.RemoveTable:
+        handleRemoveTable(reply, message)
         break
       case MsgType.AppendRow:
         handleAppendRow(reply, message)
@@ -462,3 +474,5 @@ export class TableFlowServer {
     }
   }
 }
+
+const s = new TableFlowServer()

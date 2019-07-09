@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "test": "mocha --require ts-node/register test/server.test.ts"
+    "test": "mocha --require ts-node/register src/test/server.test.ts"
   },
   "keywords": [],
   "author": "",
