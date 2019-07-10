@@ -12,7 +12,7 @@ export type TableId = string
 export type TableName = string
 
 export type ColumnName = string
-export type ColumnValue = String
+export type ColumnValue = Object
 
 export type SessionId = string
 
@@ -192,7 +192,7 @@ export function removeTable(
   removerId: RemoverId
 ) {
   const msg = {
-    msgType: MsgType.CreateTable,
+    msgType: MsgType.RemoveTable,
     payLoad: {
       sessionId: sessionId,
       tableId: tableId,
@@ -227,12 +227,13 @@ export function removeTableFailure(tableId: TableId, errorCode: ErrorCode, reaso
   return JSON.stringify(msg)
 }
 
-export function createTableFailure(tableId: TableId, reason: string) {
+export function createTableFailure(tableId: TableId, errorCode: ErrorCode, reason: string) {
   const msg = {
     msgType: MsgType.CreateTableFailure,
     payLoad: {
       tableId: tableId,
-      reason: reason
+      reason: reason,
+      errorCode: errorCode,
     }
   }
 

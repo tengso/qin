@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { describe } from 'mocha'
-import { ErrorCode, UserInfo, Table, SessionId, appendTableRowSuccess, RowId, TableId, ColumnName } from '../Messages';
+import { ColumnValue, Row, ErrorCode, UserInfo, Table, SessionId, appendTableRowSuccess, RowId, TableId, ColumnName } from '../Messages';
 import { TableFlowServer } from '../server'
 import { Client, DefaultClientCallback } from '../client'
 import { fail } from 'assert';
@@ -107,8 +107,290 @@ describe('Test Create User', function() {
       }
     }
 
-    client.addCallback(new CreateUserTest((client, sessionoId) => {
+    client.addCallback(new CreateUserTest((client, sessionId) => {
       client.createUser(newUserId, newUserName, newUserPassword)
+    }))
+
+    client.connect(host, port) 
+  })
+})
+
+describe('Test Create Table', function() {
+  it('basic cases', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+
+    class CreateTableTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        done()
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+    }
+
+    client.addCallback(new CreateTableTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+})
+
+describe('Test Subscribe Table', function() {
+  it('basic cases', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+
+    let receivedResponse = false
+    let receivedSnap = false
+
+    class SubscribeTableTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        client.subscribeTables()
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table) => {
+        if (table.tableId === tableId) {
+          expect(table.tableName).equal(tableName)
+          expect(table.columns).deep.equal(columns)
+          expect(table.rows).deep.equal([])
+          expect(table.version).equal(0)
+          receivedSnap = true
+          if (receivedResponse && receivedSnap) {
+            done()
+          }
+        }
+      }
+
+      subscribeTablesSuccess = () => {
+        receivedResponse = true
+        if (receivedResponse && receivedSnap) {
+          done()
+        }
+      }
+    }
+
+    client.addCallback(new SubscribeTableTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+})
+
+describe('Test Add Row', function() {
+  it('basic cases', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId = 'row_id_1' 
+    const rowValue = ['val1', 'val2']
+
+    let receivedResponse = false
+    let receivedUpdate = false
+
+    class AddRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        client.subscribeTables()
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        if (table.tableId === tableId) {
+          expect(table.tableName).equal(tableName)
+          expect(table.columns).deep.equal(columns)
+          expect(table.rows).deep.equal([])
+          expect(table.version).equal(0)
+
+          const row: Row = {
+            rowId: rowId,
+            values: rowValue,
+          }
+
+          client.appendRow(tableId, row)
+        }
+      }
+
+      appendRowSuccess = (newRowId) => {
+        expect(newRowId).equal(rowId)
+        receivedResponse = true
+        if (receivedResponse && receivedUpdate) {
+          done()
+        }
+      }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+        expect(newTableId).equal(tableId)
+        expect(newRowId).equal(newRowId)
+        expect(newRowValue).deep.equal(rowValue)
+        receivedUpdate = true
+        if (receivedResponse && receivedUpdate) {
+          done()
+        }
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new AddRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+})
+
+describe('Test Remove Row', function() {
+  it('basic cases', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId = 'row_id_1' 
+    const rowValue = ['val1', 'val2']
+
+    let receivedAppendResponse = false
+    let receivedAppendUpdate = false
+
+    let receivedRemoveResponse = false
+    let receivedRemoveUpdate = false
+
+    class RemoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        client.subscribeTables()
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        if (table.tableId === tableId) {
+          expect(table.tableName).equal(tableName)
+          expect(table.columns).deep.equal(columns)
+          expect(table.rows).deep.equal([])
+          expect(table.version).equal(0)
+
+          const row: Row = {
+            rowId: rowId,
+            values: rowValue,
+          }
+
+          client.appendRow(tableId, row)
+        }
+      }
+
+      appendRowSuccess = (newRowId) => {
+        expect(newRowId).equal(rowId)
+        receivedAppendResponse = true
+        if (receivedAppendResponse && receivedAppendUpdate) {
+          client.removeRow(tableId, rowId)
+        }
+      }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+        expect(newTableId).equal(tableId)
+        expect(newRowId).equal(newRowId)
+        expect(newRowValue).deep.equal(rowValue)
+        receivedAppendUpdate = true
+        if (receivedAppendResponse && receivedAppendUpdate) {
+          client.removeRow(tableId, rowId)
+        }
+      }
+
+      removeRow = (removedRowId: RowId) => {
+        expect(removedRowId).equal(rowId)
+        receivedRemoveUpdate = true
+        if (receivedRemoveResponse && receivedRemoveUpdate) {
+          done()
+        }
+      }
+
+      removeRowSuccess = (removedRowId: RowId) => {
+        expect(removedRowId).equal(rowId)
+        receivedRemoveResponse = true
+        if (receivedRemoveResponse && receivedRemoveUpdate) {
+          done()
+        }
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new RemoveRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
     }))
 
     client.connect(host, port) 

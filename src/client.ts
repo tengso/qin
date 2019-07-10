@@ -1,6 +1,6 @@
 import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
-  removeUser, removeTable
+  removeUser, removeTable, Row
   } from './Messages';
 
 
@@ -30,14 +30,20 @@ export interface ClientCallback {
   removeTableSuccess: (tableId: TableId) => void
   removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void
 
-  subscribeTablesSuccess: () => void
-  appendRowSuccess: (rowId: RowId) => void
-  removeRowSuccess: (rowId: RowId) => void
-  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
   tableSnap: (table: Table) => void
+  subscribeTablesSuccess: () => void
+
   appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void 
+  appendRowSuccess: (rowId: RowId) => void
+  appendRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
+
   removeRow: (rowId: RowId) => void
+  removeRowSuccess: (rowId: RowId) => void
+  removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
+
   updateCell: (rowId: RowId, columnIndex: number, value: Object) => void
+  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
+  updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void
 }
 
 export class DefaultClientCallback {
@@ -45,31 +51,36 @@ export class DefaultClientCallback {
   connectFailure: () => void = () => {}
 
   loginSuccess: (sessionId: SessionId) => void  = sessionId => {}
-  loginFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+  loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
 
   logoutSuccess: () => void = () => {}
   logoutFailure: (reason: string) => void = reason => {}
 
   createUserSuccess: () => void = () => {}
-  createUserFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+  createUserFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
 
   removeUserSuccess: () => void = () => {}
-  removeUserFailure: (errorCode: ErrorCode, reason: string) => void  = reason => {}
+  removeUserFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
 
   createTableSuccess: (tableId: TableId) => void = tableId => {}
-  createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = tableId => {}
+  createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = (tableId, errorCode, reason) => {}
 
   removeTableSuccess: (tableId: TableId) => void = tableId => {}
-  removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = tableId => {}
+  removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = (tableId, errorCode, reason) => {}
 
+  tableSnap: (table: Table) => void = table => {}
   subscribeTablesSuccess: () => void = () => {}
 
   appendRowSuccess: (rowId: RowId) => void = rowId => {}
-  removeRowSuccess: (rowId: RowId) => void = rowId => {}
-  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
-  tableSnap: (table: Table) => void = table => {}
+  appendRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = rowId => {}
   appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {}
+
+  removeRowSuccess: (rowId: RowId) => void = rowId => {}
+  removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
   removeRow: (rowId: RowId) => void = rowId => {}
+
+  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
+  updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
   updateCell: (rowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
 }
 
@@ -130,8 +141,7 @@ export class Client {
     this.connection.send(msg)
   }
 
-  createTable(tableName: string, columns: ColumnName[]) {
-    const tableId = uuid()
+  createTable(tableId: TableId, tableName: string, columns: ColumnName[]) {
     this.connection.send(createTable(this.sessionId, tableId, tableName, columns, this.userId))
   }
 
@@ -143,9 +153,8 @@ export class Client {
     this.connection.send(subscribeTables(this.sessionId, this.userId))
   }
 
-  appendRow(tableId: TableId, values: ColumnValue[]) {
-    const rowId = uuid()
-    this.connection.send(appendTableRow(this.sessionId, tableId, rowId, values, this.userId))
+  appendRow(tableId: TableId, row: Row) {
+    this.connection.send(appendTableRow(this.sessionId, tableId, row.rowId, row.values, this.userId))
   }
 
   removeRow(tableId: TableId, rowId: RowId) {

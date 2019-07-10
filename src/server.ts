@@ -30,7 +30,6 @@ function publish(msg, callback): void {
       sessionIds.forEach(sessionId => {
         if (sessionIdToSocket.has(sessionId)) {
           sessionIdToSocket.get(sessionId).send(msg)
-          callback()
         }
         else {
           console.log(`can't find socket for ${sessionId}`)
@@ -41,6 +40,7 @@ function publish(msg, callback): void {
       console.log(`empty subscribers`)
     }
   })
+  callback()
 }
 
 function Reply(ws) {
@@ -302,7 +302,7 @@ function handleCreateTable(reply, message) {
   const creatorId = pl.creatorId
 
   db.getSessionId(creatorId, (storedSessionId) => {
-    if (storedSessionId != sessionId) {
+    if (storedSessionId === sessionId) {
       db.getTableSnap(tableId, (tableSnap) => {
         if (!tableSnap) {
           db.setTableUpdate(tableId, 0, JSON.stringify(message), (_) => {
@@ -326,12 +326,12 @@ function handleCreateTable(reply, message) {
           })
         }
         else {
-          reply(createTableFailure(tableId, `table ${tableId} exists`))
+          reply(createTableFailure(tableId, ErrorCode.TableExists, `table ${tableId} exists`))
         }
       })
     }
     else {
-      reply(createTableFailure(tableId, `${sessionId} unknown session`))
+      reply(createTableFailure(tableId, ErrorCode.UnknownUser, `${sessionId} unknown session`))
     }
   })
   /*
@@ -381,9 +381,11 @@ function handleRemoveTable(reply, message) {
       db.getTableSnap(tableId, (tableSnap) => {
         if (tableSnap) {
           db.setTableUpdate(tableId, tableSnap.version + 1, JSON.stringify(message), (_) => {
-            const tableUpdate = sendTableUpdate(sessionId, removerId, message)
-            publish(tableUpdate, () => {
-              reply(removeTableSuccess(tableId))
+            db.removeTableSnap(tableId, () => {
+              const tableUpdate = sendTableUpdate(sessionId, removerId, message)
+              publish(tableUpdate, () => {
+                reply(removeTableSuccess(tableId))
+              })
             })
           })
         }
@@ -408,7 +410,9 @@ function handleSubscribeTables(reply, message) {
       db.setSubscriber(sessionId, subscriberId, () => {
         db.getTables(tables => {
           if (tables) {
-            tables.forEach((table, _) =>{
+            console.log(tables)
+            console.log(typeof tables)
+            Object.entries(tables).forEach(([_, table]: [TableId, Table]) => {
               console.log(table)
               reply(sendTableSnap(sessionId, subscriberId, table))
               reply(subscribeTablesSuccess(sessionId, subscriberId))
@@ -457,6 +461,10 @@ export class TableFlowServer {
       case MsgType.RemoveTable:
         handleRemoveTable(reply, message)
         break
+      case MsgType.SubscribeTables:
+        handleSubscribeTables(reply, message)
+        break
+      // FIXME: add UnsubscribeTables
       case MsgType.AppendRow:
         handleAppendRow(reply, message)
         break
@@ -466,8 +474,6 @@ export class TableFlowServer {
       case MsgType.UpdateCell:
         handleUpdateCell(reply, message)
         break
-      case MsgType.SubscribeTables:
-        handleSubscribeTables(reply, message)
       default:
         console.log(`Unknown Msg`)
         break
