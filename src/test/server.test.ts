@@ -396,3 +396,123 @@ describe('Test Remove Row', function() {
     client.connect(host, port) 
   })
 })
+
+describe('Test Update Cell', function() {
+  it('basic cases', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columnIndex = 1 
+    const columns = ['col1', 'col2', 'col3']
+    const rowId = 'row_id_1' 
+    const rowValue = ['val1', 'val2']
+    const newValue = ['new_value']
+
+    let receivedResponse = false
+    let receivedUpdate = false
+
+    let receivedCellResponse = false
+    let receivedCellUpdate = false
+
+    let awaitCellUpdate = false
+
+    class AddRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        client.subscribeTables()
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        if (table.tableId === tableId) {
+          expect(table.tableName).equal(tableName)
+          expect(table.columns).deep.equal(columns)
+          expect(table.rows).deep.equal([])
+          expect(table.version).equal(0)
+
+          const row: Row = {
+            rowId: rowId,
+            values: rowValue,
+          }
+
+          client.appendRow(tableId, row)
+        }
+      }
+
+      appendRowSuccess = (newRowId) => {
+        expect(newRowId).equal(rowId)
+        receivedResponse = true
+        if (receivedResponse && receivedUpdate) {
+          if (!awaitCellUpdate) {
+            client.updateCell(tableId, rowId, columns[columnIndex], newValue)
+            awaitCellUpdate = true
+          }
+        }
+      }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+        expect(newTableId).equal(tableId)
+        expect(newRowId).equal(newRowId)
+        expect(newRowValue).deep.equal(rowValue)
+        receivedUpdate = true
+        if (receivedResponse && receivedUpdate) {
+          if (!awaitCellUpdate) {
+            client.updateCell(tableId, rowId, columns[columnIndex], newValue)
+            awaitCellUpdate = true
+          }
+        }
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+
+      updateCell = (updatedRowId: RowId, updatedColumnIndex: number, value: Object) => {
+        expect(updatedRowId).equal(rowId)
+        expect(updatedColumnIndex).equal(columnIndex)
+        expect(value).deep.equal(newValue)
+        receivedCellUpdate = true
+
+        if(receivedCellResponse && receivedCellUpdate) {
+          done()
+        }
+      }
+
+      updateCellSuccess = (updatedTableId, updatedRowId, updatedColumnName) => {
+        expect(updatedTableId).equal(tableId)
+        expect(updatedRowId).equal(rowId)
+        expect(updatedColumnName).equal(columns[columnIndex])
+        receivedCellResponse = true
+
+        if(receivedCellResponse && receivedCellUpdate) {
+          done()
+        }
+      }
+
+      updateCellFailure = (tableId, rowId, columnName, errorCode, reason) => {
+        fail(`fail to update cell: ${errorCode} ${reason}`)
+      }
+    }
+
+    client.addCallback(new AddRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+})
