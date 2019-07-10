@@ -1,7 +1,7 @@
 import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
   removeUser, removeTable, Row
-  } from './Messages';
+  } from './TableFlowMessages';
 
 
 // FIXME: use import
@@ -169,7 +169,7 @@ export class Client {
     this.connection.onmessage = (e) => {
       const returnMsg = JSON.parse(e.data.toString())
 
-      console.log(`ret: ${e.data.toString()}`)
+      console.log(`received: ${e.data.toString()}`)
 
       switch (returnMsg.msgType) {
         case MsgType.LoginSuccess: {
@@ -270,6 +270,7 @@ export class Client {
           }
           break
         }
+        // FIXME: handle failures
         case MsgType.AppendRowFailure: {
           console.error(`append row failure: ${returnMsg.payLoad.reason}`)
           break

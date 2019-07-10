@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { describe } from 'mocha'
 import { RedisStorage } from '../RedisStorage'
-import { UserInfo, Table } from '../Messages';
+import { UserInfo, Table } from '../TableFlowMessages';
 
 let s
 

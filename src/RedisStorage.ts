@@ -1,5 +1,5 @@
 import { Storage } from './Storage'
-import { TableId, UserId, RowId, SessionId, UserInfo, Table, Version } from './Messages'
+import { TableId, UserId, RowId, SessionId, UserInfo, Table, Version } from './TableFlowMessages'
 
 const redis = require('redis')
 

@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { describe } from 'mocha'
-import { ColumnValue, Row, ErrorCode, UserInfo, Table, SessionId, appendTableRowSuccess, RowId, TableId, ColumnName } from '../Messages';
-import { TableFlowServer } from '../server'
-import { Client, DefaultClientCallback } from '../client'
+import { ColumnValue, Row, ErrorCode, UserInfo, Table, SessionId, appendTableRowSuccess, RowId, TableId, ColumnName } from '../TableFlowMessages';
+import { TableFlowServer } from '../TableFlowServer'
+import { Client, DefaultClientCallback } from '../TableFlowClient'
 import { fail } from 'assert';
 
 

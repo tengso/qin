@@ -1,4 +1,4 @@
-import {UserId, SessionId, TableId, UserInfo, Table, Version, RowId } from './Messages'
+import {UserId, SessionId, TableId, UserInfo, Table, Version, RowId } from './TableFlowMessages'
 
 export interface Storage {
   beginTransaction(callback): void

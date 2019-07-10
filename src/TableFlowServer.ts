@@ -6,7 +6,7 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure, ErrorCode, RemoverId,
          removeUserFailure, removeUserSuccess,
-         removeTableSuccess, removeTableFailure } from './Messages'
+         removeTableSuccess, removeTableFailure } from './TableFlowMessages'
 
 import {Storage} from './Storage'
 import {RedisStorage} from './RedisStorage'
@@ -334,40 +334,6 @@ function handleCreateTable(reply, message) {
       reply(createTableFailure(tableId, ErrorCode.UnknownUser, `${sessionId} unknown session`))
     }
   })
-  /*
-  if (checkSessionId(creatorId, sessionId)) {
-    if (!tableUpdates.has(tableId)) {
-      tableUpdates.set(tableId, new Map<Version, any>())
-
-      const version = 0
-      const tableUpdate = tableUpdates.get(tableId)
-      tableUpdate.set(version, message)
-
-      const table: Table = {
-        tableId: tableId,
-        tableName: tableName,
-        version: version,
-        columns: columns,
-        rows:  new Array<Row>(),
-        creatorId: creatorId,
-      }
-
-      tables.set(tableId, table)
-
-      console.log(`create table\n${JSON.stringify(table)}\n${tableUpdate}`)
-
-      publishTableUpdate(message)
-      publishTableSnap(table)
-      return createTableSuccess(tableId)
-    }
-    else {
-      return createTableFailure(tableId, `table ${tableId} exists`)
-    }
-  }
-  else {
-    return createTableFailure(tableId, 'unknown session')
-  }
-  */
 }
 
 function handleRemoveTable(reply, message) {
@@ -481,4 +447,6 @@ export class TableFlowServer {
   }
 }
 
-const s = new TableFlowServer()
+if (require.main === module) {
+  const s = new TableFlowServer()
+}
