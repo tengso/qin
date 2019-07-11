@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './built/client.js',
+  entry: './built/examples/ClientSim.js',
   mode: 'development',
   output: {
     filename: 'main.js',

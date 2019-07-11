@@ -1,12 +1,12 @@
 import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
-  removeUser, removeTable, Row
+  removeUser, removeTable, Row, TableName, CreatorId
   } from './TableFlowMessages';
 
 
 // FIXME: use import
 const uuid = require('uuid/v4')
-const WebSocket = require('ws');
+// const WebSocket = require('ws');
     
 export interface ClientCallback {
   connectSuccess: (client: Client) => void
@@ -24,9 +24,11 @@ export interface ClientCallback {
   removeUserSuccess: () => void
   removeUserFailure: (errorCode: ErrorCode, reason: string) => void
 
+  createTable: (tableId: TableId, tableName: TableName, columns: ColumnName[], creatorId: CreatorId) => void
   createTableSuccess: (tableId: TableId) => void
   createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void
 
+  removeTable: (tableId: TableId) => void
   removeTableSuccess: (tableId: TableId) => void
   removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void
 
@@ -44,6 +46,7 @@ export interface ClientCallback {
   updateCell: (rowId: RowId, columnIndex: number, value: Object) => void
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void
+
 }
 
 export class DefaultClientCallback {
@@ -62,9 +65,11 @@ export class DefaultClientCallback {
   removeUserSuccess: () => void = () => {}
   removeUserFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
 
+  createTable: (tableId: TableId, tableName: TableName, columns: ColumnName[], creatorId: CreatorId) => void = (tableId, tableName, columsn, creatorId) => {}
   createTableSuccess: (tableId: TableId) => void = tableId => {}
   createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = (tableId, errorCode, reason) => {}
 
+  removeTable: (tableId: TableId) => void = tableId => {}
   removeTableSuccess: (tableId: TableId) => void = tableId => {}
   removeTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = (tableId, errorCode, reason) => {}
 
@@ -90,10 +95,13 @@ export class Client {
   sessionId: SessionId | undefined
 
   connection: WebSocket
+  webSocketFactory: any
 
   callback: ClientCallback
 
-  constructor() {}
+  constructor(webSocketFactory: any) {
+    this.webSocketFactory = webSocketFactory
+  }
 
   addCallback(callback: ClientCallback) {
     this.callback = callback
@@ -101,7 +109,7 @@ export class Client {
 
   connect(host: string, port: number) {
     const url = `ws://${host}:${port}`
-    this.connection = new WebSocket(url)
+    this.connection = new this.webSocketFactory(url)
 
     this.connection.onopen = () => {
       this.listen()
@@ -153,8 +161,9 @@ export class Client {
     this.connection.send(subscribeTables(this.sessionId, this.userId))
   }
 
-  appendRow(tableId: TableId, row: Row) {
-    this.connection.send(appendTableRow(this.sessionId, tableId, row.rowId, row.values, this.userId))
+  appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
+    const msg = appendTableRow(this.sessionId, tableId, rowId, values, this.userId)
+    this.connection.send(msg)
   }
 
   removeRow(tableId: TableId, rowId: RowId) {
@@ -265,6 +274,13 @@ export class Client {
             case MsgType.UpdateCell:
               this.callback.updateCell(update.rowId, update.columnIndex, update.value)
               break
+            case MsgType.RemoveTable:
+              this.callback.removeTable(returnMsg.payLoad.update.tableId)
+              break
+            case MsgType.CreateTable:
+              const {tableId, tableName, columns, creatorId} = returnMsg.payLoad.update
+              this.callback.createTable(tableId, tableName, columns, creatorId)
+              break
             default:
               console.log(`unknown update type: ${update.updateType}`)
           }
@@ -299,8 +315,3 @@ export class Client {
     }
   }
 }
-
-// @ts-ignore
-// window.Client = Client
-
-

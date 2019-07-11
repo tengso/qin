@@ -23,8 +23,4 @@ export interface Storage {
 
   setTableUpdate(tableId: TableId, version: Version, update: any, callback): void
   getTableUpdate(tableId: TableId, version: Version, callback): void
-
-  setRowIndex(rowId: RowId, rowIndex: number, callback): void
-  getRowIndex(rowId: RowId, callback): void
-  removeRowIndex(rowId: RowId, callback): void
 }

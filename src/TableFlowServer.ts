@@ -30,6 +30,7 @@ function publish(msg, callback): void {
       sessionIds.forEach(sessionId => {
         if (sessionIdToSocket.has(sessionId)) {
           sessionIdToSocket.get(sessionId).send(msg)
+          console.log(`published: ${msg}`)
         }
         else {
           console.log(`can't find socket for ${sessionId}`)
@@ -55,14 +56,13 @@ function isRoot(userId: UserId, password: Password) {
 }
 
 function handleLogin(ws, reply, userId: UserId, password: Password) {
-  console.log(`login: ${userId} ${password}`)
-
   db.getUser(userId, (user: UserInfo | undefined) => {
     if (!user && !isRoot(userId, password)) {
       reply(loginFailure(ErrorCode.UnknownUser, `user ${userId} not found`))
     }
     else if (isRoot(userId, password) || (user.password === password)) {
       db.getSessionId(userId, (sessionId: SessionId) => {
+        console.log(sessionId)
         if (!sessionId) {
           const sessionId = uuid()
           sessionIdToSocket.set(sessionId, ws)
@@ -162,18 +162,16 @@ function handleAppendRow(reply, message) {
           })
 
           db.setTableSnap(tableId, table, () => {
-            db.setRowIndex(rowId, table.rows.length -1, () => {
-              db.setTableUpdate(tableId, table.version, message, () => {
-                const update = {
-                  updateType: message.msgType,
-                  tableId: tableId,
-                  rowId: rowId,
-                  values: values
-                }
-                const msg = sendTableUpdate(sessionId, updatorId, update)
-                publish(msg, () => {
-                  reply(appendTableRowSuccess(rowId))
-                })
+            db.setTableUpdate(tableId, table.version, message, () => {
+              const update = {
+                updateType: message.msgType,
+                tableId: tableId,
+                rowId: rowId,
+                values: values
+              }
+              const msg = sendTableUpdate(sessionId, updatorId, update)
+              publish(msg, () => {
+                reply(appendTableRowSuccess(rowId))
               })
             })
           })
@@ -200,30 +198,30 @@ function handleRemoveRow(reply, message) {
     if (sessionId && sessionId === uncheckedSessionId) {
       db.getTableSnap(tableId, table => {
         if (table) {
-          db.getRowIndex(rowId, rowIndex => {
-            if (rowIndex != null) {
-              table.rows.splice(rowIndex, 1)
-              table.version = table.version + 1
-              db.setTableSnap(tableId, table, () => {
-                db.setTableUpdate(tableId, table.version, message, () => {
-                  db.removeRowIndex(rowId, () => {
-                    const update = {
-                      updateType: message.msgType,
-                      tableId: tableId,
-                      rowId: rowId,
-                    }
-                    const msg = sendTableUpdate(sessionId, updatorId, update)
-                    publish(msg, () => {
-                      reply(removeTableRowSuccess(rowId))
-                    })
-                  })
-                }) 
+          console.log(JSON.stringify(table))
+          console.log(rowId)
+          const rowIndex = getRowIndex(table, rowId) 
+          console.log(rowIndex)
+          if (rowIndex != -1) {
+            table.rows.splice(rowIndex, 1)
+            table.version = table.version + 1
+            db.setTableSnap(tableId, table, () => {
+              db.setTableUpdate(tableId, table.version, message, () => {
+                const update = {
+                  updateType: message.msgType,
+                  tableId: tableId,
+                  rowId: rowId,
+                }
+                const msg = sendTableUpdate(sessionId, updatorId, update)
+                publish(msg, () => {
+                  reply(removeTableRowSuccess(rowId))
+                })
               })
-            }
-            else {
-              reply(removeTableRowFailure(rowId, `table ${rowId} not exists`))
-            }
-          })
+            }) 
+          }
+          else {
+            reply(removeTableRowFailure(rowId, `row ${rowId} not exists`))
+          }
         }
         else {
           reply(removeTableRowFailure(rowId, `table ${tableId} not exists`))
@@ -249,38 +247,39 @@ function handleUpdateCell(reply, message) {
     if (sessionId && sessionId === uncheckedSessionId) {
       db.getTableSnap(tableId, table => {
         if (table) {
-          db.getRowIndex(rowId, rowIndex => {
-            if (rowIndex != null) {
-              const columnIndex = table.columns.indexOf(columnName)
-              if (columnIndex === -1) {
-                reply(updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`))
-              }
-              else {
-                table.version = table.version + 1
-                const row = table.rows[rowIndex]
-                row.values[columnIndex] = value
-
-                db.setTableSnap(tableId, table, () => {
-                  db.setTableUpdate(tableId, table.version, message, () => {
-                    const update = {
-                      updateType: message.msgType,
-                      tableId: tableId,
-                      rowId: rowId,
-                      columnIndex: columnIndex,
-                      value: value,
-                    }
-                    const msg = sendTableUpdate(sessionId, updatorId, update)
-                    publish(msg, () => {
-                      reply(updateCellSuccess(tableId, rowId, columnName))
-                    })
-                  })
-                })
-              }
+          const rowIndex = getRowIndex(table, rowId)
+          if (rowIndex != -1) {
+            const columnIndex = table.columns.indexOf(columnName)
+            if (columnIndex === -1) {
+              reply(updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`))
             }
             else {
-              reply(updateCellFailure(tableId, rowId, columnName, `row ${rowId} not exists`))
+              console.log(JSON.stringify(table))
+              console.log(rowIndex)
+              table.version = table.version + 1
+              const row = table.rows[rowIndex]
+              row.values[columnIndex] = value
+
+              db.setTableSnap(tableId, table, () => {
+                db.setTableUpdate(tableId, table.version, message, () => {
+                  const update = {
+                    updateType: message.msgType,
+                    tableId: tableId,
+                    rowId: rowId,
+                    columnIndex: columnIndex,
+                    value: value,
+                  }
+                  const msg = sendTableUpdate(sessionId, updatorId, update)
+                  publish(msg, () => {
+                    reply(updateCellSuccess(tableId, rowId, columnName))
+                  })
+                })
+              })
             }
-          })
+          }
+          else {
+            reply(updateCellFailure(tableId, rowId, columnName, `row ${rowId} not exists`))
+          }
         }
         else {
           reply(updateCellFailure(tableId, rowId, columnName, `table ${tableId} not exists`))
@@ -315,10 +314,19 @@ function handleCreateTable(reply, message) {
               creatorId: creatorId,
             }
             db.setTableSnap(tableId, table, () => {
+              // FIXME: why send user
               const userId = null
-              const tableUpdate = sendTableUpdate(sessionId, userId, message)
+              const update = {
+                updateType: message.msgType,
+                tableId: tableId,
+                tableName: tableName,
+                columns: columns,
+                creatorId: creatorId,
+              }
+              const tableUpdate = sendTableUpdate(sessionId, userId, update)
               publish(tableUpdate, () => {
-                publish(table, () => {
+                const tableSnap = sendTableSnap(sessionId, creatorId, table)
+                publish(tableSnap, () => {
                   reply(createTableSuccess(tableId))
                 })
               })
@@ -348,7 +356,11 @@ function handleRemoveTable(reply, message) {
         if (tableSnap) {
           db.setTableUpdate(tableId, tableSnap.version + 1, JSON.stringify(message), (_) => {
             db.removeTableSnap(tableId, () => {
-              const tableUpdate = sendTableUpdate(sessionId, removerId, message)
+              const update = {
+                updateType: message.msgType,
+                tableId: tableId,
+              }
+              const tableUpdate = sendTableUpdate(sessionId, removerId, update)
               publish(tableUpdate, () => {
                 reply(removeTableSuccess(tableId))
               })
@@ -391,22 +403,36 @@ function handleSubscribeTables(reply, message) {
       reply(subscribeTablesFailure(sessionId, subscriberId, `subscriberId: ${subscriberId} not login`))
     }
   }) 
+
+}
+
+// FIXME: this is slow
+function getRowIndex(table: Table, rowId: RowId): number {
+  let index =0 
+  while (index < table.rows.length) {
+    if (table.rows[index].rowId === rowId) {
+      return index
+    }
+    index++
+  }
+
+  return -1;
 }
 
 export class TableFlowServer {
   constructor() {
     const wss = new Server({ port: 8080 })
     wss.on('connection',  ws => {
+      console.log('connected')
       ws.on('message', msg => {
-        const message = JSON.parse(msg.toString())
+        console.log(`recv: ${msg}`)
+        const message = JSON.parse(msg as string)
         this.handleMessage(ws, message)
       })
     })
   }
 
   handleMessage = (ws, message) => {
-    console.log(message)
-
     const reply = Reply(ws)
     switch (message.msgType) {
       case MsgType.Login:

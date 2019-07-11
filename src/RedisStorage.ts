@@ -11,7 +11,6 @@ class Hash {
   Subscribers = `${this.namespace}.Subscribers`
   Tables = `${this.namespace}.Tables`
   TableUpdates = `${this.namespace}.TableUpdates`
-  RowIdIndex = `${this.namespace}.RowIdIndex`
 }
 
 export class RedisStorage implements Storage {
@@ -230,47 +229,6 @@ export class RedisStorage implements Storage {
       }
       else {
         console.log(`failed to get for ${tableId} ${version}`)
-        callback(undefined)
-      }
-    })
-  }
-
-  setRowIndex(rowId: RowId, rowIndex: number, callback: any): void {
-    this.client.hset(this.hash.RowIdIndex, rowId, rowIndex, (err, res) => {
-      if (!err) {
-        callback(res)
-      }
-      else {
-        console.log(`failed to set row index for ${rowId} ${rowIndex}`)
-        callback(undefined)
-      }
-    })
-  }
-
-  getRowIndex(rowId: RowId, callback: any): void {
-    this.client.hget(this.hash.RowIdIndex, rowId, (err, res) => {
-      if (!err) {
-        if (res) {
-          callback(Number(res))
-        }
-        else {
-          callback(null)
-        }
-      }
-      else {
-        console.log(`failed to set row index for ${rowId}`)
-        callback(undefined)
-      }
-    })
-  }
-
-  removeRowIndex(rowId: string, callback: any): void {
-    this.client.hdel(this.hash.RowIdIndex, rowId, (err, res) => {
-      if (!err) {
-        callback(res)
-      }
-      else {
-        console.log(`failed to set row index for ${rowId}`)
         callback(undefined)
       }
     })

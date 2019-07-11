@@ -1,211 +1,55 @@
 <!DOCTYPE html>
-<script src='../dist/main.js'></script>
-<script>
-
-    function createTable(tableId, tableName, columns) {
-        var tables = document.getElementById("tables")
-        table = document.createElement("table")   
-        table.setAttribute("id", tableId)
-        table.border = '1'
-        tables.appendChild(table) 
-
-        var header = table.createTHead()
-
-        for (const column of columns ) {
-            var c = table.tHead.appendChild(document.createElement("th"))
-            c.innerHTML = column
-        }
-    }
-
-    function appendRowUtil(tableId, rowId, values) {
-        var table = document.getElementById(tableId)
-
-        var rowCount = table.rows.length
-        var row = table.insertRow(rowCount)
-        row.setAttribute("id", rowId)
-
-        values.forEach((value, i)=> {
-            row.insertCell(i).innerHTML = value
-        })
-    }
-
-    function removeRowUtil(rowId) {
-        var row = document.getElementById(rowId)
-        row.parentNode.removeChild(row)
-    }
-
-    function updateCellUtil(rowId, columnIndex, value) {
-        row = document.getElementById(rowId)
-        row.childNodes[columnIndex].innerHTML = value 
-    }
-
-    var client
-
-    callback = {
-        loginSuccess: function(sessionId) {
-            var logs = document.getElementById("logs")
-            logs.value += `login success ${sessionId}\n`
-        },
-        logoutSuccess: function(sessionId) {
-            var logs = document.getElementById("logs")
-            logs.value += `logout success ${sessionId}\n`
-        },
-        createUserSuccess: function() {
-            var logs = document.getElementById("logs")
-            logs.value += `create user success\n`
-        },
-        createTableSuccess: function(tableId) {
-            var logs = document.getElementById("logs")
-            logs += `create table success ${tableId}\n`
-        },
-        subscribeTablesSuccess: function() {
-            var logs = document.getElementById("logs")
-            logs += `subscribe tables success\n`
-        },
-        appendRowSuccess: function(rowId) {
-            var logs = document.getElementById("logs")
-            logs += `append row success: ${rowId}\n`
-        },
-        removeRowSuccess: function(rowId) {
-            var logs = document.getElementById("logs")
-            logs += `remove row success: ${rowId}\n`
-        },
-        updateCellSuccess: function(tableId, rowId, columnName) {
-            var logs = document.getElementById("logs")
-            logs += `update cell success: ${tableId} ${rowId} ${columnName}\n`
-        },
-        tableSnap: function(table) {
-            var t = document.getElementById("tableSnap")
-            t.value += `${JSON.stringify(table)}\n`
-            createTable(table.tableId, table.tableName, table.columns)
-            table.rows.forEach(row => {
-                appendRowUtil(table.tableId, row.rowId, row.values)
-            })
-        },
-        // tableUpdate: function(update) {
-        //     var t = document.getElementById("tableUpdate")
-        //     t.value += `${JSON.stringify(update)}\n`
-        // },
-        appendRow: function(tableId, rowId, values) {
-            var t = document.getElementById("tableUpdate")
-            t.value += `append row - tableId [${tableId}] rowId [${rowId}] value [${values}]\n`
-
-            appendRowUtil(tableId, rowId, values)
-        },
-        removeRow: function(rowId) {
-            var t = document.getElementById("tableUpdate")
-            t.value += `remove row - rowId [${rowId}]\n`
-
-            removeRowUtil(rowId)
-        },
-        updateCell: function(rowId, columnIndex, value) {
-            var t = document.getElementById("tableUpdate")
-            t.value += `update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]\n`
-
-            updateCellUtil(rowId, columnIndex, value)
-        }
-    }
-
-    function getClient(host, port, callback) {
-        if (!client) {
-            client = new Client(host, port, callback)
-            return client
-        }
-        else {
-            return client
-        }
-    }
-
-    client = getClient('localhost', 8080, callback)
-
-    function getUserId() {
-        console.log(document.getElementById('userId').value)
-        return document.getElementById('userId').value
-    }
-    function getPassword() {
-        console.log(document.getElementById('password').value)
-        return document.getElementById('password').value
-    }
-    function getNewUserId() {
-        return document.getElementById('newUserId').value
-    }
-    function getNewUserName() {
-        return document.getElementById('newUserName').value
-    }
-    function getNewUserPassword() {
-        return document.getElementById('newUserPassword').value
-    }
-    function getNewTableName() {
-        return document.getElementById('tableNameCT').value
-    }
-    function getNewTableColumns() {
-        return JSON.parse(document.getElementById('tableColumnsCT').value)
-    }
-    function getAppendRowTableId() {
-        return document.getElementById('tableIdAR').value
-    }
-    function getAppendRowValues() {
-        return JSON.parse(document.getElementById('valuesAR').value)
-    }
-    function getRemoveRowTableId() {
-        return document.getElementById('tableIdDR').value
-    }
-    function getRemoveRowRowId() {
-        return document.getElementById('rowIdDR').value
-    }
-    function getUpdateCellTableId() {
-        return document.getElementById('tableIdUC').value
-    }
-    function getUpdateCellRowId() {
-        return document.getElementById('rowIdUC').value
-    }
-    function getUpdateCellColumnName() {
-        return document.getElementById('columnUC').value
-    }
-    function getUpdateCellValue() {
-        return document.getElementById('valueUC').value
-    }
-</script>
+<script src='../../dist/main.js'></script>
 <head>QIN Client Sim</head>
 <body>
     <p>
-        <button onclick="client.login(getUserId(), getPassword());">login</button>
-        user id: <input type='text' id='userId'></input> 
-        password: <input type='text' id='password'></input>
+        <button id='loginBn'>login</button>
+        user id: <input type='text' id='userId' value='root'></input> 
+        password: <input type='text' id='password' value='root'></input>
     </p>
     <p>
-        <button id='logout' onclick="client.logout()">logout</button>
+        <button id='logoutBn'>logout</button>
     </p>
     <p>
-        <button id='createUser' onclick="client.createUser(getNewUserId(), getNewUserName(), getNewUserPassword())">create user</button>
+        <button id='createUserBn'>create user</button>
         user id: <input type='text' id='newUserId'></input> 
         user name: <input type='text' id='newUserName'></input> 
         password: <input type='text' id='newUserPassword'></input>
     </p>
     <p>
-        <button id='createTable' onClick="client.createTable(getNewTableName(), getNewTableColumns())">create table</button>
-        name: <input type='text' id='tableNameCT'></input> 
+        <button id='removeUserBn'>remove user</button>
+        user id: <input type='text' id='removeUserId'></input> 
+    </p>
+    <p>
+        <button id='createTableBn'>create table</button>
+        table id: <input type='text' id='tableIdCT'></input> 
+        table name: <input type='text' id='tableNameCT'></input> 
         columns: <input type='text' id='tableColumnsCT'></input> 
     </p>
     <p>
-        <button id='appendRow' onClick="client.appendRow(getAppendRowTableId(), getAppendRowValues())">append row</button>
+        <button id='removeTableBn'>remove table</button>
+        table id: <input type='text' id='tableIdRT'></input> 
+    </p>
+    <p>
+        <button id='appendRowBn'>append row</button>
         table id: <input type='text' id='tableIdAR'></input> 
+        row id: <input type='text' id='rowIdAR'></input> 
         values: <input type='text' id='valuesAR'></input> 
     </p>
     <p>
-        <button onClick="client.removeRow(getRemoveRowTableId(), getRemoveRowRowId())">remove row</button>
+        <button id='removeRowBn'>remove row</button>
         table id: <input type='text' id='tableIdDR'></input> 
         row id: <input type='text' id='rowIdDR'></input> 
     </p>
     <p>
-        <button onclick="client.updateCell(getUpdateCellTableId(), getUpdateCellRowId(), getUpdateCellColumnName(), getUpdateCellValue())">update cell</button>
+        <button id='updateCellBn'>update cell</button>
         table id: <input type='text' id='tableIdUC'></input> 
         column: <input type='text' id='columnUC'></input> 
         row id: <input type='text' id='rowIdUC'></input> 
         value: <input type='text' id='valueUC'></input> 
     </p>
     <p>
-        <button id='subscribeTables' onClick="client.subscribeTables()">subscribe tables</button>
+        <button id='subscribeTablesBn'>subscribe tables</button>
     </p>
     <p>
         <button id='unsubscribeTables'>unsubscribe tables</button>
@@ -220,4 +64,7 @@
     <p>
         log<br><textarea id="logs"></textarea>
     </p>
+    <script>
+        bindListeners()
+    </script>
 </body>

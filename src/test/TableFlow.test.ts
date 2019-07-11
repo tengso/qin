@@ -5,6 +5,8 @@ import { TableFlowServer } from '../TableFlowServer'
 import { Client, DefaultClientCallback } from '../TableFlowClient'
 import { fail } from 'assert';
 
+// FIXME:
+const WebSocket = require('ws')
 
 let server: TableFlowServer
 let client: Client
@@ -54,7 +56,7 @@ class Test extends DefaultClientCallback {
 
 beforeEach(() => {
   console.log('init')
-  client = new Client()   
+  client = new Client(WebSocket)   
 })
 
 afterEach(() => {
@@ -163,6 +165,7 @@ describe('Test Subscribe Table', function() {
 
     let receivedResponse = false
     let receivedSnap = false
+    let isDone = false
 
     class SubscribeTableTest extends Test {
       constructor(afterLogin) {
@@ -194,7 +197,8 @@ describe('Test Subscribe Table', function() {
           expect(table.rows).deep.equal([])
           expect(table.version).equal(0)
           receivedSnap = true
-          if (receivedResponse && receivedSnap) {
+          if (receivedResponse && receivedSnap && !isDone) {
+            isDone = true
             done()
           }
         }
@@ -202,7 +206,8 @@ describe('Test Subscribe Table', function() {
 
       subscribeTablesSuccess = () => {
         receivedResponse = true
-        if (receivedResponse && receivedSnap) {
+        if (receivedResponse && receivedSnap && !isDone) {
+          isDone = true
           done()
         }
       }
@@ -263,7 +268,7 @@ describe('Test Add Row', function() {
             values: rowValue,
           }
 
-          client.appendRow(tableId, row)
+          client.appendRow(tableId, row.rowId, row.values)
         }
       }
 
@@ -347,7 +352,7 @@ describe('Test Remove Row', function() {
             values: rowValue,
           }
 
-          client.appendRow(tableId, row)
+          client.appendRow(tableId, row.rowId, row.values)
         }
       }
 
@@ -451,7 +456,7 @@ describe('Test Update Cell', function() {
             values: rowValue,
           }
 
-          client.appendRow(tableId, row)
+          client.appendRow(tableId, row.rowId, row.values)
         }
       }
 
