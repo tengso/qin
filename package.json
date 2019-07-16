@@ -24,6 +24,7 @@
     "ws": "^7.0.1"
   },
   "dependencies": {
+    "sortablejs": "^1.10.0-rc3",
     "uuid": "^3.3.2"
   }
 }
