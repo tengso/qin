@@ -28,21 +28,25 @@
     width: 20%
   }
 
-  .done-task-list .task {
+  .done-task {
     color: green;
+    border: 1px solid;
+    margin: 10px
   }
 
-  .todo-task-list .task {
+  .todo-task {
     color: red;
+    border: 1px solid;
+    margin: 10px
   }
 
-  .ip-task-list .task {
+  .ip-task {
     color: blue;
+    border: 1px solid;
+    margin: 10px
   }
 
   .task {
-    border: 1px solid;
-    margin: 10px
   }
 
   .list-name {
@@ -54,40 +58,70 @@
   <div id="board" class="board">
     <div id="toDo" class="todo-task-list">
       <h3 class="list-name">Todo</h3>
-      <div class="task">Task 1</div>
-      <div class="task">Task 2</div>
+      <div id="toDoTasks">
+        <div class="todo-task" id="todo_1">Task 1</div>
+        <div class="todo-task" id="todo_2">Task 2</div>
+      </div>
     </div>
     <div id="inProgress" class="ip-task-list">
       <h3 class="list-name">In Progress</h3>
-      <div class="task">Task 1</div>
-      <div class="task">Task 2</div>
+      <div id="ipTasks">
+        <div class="ip-task" id="ip_1">Task 1</div>
+        <div class="ip-task" id="id_2">Task 2</div>
+      </div>
     </div>
     <div id="done" class="done-task-list">
       <h3 class="list-name">Done</h3>
-      <div class="task">Task 1</div>
-      <div class="task">Task 2</div>
+      <div id='doneTasks'>
+        <div class="done-task" id="done_1">Task 1</div>
+        <div class="done-task" id="done_2">Task 2</div>
+      </div>
     </div>
   </div>
   </div>
 </body>
 <script>
-  var toDo = document.getElementById('toDo')
-  var inProgress = document.getElementById('inProgress')
-  var done = document.getElementById('done')
+  function toString(evt) {
+    return `
+    item: ${evt.item.id} 
+    from: ${evt.from.id} old index: ${evt.oldIndex} 
+    to: ${evt.to.id} new index ${evt.newIndex}
+    `
+  }
 
-  toDo = new Sortable(toDo, {
+  function getParams(listName) {
+    params = {
       group: 'shared', 
-      animation: 150
-  });
+      animation: 150,
+      onEnd: evt => {
+        console.log(`${listName} end ${toString(evt)}`)
+      },
+      /*
+      onStart: evt => {
+        console.log(`${listName} start ${toString(evt)}`)
+      },*/
+      /*
+      onAdd: evt => {
+        console.log(`${listName} add ${toString(evt)}`)
+      },
+      onRemove: evt => {
+        console.log(`${listName} remove ${toString(evt)}`)
+      },*/
+    }
 
-  inProgress = new Sortable(inProgress, {
-      group: 'shared',
-      animation: 150
-  });
+    return params 
+  }
 
-  done = new Sortable(done, {
-      group: 'shared',
-      animation: 150
-  });
+  var toDo = document.getElementById('toDoTasks')
+  var inProgress = document.getElementById('ipTasks')
+  var done = document.getElementById('doneTasks')
+
+  param = {
+    group: 'share'
+  }
+
+  toDo = new Sortable(toDo, getParams('todo'))
+  inProgress = new Sortable(inProgress, getParams('ip'));
+  done = new Sortable(done, getParams('done'));
 </script>
 </html>
