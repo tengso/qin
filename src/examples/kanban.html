@@ -4,56 +4,76 @@
 <script>
   function createToDo() {
     task = document.createElement('div')
+    task.setAttribute("class", "task")
     task.innerHTML = 'new task'
-    document.getElementById('toDoColumn').appendChild(task)
+    document.getElementById('toDo').appendChild(task)
   }
 </script>
 <style>
-  .grid-container {
-    display: grid;
-    grid-template-columns: auto auto auto;
-    border: thick;
-    grid-column-gap: 20rem
+  .board {
+    display: flex;
+    justify-content: space-between;
+    flex-basis: 20%
   }
 
-  .grid-item {
-    border-style: solid
+  .todo-task-list {
+    width: 20%
   }
+
+  .ip-task-list {
+    width: 20%
+  }
+
+  .done-task-list {
+    width: 20%
+  }
+
+  .done-task-list .task {
+    color: green;
+  }
+
+  .todo-task-list .task {
+    color: red;
+  }
+
+  .ip-task-list .task {
+    color: blue;
+  }
+
+  .task {
+    border: 1px solid;
+    margin: 10px
+  }
+
+  .list-name {
+    margin: 10px
+  }
+
 </style>
 <body>
-  <button onclick="createToDo()">new</button><pre></pre>
-  <div id="board" class="grid-container">
-    <div id="toDoColumn" class="grid-item">To do<pre></pre>
-      <div class="list-group-item">Item 1 1</div>
-      <div class="list-group-item">Item 1 2</div>
-      <div class="list-group-item">Item 1 3</div>
-      <div class="list-group-item">Item 1 4</div>
-      <div class="list-group-item">Item 1 5</div>
-      <div class="list-group-item">Item 1 6</div>
+  <div id="board" class="board">
+    <div id="toDo" class="todo-task-list">
+      <h3 class="list-name">Todo</h3>
+      <div class="task">Task 1</div>
+      <div class="task">Task 2</div>
     </div>
-    <div id="inProgressColumn" class="grid-item">In Progress<pre></pre>
-      <div class="list-group-item tinted">Item 2 1</div>
-      <div class="list-group-item tinted">Item 2 2</div>
-      <div class="list-group-item tinted">Item 2 3</div>
-      <div class="list-group-item tinted">Item 2 4</div>
-      <div class="list-group-item tinted">Item 2 5</div>
-      <div class="list-group-item tinted">Item 2 6</div>
+    <div id="inProgress" class="ip-task-list">
+      <h3 class="list-name">In Progress</h3>
+      <div class="task">Task 1</div>
+      <div class="task">Task 2</div>
     </div>
-    <div id="doneColumn" class="grid-item">Done<pre></pre>
-      <div class="list-group-item tinted">Item 2 1</div>
-      <div class="list-group-item tinted">Item 2 2</div>
-      <div class="list-group-item tinted">Item 2 3</div>
-      <div class="list-group-item tinted">Item 2 4</div>
-      <div class="list-group-item tinted">Item 2 5</div>
-      <div class="list-group-item tinted">Item 2 6</div>
+    <div id="done" class="done-task-list">
+      <h3 class="list-name">Done</h3>
+      <div class="task">Task 1</div>
+      <div class="task">Task 2</div>
     </div>
   </div>
   </div>
 </body>
 <script>
-  var toDo = document.getElementById('toDoColumn')
-  var inProgress = document.getElementById('inProgressColumn')
-  var done = document.getElementById('doneColumn')
+  var toDo = document.getElementById('toDo')
+  var inProgress = document.getElementById('inProgress')
+  var done = document.getElementById('done')
 
   toDo = new Sortable(toDo, {
       group: 'shared', 
