@@ -1,12 +1,11 @@
-import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendTableRow, UserId, Password, removeTableRow, 
+import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendRow, UserId, Password, removeRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
-  removeUser, removeTable, Row, TableName, CreatorId
+  removeUser, removeTable, Row, TableName, CreatorId, insertRow
   } from './TableFlowMessages';
 
 
 // FIXME: use import
 const uuid = require('uuid/v4')
-// const WebSocket = require('ws');
     
 export interface ClientCallback {
   connectSuccess: (client: Client) => void
@@ -38,6 +37,10 @@ export interface ClientCallback {
   appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void 
   appendRowSuccess: (rowId: RowId) => void
   appendRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
+
+  insertRow: (tableId: TableId, rowId: RowId, afterRowId: RowId, values: Object[]) => void 
+  insertRowSuccess: (rowId: RowId) => void
+  insertRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
 
   removeRow: (rowId: RowId) => void
   removeRowSuccess: (rowId: RowId) => void
@@ -80,6 +83,10 @@ export class DefaultClientCallback {
   appendRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = rowId => {}
   appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {}
 
+  insertRowSuccess: (rowId: RowId) => void = rowId => {}
+  insertRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = rowId => {}
+  insertRow: (tableId: TableId, rowId: RowId, afterRowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {}
+
   removeRowSuccess: (rowId: RowId) => void = rowId => {}
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
   removeRow: (rowId: RowId) => void = rowId => {}
@@ -112,13 +119,14 @@ export class Client {
     this.connection = new this.webSocketFactory(url)
 
     this.connection.onopen = () => {
+      console.log('connected')
       this.listen()
       this.callback.connectSuccess(this)
     }
 
     this.connection.onerror = (error) => {
       this.callback.connectFailure()
-      console.log(`connect error: ${error}`)
+      console.log(`connect error: ${error['message']}`)
     }
   }
 
@@ -162,12 +170,17 @@ export class Client {
   }
 
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
-    const msg = appendTableRow(this.sessionId, tableId, rowId, values, this.userId)
+    const msg = appendRow(this.sessionId, tableId, rowId, values, this.userId)
     this.connection.send(msg)
   }
 
   removeRow(tableId: TableId, rowId: RowId) {
-    this.connection.send(removeTableRow(this.sessionId, tableId, rowId, this.userId))
+    this.connection.send(removeRow(this.sessionId, tableId, rowId, this.userId))
+  }
+
+  insertRow(tableId: TableId, rowId: RowId, afterRowId: RowId, values: ColumnValue[]) {
+    const msg = insertRow(this.sessionId, tableId, rowId, afterRowId, values, this.userId)
+    this.connection.send(msg)
   }
 
   updateCell(tableId: TableId, rowId: RowId, columnName: ColumnName, newValue: ColumnValue) {
@@ -249,6 +262,10 @@ export class Client {
           this.callback.appendRowSuccess(returnMsg.payLoad.rowId)
           break
         }
+        case MsgType.InsertRowSuccess: {
+          this.callback.insertRowSuccess(returnMsg.payLoad.rowId)
+          break
+        }
         case MsgType.RemoveRowSuccess: {
           this.callback.removeRowSuccess(returnMsg.payLoad.rowId)
           break
@@ -267,6 +284,9 @@ export class Client {
           switch (update.updateType) {
             case MsgType.AppendRow:
               this.callback.appendRow(update.tableId, update.rowId, update.values)
+              break
+            case MsgType.InsertRow:
+              this.callback.insertRow(update.tableId, update.rowId, update.afterRowId, update.values)
               break
             case MsgType.RemoveRow:
               this.callback.removeRow(update.rowId)
@@ -289,6 +309,10 @@ export class Client {
         // FIXME: handle failures
         case MsgType.AppendRowFailure: {
           console.error(`append row failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.InsertRowFailure: {
+          console.error(`insert row failure: ${returnMsg.payLoad.reason}`)
           break
         }
         case MsgType.CreateTableFailure: {

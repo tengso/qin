@@ -1,12 +1,12 @@
 import { Server } from 'ws'
 import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSuccess, logoutSuccess, logoutFailure,
          createUserFailure, createUserSuccess, TableId, TableName, CreatorId, ColumnName, RowId,
-         createTableSuccess, createTableFailure, appendTableRowFailure, appendTableRowSuccess,
-         removeTableRowFailure, removeTableRowSuccess, updateCellSuccess, updateCellFailure,
+         createTableSuccess, createTableFailure, appendRowFailure, appendRowSuccess,
+         removeRowFailure, removeRowSuccess, updateCellSuccess, updateCellFailure,
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure, ErrorCode, RemoverId,
          removeUserFailure, removeUserSuccess,
-         removeTableSuccess, removeTableFailure } from './TableFlowMessages'
+         removeTableSuccess, removeTableFailure, insertRowFailure, insertRowSuccess } from './TableFlowMessages'
 
 import {Storage} from './Storage'
 import {RedisStorage} from './RedisStorage'
@@ -171,18 +171,91 @@ function handleAppendRow(reply, message) {
               }
               const msg = sendTableUpdate(sessionId, updatorId, update)
               publish(msg, () => {
-                reply(appendTableRowSuccess(rowId))
+                reply(appendRowSuccess(rowId))
               })
             })
           })
         }
         else {
-          reply(appendTableRowFailure(rowId, `table ${tableId} not exists`))
+          reply(appendRowFailure(rowId, `table ${tableId} not exists`))
         }
       })
     }
     else {
-      reply(appendTableRowFailure(rowId, 'unknown session'))
+      reply(appendRowFailure(rowId, 'unknown session'))
+    }
+  })
+}
+
+function handleInsertRow(reply, message) {
+  const pl = message.payLoad
+  const uncheckedSessionId = pl.sessionId
+  const tableId = pl.tableId 
+  const rowId = pl.rowId
+  const values = pl.values
+  const updatorId = pl.updatorId
+  const afterRowId = pl.afterRowId
+
+  // console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
+
+  console.log(`after row id: ${afterRowId}`)
+
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId == uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          let i = -1
+          if (afterRowId) {
+            console.log(`${table.rows.length}`)
+            let index 
+            for (index = 0; index < table.rows.length; index++) {
+              console.log(`row: ${table.rows[index].rowId}`)
+              if (table.rows[index].rowId === afterRowId) {
+                i = index
+                break
+              }
+            }
+          }
+          else {
+            i = 0
+          }
+
+          if (i === -1) {
+            reply(insertRowFailure(rowId, ErrorCode.RowNotExists, `row ${afterRowId} not found`))
+          }
+          else {
+            table.version = table.version + 1
+            table.rows.splice(i + 1, 0, {rowId: rowId, values: values})
+
+            console.log(table)
+
+            db.setTableSnap(tableId, table, () => {
+              console.log('saved table')
+              db.setTableUpdate(tableId, table.version, message, () => {
+              console.log('saved updated')
+                const update = {
+                  updateType: message.msgType,
+                  tableId: tableId,
+                  rowId: rowId,
+                  afterRowId: afterRowId,
+                  values: values
+                }
+                const msg = sendTableUpdate(sessionId, updatorId, update)
+                publish(msg, () => {
+                  reply(insertRowSuccess(rowId))
+                  console.log('sent response')
+                })
+              })
+            })
+          }
+        }
+        else {
+          reply(insertRowFailure(rowId, ErrorCode.TableNotExists, `table ${tableId} not exists`))
+        }
+      })
+    }
+    else {
+      reply(insertRowFailure(rowId, ErrorCode.UnknownUser, 'unknown session'))
     }
   })
 }
@@ -214,22 +287,22 @@ function handleRemoveRow(reply, message) {
                 }
                 const msg = sendTableUpdate(sessionId, updatorId, update)
                 publish(msg, () => {
-                  reply(removeTableRowSuccess(rowId))
+                  reply(removeRowSuccess(rowId))
                 })
               })
             }) 
           }
           else {
-            reply(removeTableRowFailure(rowId, `row ${rowId} not exists`))
+            reply(removeRowFailure(rowId, `row ${rowId} not exists`))
           }
         }
         else {
-          reply(removeTableRowFailure(rowId, `table ${tableId} not exists`))
+          reply(removeRowFailure(rowId, `table ${tableId} not exists`))
         }
       })
     }
     else {
-      reply(appendTableRowFailure(rowId, 'unknown session'))
+      reply(appendRowFailure(rowId, 'unknown session'))
     }
   }) 
 }
@@ -368,7 +441,7 @@ function handleRemoveTable(reply, message) {
           })
         }
         else {
-          reply(removeTableFailure(tableId, ErrorCode.TableNoExists, `table ${tableId} not exists`))
+          reply(removeTableFailure(tableId, ErrorCode.TableNotExists, `table ${tableId} not exists`))
         }
       })
     }
@@ -422,6 +495,7 @@ function getRowIndex(table: Table, rowId: RowId): number {
 export class TableFlowServer {
   constructor() {
     const wss = new Server({ port: 8080 })
+    console.log('listening')
     wss.on('connection',  ws => {
       console.log('connected')
       ws.on('message', msg => {
@@ -459,6 +533,9 @@ export class TableFlowServer {
       // FIXME: add UnsubscribeTables
       case MsgType.AppendRow:
         handleAppendRow(reply, message)
+        break
+      case MsgType.InsertRow:
+        handleInsertRow(reply, message)
         break
       case MsgType.RemoveRow:
         handleRemoveRow(reply, message)

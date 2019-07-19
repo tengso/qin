@@ -62,6 +62,10 @@ export enum MsgType {
   AppendRowSuccess = 'appendRowSuccess',
   AppendRowFailure = 'appendRowFailure',
 
+  InsertRow = 'insertRow',
+  InsertRowSuccess = 'insertRowSuccess',
+  InsertRowFailure = 'insertRowFailure',
+
   RemoveRow = 'removeRow',
   RemoveRowSuccess = 'removeRowSuccess',
   RemoveRowFailure = 'removeRowFailure',
@@ -93,7 +97,8 @@ export enum ErrorCode {
   UserExists,
   UserNotExists,
   TableExists,
-  TableNoExists
+  TableNotExists,
+  RowNotExists,
 }
 
 export function createUser(
@@ -112,6 +117,26 @@ export function createUser(
         userName: userName,
         creatorId: creatorId,
     } 
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function createUserSuccess() {
+  const msg = {
+    msgType: MsgType.CreateUserSuccess,
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function createUserFailure(errorCode: ErrorCode, reason: string) {
+  const msg = {
+    msgType: MsgType.CreateUserFailure,
+    payLoad: {
+      reason: reason,
+      errorCode: errorCode
+    }
   }
 
   return JSON.stringify(msg)
@@ -186,6 +211,19 @@ export function createTableSuccess(tableId: TableId) {
   return JSON.stringify(msg)
 }
 
+export function createTableFailure(tableId: TableId, errorCode: ErrorCode, reason: string) {
+  const msg = {
+    msgType: MsgType.CreateTableFailure,
+    payLoad: {
+      tableId: tableId,
+      reason: reason,
+      errorCode: errorCode,
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
 export function removeTable(
   sessionId: SessionId,
   tableId: TableId,
@@ -227,20 +265,7 @@ export function removeTableFailure(tableId: TableId, errorCode: ErrorCode, reaso
   return JSON.stringify(msg)
 }
 
-export function createTableFailure(tableId: TableId, errorCode: ErrorCode, reason: string) {
-  const msg = {
-    msgType: MsgType.CreateTableFailure,
-    payLoad: {
-      tableId: tableId,
-      reason: reason,
-      errorCode: errorCode,
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function appendTableRow(
+export function appendRow(
   sessionId: SessionId,
   tableId: TableId,
   rowId: RowId,
@@ -261,7 +286,76 @@ export function appendTableRow(
   return JSON.stringify(msg)
 }
 
-export function removeTableRow(sessionId: SessionId, tableId: TableId, rowId: RowId, updatorId: UpdatorId) {
+export function appendRowSuccess(rowId: RowId) { 
+  const msg = {
+    msgType: MsgType.AppendRowSuccess,
+    payLoad: {
+      rowId: rowId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function appendRowFailure(rowId: RowId, reason: string) {
+  const msg = {
+    msgType: MsgType.AppendRowFailure,
+    payLoad: {
+      rowId: rowId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function insertRow(
+  sessionId: SessionId,
+  tableId: TableId,
+  rowId: RowId,
+  afterRowId: RowId | undefined,
+  values: ColumnValue[],
+  updatorId: UpdatorId
+) {
+  const msg = {
+    msgType: MsgType.InsertRow,
+    payLoad: {
+      sessionId: sessionId,
+      tableId: tableId,
+      rowId: rowId,
+      afterRowId: afterRowId,
+      values: values,
+      updatorId: updatorId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function insertRowSuccess(rowId: RowId) { 
+  const msg = {
+    msgType: MsgType.InsertRowSuccess,
+    payLoad: {
+      rowId: rowId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function insertRowFailure(rowId: RowId, errorCode: ErrorCode, reason: string) {
+  const msg = {
+    msgType: MsgType.InsertRowFailure,
+    payLoad: {
+      rowId: rowId,
+      errorCode: errorCode,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+export function removeRow(sessionId: SessionId, tableId: TableId, rowId: RowId, updatorId: UpdatorId) {
   const msg = {
     msgType: MsgType.RemoveRow,
     payLoad: {
@@ -269,6 +363,29 @@ export function removeTableRow(sessionId: SessionId, tableId: TableId, rowId: Ro
       tableId: tableId,
       rowId: rowId,
       updatorId: updatorId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeRowSuccess(rowId: RowId) { 
+  const msg = {
+    msgType: MsgType.RemoveRowSuccess,
+    payLoad: {
+      rowId: rowId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeRowFailure(rowId: RowId, reason: string) {
+  const msg = {
+    msgType: MsgType.RemoveRowFailure,
+    payLoad: {
+      rowId: rowId,
+      reason: reason
     }
   }
 
@@ -292,6 +409,33 @@ export function updateCell(
       columnName: columnName,
       value: value,
       updatorId: updatorId
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function updateCellSuccess(tableId: TableId, rowId: RowId, columnName: ColumnName) { 
+  const msg = {
+    msgType: MsgType.UpdateCellSuccess,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      columnName: columnName
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function updateCellFailure(tableId: TableId, rowId: RowId, columnName: ColumnName, reason: string) {
+  const msg = {
+    msgType: MsgType.UpdateCellFailure,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      columnName: columnName,
+      reason: reason
     }
   }
 
@@ -350,17 +494,6 @@ export function login(userId: UserId, password: Password) {
   return JSON.stringify(msg)
 }
 
-export function logout(userId: UserId) {
-  const msg = {
-    msgType: MsgType.Logout,
-    payLoad: {
-      userId: userId
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
 export function loginSuccess(sessionId: SessionId) {
   const msg = {
     msgType: MsgType.LoginSuccess,
@@ -378,6 +511,17 @@ export function loginFailure(errorCode: ErrorCode, reason: string) {
     payLoad: {
       errorCode: errorCode,
       reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function logout(userId: UserId) {
+  const msg = {
+    msgType: MsgType.Logout,
+    payLoad: {
+      userId: userId
     }
   }
 
@@ -403,99 +547,6 @@ export function logoutFailure(reason: string) {
   return JSON.stringify(msg)
 }
 
-export function createUserSuccess() {
-  const msg = {
-    msgType: MsgType.CreateUserSuccess,
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function createUserFailure(errorCode: ErrorCode, reason: string) {
-  const msg = {
-    msgType: MsgType.CreateUserFailure,
-    payLoad: {
-      reason: reason,
-      errorCode: errorCode
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-
-export function appendTableRowSuccess(rowId: RowId) { 
-  const msg = {
-    msgType: MsgType.AppendRowSuccess,
-    payLoad: {
-      rowId: rowId
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function appendTableRowFailure(rowId: RowId, reason: string) {
-  const msg = {
-    msgType: MsgType.AppendRowFailure,
-    payLoad: {
-      rowId: rowId,
-      reason: reason
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function removeTableRowSuccess(rowId: RowId) { 
-  const msg = {
-    msgType: MsgType.RemoveRowSuccess,
-    payLoad: {
-      rowId: rowId
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function removeTableRowFailure(rowId: RowId, reason: string) {
-  const msg = {
-    msgType: MsgType.RemoveRowFailure,
-    payLoad: {
-      rowId: rowId,
-      reason: reason
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function updateCellSuccess(tableId: TableId, rowId: RowId, columnName: ColumnName) { 
-  const msg = {
-    msgType: MsgType.UpdateCellSuccess,
-    payLoad: {
-      tableId: tableId,
-      rowId: rowId,
-      columnName: columnName
-    }
-  }
-
-  return JSON.stringify(msg)
-}
-
-export function updateCellFailure(tableId: TableId, rowId: RowId, columnName: ColumnName, reason: string) {
-  const msg = {
-    msgType: MsgType.UpdateCellFailure,
-    payLoad: {
-      tableId: tableId,
-      rowId: rowId,
-      columnName: columnName,
-      reason: reason
-    }
-  }
-
-  return JSON.stringify(msg)
-}
 
 export function sendTableSnap(sessionId: SessionId, subscriberId: SubscriberId, table: Table) {
   const msg = {

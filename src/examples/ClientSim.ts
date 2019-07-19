@@ -55,6 +55,19 @@ function appendRowUtil(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
   })
 }
 
+// FIXME:
+function insertRowUtil(tableId: TableId, rowId: RowId, afterRowId: RowId, values: ColumnValue[]) {
+  const table: HTMLTableElement = document.getElementById(tableId) as HTMLTableElement
+
+  const rowCount = table.rows.length
+  const row = table.insertRow(rowCount)
+  row.setAttribute("id", rowId)
+
+  values.forEach((value, i) => {
+    row.insertCell(i).innerHTML = value.toString()
+  })
+}
+
 function removeRowUtil(rowId: RowId) {
   const row = document.getElementById(rowId)
   row.parentNode.removeChild(row)
@@ -106,6 +119,10 @@ class Callback implements ClientCallback {
     this.logMessage(`append row failure ${rowId} ${reason} ${errorCode}`)
   }
 
+  insertRowFailure(rowId: string, errorCode: ErrorCode, reason: string) {
+    this.logMessage(`insert row failure ${rowId} ${reason} ${errorCode}`)
+  } 
+
   removeRowFailure(rowId: string, errorCode: ErrorCode, reason: string): void {
     this.logMessage(`remove row failure ${rowId} ${reason} ${errorCode}`)
   }
@@ -142,6 +159,10 @@ class Callback implements ClientCallback {
     this.logMessage(`append row success: ${rowId}`)
   }
 
+  insertRowSuccess(rowId: string) {
+    this.logMessage(`insert row success: ${rowId}`)
+  }
+
   removeRowSuccess(rowId: RowId) {
     this.logMessage(`remove row success: ${rowId}`)
   }
@@ -165,6 +186,13 @@ class Callback implements ClientCallback {
 
     appendRowUtil(tableId, rowId, values)
   }
+
+  insertRow(tableId: string, rowId: string, afterRowId: string, values: Object[]) {
+    this.logMessage(`insert row - tableId [${tableId}] rowId [${rowId}] aRowId [${afterRowId}] value [${values}]`, 'tableUpdate')
+
+    insertRowUtil(tableId, rowId, afterRowId, values)
+  } 
+
 
   removeRow(rowId: RowId) {
     this.logMessage(`remove row - rowId [${rowId}]`, 'tableUpdate')
