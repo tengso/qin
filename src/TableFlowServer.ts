@@ -215,39 +215,34 @@ function handleInsertRow(reply, message) {
                 break
               }
             }
+            if (i === -1) {
+              reply(insertRowFailure(rowId, ErrorCode.RowNotExists, `row ${afterRowId} not found`))
+              return
+            }
           }
-          else {
-            i = 0
-          }
+          table.version = table.version + 1
+          table.rows.splice(i + 1, 0, {rowId: rowId, values: values})
 
-          if (i === -1) {
-            reply(insertRowFailure(rowId, ErrorCode.RowNotExists, `row ${afterRowId} not found`))
-          }
-          else {
-            table.version = table.version + 1
-            table.rows.splice(i + 1, 0, {rowId: rowId, values: values})
+          console.log(table)
 
-            console.log(table)
-
-            db.setTableSnap(tableId, table, () => {
-              console.log('saved table')
-              db.setTableUpdate(tableId, table.version, message, () => {
-              console.log('saved updated')
-                const update = {
-                  updateType: message.msgType,
-                  tableId: tableId,
-                  rowId: rowId,
-                  afterRowId: afterRowId,
-                  values: values
-                }
-                const msg = sendTableUpdate(sessionId, updatorId, update)
-                publish(msg, () => {
-                  reply(insertRowSuccess(rowId))
-                  console.log('sent response')
-                })
+          db.setTableSnap(tableId, table, () => {
+            console.log('saved table')
+            db.setTableUpdate(tableId, table.version, message, () => {
+            console.log('saved updated')
+              const update = {
+                updateType: message.msgType,
+                tableId: tableId,
+                rowId: rowId,
+                afterRowId: afterRowId,
+                values: values
+              }
+              const msg = sendTableUpdate(sessionId, updatorId, update)
+              publish(msg, () => {
+                reply(insertRowSuccess(rowId))
+                console.log('sent response')
               })
             })
-          }
+          })
         }
         else {
           reply(insertRowFailure(rowId, ErrorCode.TableNotExists, `table ${tableId} not exists`))

@@ -57,7 +57,7 @@
 <body>
   <div id="board" class="board">
     <div id="toDo" class="todo-task-list">
-      <h3 class="list-name">Todo</h3>
+      <h3 class="list-name">Todo <button onclick="createTodo()">+</button></h3>
       <div id="toDoTasks">
         <div class="todo-task" id="todo_1">Task 1</div>
         <div class="todo-task" id="todo_2">Task 2</div>
@@ -81,6 +81,14 @@
   </div>
 </body>
 <script>
+  function createTodo() {
+    const newTask = document.createElement('div')
+    newTask.setAttribute('class', 'todo-task')
+    newTask.setAttribute('id', '1234')
+    newTask.innerHTML = 'new task'
+    document.getElementById('toDoTasks').appendChild(newTask)
+  }
+
   function toString(evt) {
     return `
     item: ${evt.item.id} 
