@@ -2,9 +2,10 @@ import { Row, ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnVal
 import { ClientCallback, Client } from '../TableFlowClient'
 
 import { v4 } from 'uuid'
+import uuid = require('uuid');
+import Sortable from 'sortablejs'
 
-const tableId = 'tasks_table_id'
-let client = getClient('localhost', 8080)
+const defaultTableId = 'tasks_table_id'
 
 type TaskGroup = string
 type TaskId = string
@@ -34,115 +35,23 @@ interface Task {
   task group == group element id 
 */
 
-function removeTask(taskId: TaskId) {
-  const taskElement = document.getElementById(taskId)
-  if (taskElement) {
-    taskElement.parentNode.removeChild(taskElement)
-  }
-  else {
-    console.log(`task ${taskId} not found`)
-  }
-}
-
-function insertTask(task: Task, group: TaskGroup, index: GroupIndex | undefined) {
-  if (document.getElementById(task.id)) {
-    console.log(`${task} exists`)
-  }
-  else {
-    let groupElement = document.getElementById(group)
-    if (!groupElement) {
-      groupElement = document.createElement('div')
-      groupElement.setAttribute('id', group)
-    }
-    const taskElement = document.createElement('div')
-    taskElement.setAttribute('id', task.id)
-    taskElement.innerHTML = task.name
-    if (index) {
-      if (index < groupElement.children.length) {
-        const refElement = groupElement.children[index]
-        groupElement.insertBefore(taskElement, refElement)
-      }
-      else {
-        console.log(`invalid index: ${index}`)
-      }
-    }
-    else {
-      groupElement.appendChild(taskElement)
-    }
-  }
-}
-
-function getGroup(task: Task): TaskGroup {
-  return task.status
-}
-
-function toTask(values: ColumnValue[]): Task {
-  const task: Task = {
-    id: values[0] as TaskId,
-    name: values[1] as TaskName,
-    status: values[2] as TaskStatus,
-  }
-
-  return task
-}
-
-export function appendTask(tableId: TableId, id: TaskId, name: TaskName, status: TaskStatus) {
-  client.appendRow(tableId, id, [id, name, status])
-}
-
-export function handleSortingEvent(event) {
-  const taskId = event.item.id
-  const taskName = event.item.name
-  const taskStatus = event.item.status
-
-  const fromGroup = event.from.id
-  const fromGroupIndex = event.oldIndex 
-
-  const toGroupId = event.to.id
-  const toGroupIndex = event.newIndex
-
-  client.removeRow(tableId, taskId)
-
-  // FIXME: need to wait
-
-  client.onRemoveRowSuccess = () => {
-    const groupElement = document.getElementById(toGroupId)
-    const afterElement = groupElement.children[toGroupIndex - 1]
-    this.insertRow(tableId, taskId, afterElement.id, [taskId, taskName, taskStatus]) 
-  }
-}
-
-function getIndex(group: TaskGroup, rowId: RowId): number | undefined {
-  const groupElement = document.getElementById(group)
-  for (let i = 0; i < groupElement.children.length; i++) {
-    if (groupElement.children[i].id === rowId) {
-      return i
-    }
-  }
-
-  return undefined
-}
-
-function clearBoard() {
-  var container = document.getElementById("container");
-  while (container.firstChild) {
-      container.removeChild(container.firstChild);
-  }
-}
-
-class Callback implements ClientCallback {
+class KanbanCallback implements ClientCallback {
   onRemoveRowSuccess: () => void 
 
   tableSnap(table: Table) {
     this.logMessage(`table - ${JSON.stringify(table)}`)
 
-    clearBoard()
+    createOrGetGroupElement(TaskStatus.ToDo)
+    createOrGetGroupElement(TaskStatus.InProgress)
+    createOrGetGroupElement(TaskStatus.Done)
 
-    table.rows.forEach((row, index) => {
-      const task = toTask(row.values)
-      const group = getGroup(task)
-      insertTask(task, group, undefined)
-    })
+    if (table.tableId === defaultTableId) {
+      table.rows.forEach((row, index) => {
+        const task = toTask(row.values)
+        const group = getGroup(task)
+        insertTask(task, group, undefined)
+      })
+    }
   }
 
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
@@ -158,7 +67,7 @@ class Callback implements ClientCallback {
 
     const task = toTask(values)
     const group = getGroup(task)
-    const index = getIndex(group, afterRowId)
+    const index = afterRowId ? getIndex(group, afterRowId) : -1
     console.log(`insert after ${index}`)
     insertTask(task, group, index + 1)
   } 
@@ -178,7 +87,7 @@ class Callback implements ClientCallback {
   }
 
   logoutFailure(reason: string): void {
-    this.logMessage(`login failure ${reason}`)
+    this.logMessage(`logout failure ${reason}`)
   }
 
   createUserFailure(errorCode: ErrorCode, reason: string): void {
@@ -223,14 +132,20 @@ class Callback implements ClientCallback {
 
   loginSuccess(sessionId: SessionId) {
     this.logMessage(`login success ${sessionId}`)
+    client.subscribeTables()
   }
 
   loginFailure(errorCode: ErrorCode, reason: string): void {
     this.logMessage(`login failure ${reason} ${errorCode}`)
+
+    if (errorCode === ErrorCode.UserAlreadyLogin) {
+      client.logout()
+    }
   }
 
   logoutSuccess() {
     this.logMessage(`logout success`)
+    client.login(client.userId, client.password)
   }
 
   createUserSuccess() {
@@ -277,15 +192,187 @@ class Callback implements ClientCallback {
 
 
   private logMessage(msg: string, elementId = 'logs') {
-    const logs = document.getElementById(elementId) as HTMLTextAreaElement
-    logs.value += msg + '\n' 
+    // const logs = document.getElementById(elementId) as HTMLTextAreaElement
+    // logs.value += msg + '\n' 
+    console.log(msg)
   }
 }
+
+
+const callback = new KanbanCallback()
+
+function removeTask(taskId: TaskId) {
+  const taskElement = document.getElementById(taskId)
+  if (taskElement) {
+    taskElement.parentNode.removeChild(taskElement)
+  }
+  else {
+    console.log(`task ${taskId} not found`)
+  }
+}
+
+function createOrGetGroupElement(group: TaskGroup) {
+  const board = document.getElementById('board')
+
+  let groupElement = document.getElementById(`${group}-container`)
+  if (groupElement) {
+    return document.getElementById(`${group}`)
+  }
+
+  groupElement = document.createElement('div')
+  groupElement.setAttribute('id', `${group}-container`)
+  groupElement.setAttribute('class', `${group}-container`)
+  board.appendChild(groupElement)
+
+  const groupName = document.createElement('h3')
+  groupName.setAttribute('class', 'container-title')
+  groupName.innerHTML = group
+  const addTaskButton = document.createElement('button')
+  addTaskButton.addEventListener('click', () => {
+    appendTask(group)
+  })
+  addTaskButton.innerHTML = '+'
+  groupName.appendChild(addTaskButton)
+
+  groupElement.appendChild(groupName)
+
+  const groupList = document.createElement('div')
+  groupList.setAttribute('id', `${group}`)
+  groupElement.appendChild(groupList)
+
+  const param = {
+    group: 'share'
+  }
+
+  new Sortable(groupList, {
+    group: 'shared',
+    animation: 150,
+    onEnd: onSortingEnd
+  })
+
+  return groupList
+}
+
+function insertTask(task: Task, group: TaskGroup, index: GroupIndex | undefined) {
+  if (document.getElementById(task.id)) {
+    console.log(`${task} exists`)
+  }
+  else {
+    const groupElement = createOrGetGroupElement(group)
+
+    const taskElement = document.createElement('div')
+    taskElement.setAttribute('id', task.id)
+    taskElement.setAttribute('name', task.name)
+    taskElement.setAttribute('status', task.status)
+    taskElement.setAttribute('class', `${group}-task`)
+    taskElement.innerHTML = task.name
+
+    const removeTask = document.createElement('button')
+    removeTask.addEventListener('click', () => {
+      client.removeRow(defaultTableId, task.id)  
+    })
+
+    removeTask.innerHTML = '-'
+    taskElement.appendChild(removeTask)
+
+    if (index !== undefined) {
+      if (index < groupElement.children.length) {
+        const refElement = groupElement.children[index]
+        groupElement.insertBefore(taskElement, refElement)
+      }
+      else if (index === groupElement.children.length) {
+        groupElement.appendChild(taskElement)
+      }
+      else {
+        console.log(`invalid index: ${index}`)
+      }
+    }
+    else {
+      groupElement.appendChild(taskElement)
+    }
+  }
+}
+
+function getGroup(task: Task): TaskGroup {
+  return task.status
+}
+
+function toTask(values: ColumnValue[]): Task {
+  const task: Task = {
+    id: values[0] as TaskId,
+    name: values[1] as TaskName,
+    status: values[2] as TaskStatus,
+  }
+
+  return task
+}
+
+export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {
+  // FIXME: hard-coded group as status here
+  client.appendRow(tableId, id, [id, name, group])
+}
+
+function onSortingEnd(event) {
+  const taskId = event.item.id
+  const taskName = event.item.getAttribute('name')
+  const taskStatus = event.item.getAttribute('status')
+
+  console.log(`moved task: ${taskId} ${taskName} ${taskStatus}`)
+
+  const fromGroup = event.from.id
+  const fromGroupIndex = event.oldIndex 
+
+  console.log(`from: ${fromGroup} ${fromGroupIndex}`)
+
+  const toGroup = event.to.id
+  const toGroupIndex = event.newIndex
+
+  console.log(`to: ${toGroup} ${toGroupIndex}`)
+
+  // client.onRemoveRowSuccess = () => {
+  //   const groupElement = document.getElementById(toGroupId)
+  //   const afterElement = groupElement.children[toGroupIndex - 1]
+  //   this.insertRow(defaultTableId, taskId, afterElement.id, [taskId, taskName, taskStatus]) 
+  // }
+  client.removeRow(defaultTableId, taskId)
+
+  const onRemoveRowSuccess = () => {
+    const groupElement = document.getElementById(toGroup)
+
+    let afterElementId
+    if (toGroupIndex != 0) {
+      const afterElement = groupElement.children[toGroupIndex - 1]
+      afterElementId = afterElement.id
+    }
+    else {
+      afterElementId = undefined
+    }
+
+    // FIXME: hard-coded group by status here
+    const newTaskStatus = toGroup
+    client.insertRow(defaultTableId, taskId, afterElementId, [taskId, taskName, newTaskStatus]) 
+  }
+
+  callback.onRemoveRowSuccess = onRemoveRowSuccess
+}
+
+function getIndex(group: TaskGroup, rowId: RowId): number | undefined {
+  const groupElement = document.getElementById(`${group}`)
+  for (let i = 0; i < groupElement.children.length; i++) {
+    if (groupElement.children[i].getAttribute('id') === rowId) {
+      return i
+    }
+  }
+
+  return undefined
+}
+
+let client = getClient('localhost', 8080)
 
 function getClient(host: string, port: number) {
   if (!client) {
     client = new Client(WebSocket)
-    client.addCallback(new Callback())
+    client.addCallback(callback)
     client.connect(host, port)
     return client
   }
@@ -295,4 +382,7 @@ function getClient(host: string, port: number) {
 }
 
 // @ts-ignore
-// window.tableFlowClient = client
+// window.eventHandler = onSortingEnd
+// @ts-ignore
+// window.appendTask = appendTask
+window.client = client

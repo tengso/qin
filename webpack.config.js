@@ -1,10 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  entry: './built/examples/ClientSim.js',
+  entry: './built/examples/Kanban.js',
   mode: 'development',
   output: {
-    filename: 'main.js',
+    filename: 'kanban_main.js',
     path: path.resolve(__dirname, 'dist'),
   }
-};
+}
