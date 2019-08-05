@@ -265,9 +265,10 @@ function insertTask(task: Task, group: TaskGroup, index: GroupIndex | undefined)
     taskElement.setAttribute('name', task.name)
     taskElement.setAttribute('status', task.status)
     taskElement.setAttribute('class', `${group}-task`)
-    taskElement.innerHTML = task.name
+    // taskElement.innerHTML = task.name
 
     const removeTask = document.createElement('button')
+    removeTask.setAttribute('class', 'remove-task')
     removeTask.addEventListener('click', () => {
       client.removeRow(defaultTableId, task.id)  
     })

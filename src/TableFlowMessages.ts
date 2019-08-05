@@ -6,8 +6,7 @@ export type Password = string
 
 export type CreatorId = string
 export type UpdatorId = string
-export type RemoverId = string
-
+export type RemoverId = string 
 export type TableId = string
 export type TableName = string
 
