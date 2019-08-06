@@ -224,17 +224,19 @@ function createOrGetGroupElement(group: TaskGroup) {
   groupElement.setAttribute('class', `${group}-container`)
   board.appendChild(groupElement)
 
+  const groupNameContainer = document.createElement('div')
+  groupNameContainer.setAttribute('class', 'container-title')
   const groupName = document.createElement('h3')
-  groupName.setAttribute('class', 'container-title')
-  groupName.innerHTML = group
+  groupName.innerHTML = `${group}   `
   const addTaskButton = document.createElement('button')
   addTaskButton.addEventListener('click', () => {
     appendTask(group)
   })
   addTaskButton.innerHTML = '+'
   groupName.appendChild(addTaskButton)
+  groupNameContainer.appendChild(groupName)
 
-  groupElement.appendChild(groupName)
+  groupElement.appendChild(groupNameContainer)
 
   const groupList = document.createElement('div')
   groupList.setAttribute('id', `${group}`)
