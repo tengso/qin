@@ -67,6 +67,42 @@ class Project {
     this.taskGroups.push(taskGroup)
     this.taskGroupsMap.set(taskGroup.id, taskGroup)
   }
+
+  // return the index of the new element
+  insertTaskGroup(taskGroup: TaskGroup, afterTaskGroupId: TaskGroupId | undefined): number | undefined {
+    if (afterTaskGroupId) {
+      let index = -1
+      for(let i = 0; i < taskGroup.project.taskGroups.length; i++) {
+        if (taskGroup.project.taskGroups[i].id === afterTaskGroupId) {
+          index = i 
+          break
+        }
+      }
+
+      if (index != -1) {
+        index++
+        this.taskGroups.splice(index, 0, taskGroup)
+        return index
+      }
+      else {
+        console.error(`${afterTaskGroupId} not found`)
+        return undefined
+      }
+    }
+    // insert at first
+    else {
+      this.taskGroups.splice(0, 0, taskGroup)
+      return 0
+    }
+  }
+
+  removeTaskGroup(taskGroupId: TaskGroupId) {
+    for(let i = 0; i < this.taskGroups.length; i++) {
+      if (this.taskGroups[i].id === taskGroupId) {
+        this.taskGroups.splice(i, 1)
+      }
+    }
+  }
 }
 
 class TaskGroup {
@@ -86,6 +122,42 @@ class TaskGroup {
   getTask(taskId: TaskId): Task {
     return this.taskMap.get(taskId)
   }
+
+  // return the index of the new task
+  insertTask(task: Task, afterTaskId: TaskId | undefined): number | undefined {
+    if (afterTaskId) {
+      let index = -1
+      for(let i = 0; i < task.taskGroup.tasks.length; i++) {
+        if (task.taskGroup.tasks[i].id === afterTaskId) {
+          index = i 
+          break
+        }
+      }
+
+      if (index != -1) {
+        index++
+        this.tasks.splice(index, 0, task)
+        return index
+      }
+      else {
+        console.error(`${afterTaskId} not found`)
+        return undefined
+      }
+    }
+    // insert at first
+    else {
+      this.tasks.splice(0, 0, task)
+      return 0
+    }
+  }
+
+  removeTask(taskId: TaskId) {
+    for (let i = 0; i < this.tasks.length; i++) {
+      if (this.tasks[i].id === taskId) {
+        this.tasks.splice(i, 1)
+      }
+    }
+  }
 }
 
 class Task {
@@ -96,17 +168,209 @@ class Task {
   taskGroup: TaskGroup
 }
 
-class KanbanCallback implements ClientCallback {
-  onRemoveRowSuccess: () => void 
 
-  projects = new Array<Project>()
+class KanbanView {
+  /*
+  <div id='app'>
+    <div class="Project" id="ProjectId">
+      <div class="ProjectHead">
+        <div class="Title"></div>
+        <div class="Description"></div>
+        <div class="DueDate"></div>
+      </div>
+      <div class="TaskGroupList">
+        <div class="TaskGroup" id="TaskGroupId">
+          <div class="TaskGroupHead">
+            <div class="Title"></div>
+            <div class="Description"></div>
+          </div>
+          <div class="TaskList>
+            <div class="Task" id="TaskId">
+              ...
+            </div>
+            <div class="Task" id="TaskId">
+              ...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  */
+
+  createTaskElement(task: Task) {
+    const taskElement = document.createElement('div')
+    taskElement.setAttribute('class', 'Task')
+    taskElement.setAttribute('id', task.id)
+    return taskElement
+  }
+
+  createTaskGroupElement(taskGroup: TaskGroup) {
+    const taskGroupElement = document.createElement('div')
+    taskGroupElement.setAttribute('id', taskGroup.id)
+    taskGroupElement.setAttribute('class', 'TaskGroup')
+
+    const taskGroupHeadElement = document.createElement('div')
+
+    const titleElement = document.createElement('div')
+    titleElement.setAttribute('class', 'Title')
+
+    const descElement = document.createElement('div')
+    descElement.setAttribute('class', 'Description')
+
+    taskGroupHeadElement.appendChild(titleElement)
+    taskGroupHeadElement.appendChild(descElement)
+
+    const taskGroupListElement = document.createElement('div')
+    taskGroupListElement.setAttribute('class', 'TaskList')
+
+    new Sortable(taskGroupListElement, {
+      group: 'shared',
+      animation: 150,
+      onEnd: onSortingEnd
+    })
+
+    taskGroupElement.appendChild(taskGroupHeadElement)
+    taskGroupElement.appendChild(taskGroupListElement)
+
+    return taskGroupElement
+  }
+
+  createProjectElement(project: Project) {
+    const projectElement = document.createElement('div')
+    projectElement.setAttribute('class', 'Project')
+    projectElement.setAttribute('id', project.id)
+
+    const projectHeadElement = document.createElement('div')
+    projectHeadElement.setAttribute('class', 'ProjectHead')
+
+    const titleElement = document.createElement('div')
+    titleElement.setAttribute('class', 'Title')
+
+    const descElement = document.createElement('div')
+    descElement.setAttribute('class', 'Description')
+
+    projectHeadElement.appendChild(titleElement)
+    projectHeadElement.appendChild(descElement)
+
+    const taskGroupListElement = document.createElement('div')
+    taskGroupListElement.setAttribute('class', 'TaskGroupList')
+
+    new Sortable(taskGroupListElement, {
+      group: 'shared',
+      animation: 150,
+      onEnd: onSortingEnd
+    })
+
+    projectElement.appendChild(projectHeadElement)
+    projectElement.appendChild(taskGroupListElement)
+
+    return projectElement
+  }
+
+  appendProject(project: Project) {
+    const appElement = document.getElementById('app')
+    const projectElement = this.createProjectElement(project)
+    appElement.appendChild(projectElement)
+  }
+
+  appendTaskGroup(project: Project, taskGroup: TaskGroup) {
+    const projectElement = document.getElementById(project.id)
+    if (projectElement) {
+      const taskGroupElement = this.createTaskGroupElement(taskGroup)
+      projectElement.children[1].appendChild(taskGroupElement)
+    }
+    else {
+      console.error(`${project.id} not found`)
+    }
+  }
+
+  removeTaskGroup(taskGroup: TaskGroup) {
+    const taskGroupElement = document.getElementById(taskGroup.id)
+    if (taskGroupElement) {
+      taskGroupElement.parentNode.removeChild(taskGroupElement)
+    }
+    else {
+      console.error(`${taskGroup.id} not found`)
+    }
+  }
+
+  insertTaskGroup(project: Project, taskGroup: TaskGroup, index: number) {
+    const projectElement = document.getElementById(project.id)
+    if (projectElement) {
+      if (index < projectElement.children.length - 1) {
+        const taskGroupElement = this.createTaskGroupElement(taskGroup)
+        const refElement = projectElement.children[1].children[index]
+        projectElement.children[1].insertBefore(taskGroupElement, refElement)
+      }
+      else {
+        this.appendTaskGroup(project, taskGroup)
+      }
+    }
+    else {
+      console.error(`${project.id} not found`)
+    }
+  }
+
+  appendTask(taskGroup: TaskGroup, task: Task) {
+    const taskElement = this.createTaskElement(task)
+    const taskGroupElement = document.getElementById(taskGroup.id)
+    if (taskGroupElement) {
+      taskGroupElement.children[1].appendChild(taskElement)
+    }
+    else {
+      console.error(`${taskGroup.id} not found`)
+    }
+  }
+
+  removeTask(task: Task) {
+    const taskElement = document.getElementById(task.id)
+    if (taskElement) {
+      taskElement.parentNode.removeChild(taskElement)
+    }
+    else {
+      console.error(`${task.id} not found`)
+    }
+  }
+
+  insertTask(taskGroup: TaskGroup, task: Task, index: number) {
+    const taskGroupElement = document.getElementById(taskGroup.id)
+    if (taskGroupElement) {
+      if (index < taskGroupElement.children[1].children.length - 1) {
+          const taskElement = this.createTaskElement(task)
+          const refElement = taskGroupElement.children[1].children[index] 
+          taskGroupElement.children[1].insertBefore(taskElement, refElement)
+       }
+      else {
+        this.appendTask(taskGroup, task)
+      }
+    }
+    else {
+      console.error(`${taskGroup.id} not found`)
+    }
+  }
+}
+
+class KanbanModel {
   projectMap = new Map<ProjectId, Project>()
+  taskMap = new Map<TaskId, Task>()
+  taskGroupMap = new Map<TaskId, TaskGroup>()
+
+  getTaskById(taskId: TaskId): Task | undefined {
+    return this.taskMap.get(taskId)
+  }
+
+  getTaskGroupById(taskGroupId: TaskGroupId): TaskGroup | undefined {
+    return this.taskGroupMap.get(taskGroupId)
+  }
 
   getOrCreateProject(projectId: ProjectId): Project {
     const project = this.projectMap.get(projectId)
     if (!project) {
       const project = new Project()
       project.id = projectId
+      this.projectMap.set(project.id, project)
+
       return project
     }
     else {
@@ -114,7 +378,7 @@ class KanbanCallback implements ClientCallback {
     }
   }
 
-  addTask(values: ColumnValue[]): [Project, TaskGroup, Task] {
+  createTask(values: ColumnValue[]): Task {
     const taskId = values[0] as TaskId
     const taskTitle = values[1] as Title
     const description = values[2] as Description
@@ -130,12 +394,12 @@ class KanbanCallback implements ClientCallback {
     const project = this.getOrCreateProject(projectId)
     const taskGroup = project.getOrCreateTaskGroup(taskGroupId)
     task.taskGroup = taskGroup
-    taskGroup.appendTask(task)
-
-    return [project, taskGroup, task]
+ 
+    this.taskMap.set(task.id, task)
+    return task
   }
 
-  addTaskGroup(values: ColumnValue[]): [Project, TaskGroup] {
+  createTaskGroup(values: ColumnValue[]): TaskGroup {
     const taskGroupId = values[0] as TaskGroupId
     const title = values[1] as Title
     const description = values[2] as Description
@@ -145,12 +409,26 @@ class KanbanCallback implements ClientCallback {
     taskGroup.title = title
     taskGroup.description = description
     taskGroup.project = project
-    project.appendTaskGroup(taskGroup)
 
-    return [project, taskGroup]
+    this.taskGroupMap.set(taskGroup.id, taskGroup)
+    return taskGroup
   }
 
-  addProject(values: ColumnValue[]): Project {
+  appendTask(values: ColumnValue[]): Task {
+    const task = this.createTask(values)
+    task.taskGroup.appendTask(task)
+
+    return task
+  }
+
+  appendTaskGroup(values: ColumnValue[]): TaskGroup {
+    const taskGroup = this.createTaskGroup(values)
+    taskGroup.project.appendTaskGroup(taskGroup)
+
+    return taskGroup
+  }
+
+  createProject(values: ColumnValue[]): Project {
     const projectId = values[0] as ProjectId
     const title = values[1] as Title
     const description = values[2] as Description
@@ -160,25 +438,41 @@ class KanbanCallback implements ClientCallback {
     project.description = description
     project.dueDate = dueDate
 
+    this.projectMap.set(project.id, project)
+
     return project
   }
+
+  appendProject(values: ColumnValue[]): Project {
+    const project = this.createProject(values)
+
+    // FIXME: add to app
+    return project
+  }
+}
+
+class KanbanCallback implements ClientCallback {
+  onRemoveRowSuccess: () => void 
+
+  view = new KanbanView()
+  model = new KanbanModel()
 
   tableSnap(table: Table) {
     this.logMessage(`table - ${JSON.stringify(table)}`)
 
     if (table.tableId === taskTableId) {
       table.rows.forEach((row, index) => {
-        this.addTask(row.values)
+        this.model.appendTask(row.values)
       })
     }
     else if (table.tableId == taskGroupTableId) {
       table.rows.forEach((row, index) => {
-        this.addTaskGroup(row.values)
+        this.model.appendTaskGroup(row.values)
       })
     }
     else if (table.tableId == projectTableId) {
       table.rows.forEach((row, index) => {
-        this.addProject(row.values)
+        this.model.appendProject(row.values)
       })
     }
   }
@@ -187,34 +481,59 @@ class KanbanCallback implements ClientCallback {
     this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
     
     if (tableId === taskTableId) {
-      const [project, taskGroup, task] = this.addTask(values)
+      const task = this.model.appendTask(values)
+      this.view.appendTask(task.taskGroup, task)
     }
     else if (tableId === taskGroupTableId) {
-      const [project, taskGroup] = this.addTaskGroup(values)
+      const taskGroup = this.model.appendTaskGroup(values)
+      this.view.appendTaskGroup(taskGroup.project, taskGroup)
     }
     else if (tableId === projectTableId) {
-      const project = this.addProject(values)
+      const project = this.model.appendProject(values)
+      this.view.appendProject(project)
     }
-
-    const task = toTask(values)
-    const group = getGroup(task)
-    insertTask(task, group, undefined)
   }
 
   insertRow(tableId: string, rowId: string, afterRowId: string, values: Object[]) {
     this.logMessage(`insert row - tableId [${tableId}] rowId [${rowId}] aRowId [${afterRowId}] value [${values}]`, 'tableUpdate')
 
-    const task = toTask(values)
-    const group = getGroup(task)
-    const index = afterRowId ? getIndex(group, afterRowId) : -1
-    console.log(`insert after ${index}`)
-    insertTask(task, group, index + 1)
+    if (tableId === taskTableId) {
+      const task = this.model.createTask(values)
+      // row id === task id
+      const index = task.taskGroup.insertTask(task, afterRowId)
+      this.view.insertTask(task.taskGroup, task, index)
+    }
+    else if (tableId === taskGroupTableId) {
+      const taskGroup = this.model.createTaskGroup(values)
+      // row id === task group id
+      const index = taskGroup.project.insertTaskGroup(taskGroup, afterRowId) 
+      this.view.insertTaskGroup(taskGroup.project, taskGroup, index)
+    }
+    else if (tableId === projectTableId) {
+      console.error('insert project not supported yet')
+    }
   } 
 
-  removeRow(rowId: RowId) {
+  removeRow(rowId: RowId, tableId: TableId) {
     this.logMessage(`remove row - rowId [${rowId}]`, 'tableUpdate')
 
-    removeTask(rowId)
+    if (tableId === taskTableId) {
+      const task = this.model.getTaskById(rowId)
+      if (task) {
+        task.taskGroup.removeTask(task.id)
+        this.view.removeTask(task)
+      }
+    }
+    else if (tableId === taskGroupTableId) {
+      const taskGroup = this.model.getTaskGroupById(rowId)
+      if (taskGroup) {
+        taskGroup.project.removeTaskGroup(taskGroup.id)
+        this.view.removeTaskGroup(taskGroup)
+      }
+    }
+    else if (tableId === projectTableId) {
+      console.error('remove project not supported yet')
+    }
   }
 
   connectSuccess(client: Client): void {
@@ -329,7 +648,6 @@ class KanbanCallback implements ClientCallback {
     this.logMessage(`create table: ${tableId} ${tableName} ${columns} ${creatorId}`, 'tableUpdate')
   }
 
-
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
@@ -337,115 +655,7 @@ class KanbanCallback implements ClientCallback {
   }
 }
 
-
 const callback = new KanbanCallback()
-
-function removeTask(taskId: TaskId) {
-  const taskElement = document.getElementById(taskId)
-  if (taskElement) {
-    taskElement.parentNode.removeChild(taskElement)
-  }
-  else {
-    console.log(`task ${taskId} not found`)
-  }
-}
-
-function createOrGetGroupElement(group: TaskGroup) {
-  const board = document.getElementById('board')
-
-  let groupElement = document.getElementById(`${group}-container`)
-  if (groupElement) {
-    return document.getElementById(`${group}`)
-  }
-
-  groupElement = document.createElement('div')
-  groupElement.setAttribute('id', `${group}-container`)
-  groupElement.setAttribute('class', `${group}-container`)
-  board.appendChild(groupElement)
-
-  const groupName = document.createElement('h3')
-  groupName.setAttribute('class', 'container-title')
-  groupName.innerHTML = group
-  const addTaskButton = document.createElement('button')
-  addTaskButton.addEventListener('click', () => {
-    appendTask(group)
-  })
-  addTaskButton.innerHTML = '+'
-  groupName.appendChild(addTaskButton)
-
-  groupElement.appendChild(groupName)
-
-  const groupList = document.createElement('div')
-  groupList.setAttribute('id', `${group}`)
-  groupElement.appendChild(groupList)
-
-  const param = {
-    group: 'share'
-  }
-
-  new Sortable(groupList, {
-    group: 'shared',
-    animation: 150,
-    onEnd: onSortingEnd
-  })
-
-  return groupList
-}
-
-function insertTask(task: Task, group: TaskGroup, index: GroupIndex | undefined) {
-  if (document.getElementById(task.id)) {
-    console.log(`${task} exists`)
-  }
-  else {
-    const groupElement = createOrGetGroupElement(group)
-
-    const taskElement = document.createElement('div')
-    taskElement.setAttribute('id', task.id)
-    taskElement.setAttribute('name', task.name)
-    taskElement.setAttribute('status', task.status)
-    taskElement.setAttribute('class', `${group}-task`)
-    // taskElement.innerHTML = task.name
-
-    const removeTask = document.createElement('button')
-    removeTask.setAttribute('class', 'remove-task')
-    removeTask.addEventListener('click', () => {
-      client.removeRow(defaultTableId, task.id)  
-    })
-
-    removeTask.innerHTML = '-'
-    taskElement.appendChild(removeTask)
-
-    if (index !== undefined) {
-      if (index < groupElement.children.length) {
-        const refElement = groupElement.children[index]
-        groupElement.insertBefore(taskElement, refElement)
-      }
-      else if (index === groupElement.children.length) {
-        groupElement.appendChild(taskElement)
-      }
-      else {
-        console.log(`invalid index: ${index}`)
-      }
-    }
-    else {
-      groupElement.appendChild(taskElement)
-    }
-  }
-}
-
-function getGroup(task: Task): TaskGroup {
-  return task.status
-}
-
-function toTask(values: ColumnValue[]): Task {
-  const task: Task = {
-    id: values[0] as TaskId,
-    name: values[1] as TaskName,
-    status: values[2] as TaskStatus,
-  }
-
-  return task
-}
 
 export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {
   // FIXME: hard-coded group as status here
@@ -494,17 +704,6 @@ function onSortingEnd(event) {
   }
 
   callback.onRemoveRowSuccess = onRemoveRowSuccess
-}
-
-function getIndex(group: TaskGroup, rowId: RowId): number | undefined {
-  const groupElement = document.getElementById(`${group}`)
-  for (let i = 0; i < groupElement.children.length; i++) {
-    if (groupElement.children[i].getAttribute('id') === rowId) {
-      return i
-    }
-  }
-
-  return undefined
 }
 
 let client = getClient('localhost', 8080)
