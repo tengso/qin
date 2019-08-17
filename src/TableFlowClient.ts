@@ -42,7 +42,7 @@ export interface ClientCallback {
   insertRowSuccess: (rowId: RowId) => void
   insertRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
 
-  removeRow: (rowId: RowId) => void
+  removeRow: (rowId: RowId, tableId: TableId) => void
   removeRowSuccess: (rowId: RowId) => void
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
 
@@ -89,7 +89,7 @@ export class DefaultClientCallback {
 
   removeRowSuccess: (rowId: RowId) => void = rowId => {}
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
-  removeRow: (rowId: RowId) => void = rowId => {}
+  removeRow: (rowId: RowId, tableId: TableId) => void = rowId => {}
 
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
@@ -289,7 +289,7 @@ export class Client {
               this.callback.insertRow(update.tableId, update.rowId, update.afterRowId, update.values)
               break
             case MsgType.RemoveRow:
-              this.callback.removeRow(update.rowId)
+              this.callback.removeRow(update.rowId, update.tableId)
               break
             case MsgType.UpdateCell:
               this.callback.updateCell(update.rowId, update.columnIndex, update.value)

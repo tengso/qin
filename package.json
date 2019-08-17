@@ -10,21 +10,21 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/chai": "^4.1.7",
+    "@types/chai": "^4.2.0",
     "@types/mocha": "^5.2.7",
     "@types/uuid": "^3.4.4",
     "@types/ws": "^6.0.1",
     "chai": "^4.2.0",
     "mocha": "^6.2.0",
-    "redis": "^2.8.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3",
-    "webpack": "^4.39.1",
-    "webpack-cli": "^3.3.6",
-    "ws": "^7.1.1"
+    "webpack": "^4.36.1",
+    "webpack-cli": "^3.3.6"
   },
   "dependencies": {
     "sortablejs": "^1.10.0-rc3",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "ws": "^7.1.1",
+    "redis": "^2.8.0"
   }
 }

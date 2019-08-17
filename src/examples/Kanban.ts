@@ -72,7 +72,7 @@ class KanbanCallback implements ClientCallback {
     insertTask(task, group, index + 1)
   } 
 
-  removeRow(rowId: RowId) {
+  removeRow(rowId: RowId, tableId: TableId) {
     this.logMessage(`remove row - rowId [${rowId}]`, 'tableUpdate')
 
     removeTask(rowId)
