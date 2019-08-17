@@ -205,7 +205,7 @@ class KanbanView {
     return taskElement
   }
 
-  createTaskGroupElement(taskGroup: TaskGroup) {
+  createTaskGroupElement(project: Project, taskGroup: TaskGroup) {
     const taskGroupElement = document.createElement('div')
     taskGroupElement.setAttribute('id', taskGroup.id)
     taskGroupElement.setAttribute('class', 'TaskGroup')
@@ -225,7 +225,7 @@ class KanbanView {
     taskGroupListElement.setAttribute('class', 'TaskList')
 
     new Sortable(taskGroupListElement, {
-      group: 'shared',
+      group: project.id,
       animation: 150,
       onEnd: onSortingEnd
     })
@@ -257,7 +257,7 @@ class KanbanView {
     taskGroupListElement.setAttribute('class', 'TaskGroupList')
 
     new Sortable(taskGroupListElement, {
-      group: 'shared',
+      group: `${project.id}-TaskGroup`,
       animation: 150,
       onEnd: onSortingEnd
     })
@@ -277,7 +277,7 @@ class KanbanView {
   appendTaskGroup(project: Project, taskGroup: TaskGroup) {
     const projectElement = document.getElementById(project.id)
     if (projectElement) {
-      const taskGroupElement = this.createTaskGroupElement(taskGroup)
+      const taskGroupElement = this.createTaskGroupElement(project, taskGroup)
       projectElement.children[1].appendChild(taskGroupElement)
     }
     else {
@@ -299,7 +299,7 @@ class KanbanView {
     const projectElement = document.getElementById(project.id)
     if (projectElement) {
       if (index < projectElement.children.length - 1) {
-        const taskGroupElement = this.createTaskGroupElement(taskGroup)
+        const taskGroupElement = this.createTaskGroupElement(project, taskGroup)
         const refElement = projectElement.children[1].children[index]
         projectElement.children[1].insertBefore(taskGroupElement, refElement)
       }
@@ -663,9 +663,11 @@ export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, 
 }
 
 function onSortingEnd(event) {
+  const elementClass = event.item.getAttribute('class')
+  if (elementClass ==== ) {
+    
+  }
   const taskId = event.item.id
-  const taskName = event.item.getAttribute('name')
-  const taskStatus = event.item.getAttribute('status')
 
   console.log(`moved task: ${taskId} ${taskName} ${taskStatus}`)
 
@@ -679,12 +681,7 @@ function onSortingEnd(event) {
 
   console.log(`to: ${toGroup} ${toGroupIndex}`)
 
-  // client.onRemoveRowSuccess = () => {
-  //   const groupElement = document.getElementById(toGroupId)
-  //   const afterElement = groupElement.children[toGroupIndex - 1]
-  //   this.insertRow(defaultTableId, taskId, afterElement.id, [taskId, taskName, taskStatus]) 
-  // }
-  client.removeRow(defaultTableId, taskId)
+  client.removeRow(taskTableId, taskId)
 
   const onRemoveRowSuccess = () => {
     const groupElement = document.getElementById(toGroup)
@@ -700,7 +697,7 @@ function onSortingEnd(event) {
 
     // FIXME: hard-coded group by status here
     const newTaskStatus = toGroup
-    client.insertRow(defaultTableId, taskId, afterElementId, [taskId, taskName, newTaskStatus]) 
+    client.insertRow(taskTableId, taskId, afterElementId, [taskId, taskName, newTaskStatus]) 
   }
 
   callback.onRemoveRowSuccess = onRemoveRowSuccess
