@@ -184,23 +184,31 @@ export class KanbanView {
     }
   }
 
-  getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId {
-    const taskGroupElement = document.getElementById(taskGroupId)
-    if (taskGroupElement) {
-      return taskGroupElement.parentElement.parentElement.getAttribute('id')
-    }
-    else {
-      throw new Error(`task group element ${taskGroupId} not found`)
-    }
+  // getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId {
+  //   const taskGroupElement = document.getElementById(taskGroupId)
+  //   if (taskGroupElement) {
+  //     return taskGroupElement.parentElement.parentElement.getAttribute('id')
+  //   }
+  //   else {
+  //     throw new Error(`task group element ${taskGroupId} not found`)
+  //   }
+  // }
+
+  // getProjectIdByTaskId(taskId: TaskId): ProjectId {
+  //   const taskElement = document.getElementById(taskId)
+  //   if (taskElement) {
+  //     return taskElement.parentElement.parentElement.parentElement.parentElement.getAttribute('id')
+  //   }
+  //   else {
+  //     throw new Error(`task element ${taskId} not found`)
+  //   }
+  // }
+
+  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId) {
+
   }
 
-  getProjectIdByTaskId(taskId: TaskId): ProjectId {
-    const taskElement = document.getElementById(taskId)
-    if (taskElement) {
-      return taskElement.parentElement.parentElement.parentElement.parentElement.getAttribute('id')
-    }
-    else {
-      throw new Error(`task element ${taskId} not found`)
-    }
+  moveTask(projectId: ProjectId, taskId: TaskId, taskGroupId: TaskGroupId | undefined, afterTaskId: TaskId) {
+
   }
 }

@@ -310,4 +310,20 @@ export class Model {
       }
     }
   }
+
+  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId) {
+
+  }
+
+  moveTask(projectId: ProjectId, taskId: TaskId, taskGroupId: TaskGroupId | undefined, afterTaskId: TaskId) {
+
+  }
+
+  getProjectByTaskGroupId(taskGroupId: TaskGroupId): Project | undefined {
+    return undefined
+  }
+
+  getProjectByTaskId(taskId: TaskGroupId): Project | undefined {
+    return undefined
+  }
 }

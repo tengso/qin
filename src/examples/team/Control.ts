@@ -130,7 +130,36 @@ class Control implements ClientCallback {
   }
 
   moveRowAndUpdateCell(tableId: string, rowId: string, afterRowId: string, columnIndex: number, value: Object) {
+    if (tableId === taskGroupTableId) {
+      const taskGroupId = rowId
+      const afterTaskGroupId = afterRowId
 
+      const project = this.model.getProjectByTaskGroupId(taskGroupId)
+      if (project) {
+        this.model.moveTaskGroup(project.id, taskGroupId, afterTaskGroupId)
+        this.view.moveTaskGroup(project.id, taskGroupId, afterTaskGroupId)
+      }
+      else {
+        throw new Error(`task group ${rowId} not found`)
+      }
+    }
+    else if (tableId === taskTableId) {
+      const taskId = rowId
+      const afterTaskId = afterRowId
+
+      const project = this.model.getProjectByTaskId(rowId)
+      if (project) {
+        const taskGroupId = value ? value as string : undefined
+        this.model.moveTask(project.id, taskId, taskGroupId, afterTaskId)
+        this.view.moveTask(project.id, taskId, taskGroupId, afterTaskId)
+      }
+      else {
+        throw new Error(`task ${rowId} not found`)
+      }
+    }
+    else {
+      throw new Error(`unknown ${tableId}`)
+    }
   }
 
   moveRowAndUpdateCellSuccess(tableId: string, rowId: string, afterRowId: string, columnName: string) {
@@ -260,82 +289,6 @@ class Control implements ClientCallback {
   }
 }
 
-export function onSortingEnd(event) {
-
-  // const itemId = event.item.id
-  // const from = event.from.id
-  // const fromIndex = event.oldIndex 
-  // const to = event.to.id
-  // const toIndex = event.newIndex
-
-  // console.log(`moved item: ${itemId}`)
-  // console.log(`from: ${from} ${fromIndex}`)
-  // console.log(`to: ${to} ${toIndex}`)
-
-  // const elementClass = event.item.getAttribute('class')
-  // if (elementClass === 'TaskGroup') {
-  //   const tableId = taskGroupTableId    
-  //   const taskGroupId = event.item.id
-
-  //   client.removeRow(tableId, itemId)
-
-  //   this.onRemoveRowSuccess = () => {
-  //     const projectId = this.view.getProjectIdByTaskGroupId(taskGroupId)
-  //     const project = this.model.getProjectById(projectId)
-  //     const taskGroup = project.getTaskGroupById(taskGroupId)
-  //     const afterTaskGroup = project.getTaskGroupByIndex(toIndex)
-
-  //     const values = this.createTaskGroupRow(taskGroup)
-  //     client.insertRow(tableId, taskGroupId, afterTaskGroup.id, values) 
-  //   } 
-  // }
-  // else if (elementClass === 'Task') {
-  //   const tableId = taskGroupTableId    
-  //   const taskId = event.item.id
-
-  //   client.removeRow(tableId, taskId)
-
-  //   this.onRemoveRowSuccess = () => {
-  //     const projectId = this.view.getProjectIdByTaskId(taskId)
-  //     const project = this.model.getProjectById(projectId)
-  //     const taskGroup = project.getTaskGroupById(taskGroupId)
-  //     const afterTaskGroup = project.getTaskGroupByIndex(toIndex)
-
-  //     const values = this.createTaskGroupRow(taskGroup)
-  //     client.insertRow(tableId, taskGroupId, afterTaskGroup.id, values) 
-  //   } 
-  // }
-  // else {
-  //   throw new Error(`element class ${elementClass} unknown`)
-  // }
-
-  // client.removeRow(tableId, itemId)
-
-  // const onRemoveRowSuccess = () => {
-  //   this.model.
-  //   const groupElement = document.getElementById(toGroup)
-
-  //   let afterElementId
-  //   if (toGroupIndex != 0) {
-  //     const afterElement = groupElement.children[toGroupIndex - 1]
-  //     afterElementId = afterElement.id
-  //   }
-  //   else {
-  //     afterElementId = undefined
-  //   }
-
-  //   client.insertRow(tableId, itemId, afterElementId, [taskId, taskName, newTaskStatus]) 
-  // }
-
-  // callback.onRemoveRowSuccess = onRemoveRowSuccess
-}
-
-
-// export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {
-//   // FIXME: hard-coded group as status here
-//   client.appendRow(tableId, id, [id, name, group])
-// }
-
 function getClient(host: string, port: number) {
   if (!client) {
     client = new Client(WebSocket)
@@ -351,8 +304,67 @@ function getClient(host: string, port: number) {
 
 let client = getClient('localhost', 8080)
 
+export function onSortingEnd(event) {
+  // const itemId = event.item.id
+  // const from = event.from.id
+  // const fromIndex = event.oldIndex 
+  // const to = event.to.id
+  // const toIndex = event.newIndex
+
+  // console.log(`moved item: ${itemId}`)
+  // console.log(`from: ${from} ${fromIndex}`)
+  // console.log(`to: ${to} ${toIndex}`)
+
+  const elementClass = event.item.getAttribute('class')
+  if (elementClass === 'TaskGroup') {
+    const tableId = taskGroupTableId    
+    const taskGroupId = event.item.id
+    const toTaskGroupIndex = event.newIndex
+
+    const project = this.model.getProjectByTaskGroupId(taskGroupId)
+    const afterTaskGroup = toTaskGroupIndex == 0 ? undefined : project.getTaskGroupByIndex(toTaskGroupIndex -1)
+
+    if (afterTaskGroup) {
+      client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
+    }
+    else {
+      throw new Error(`task group index ${toTaskGroupIndex} not found`)
+    }
+  }
+  else if (elementClass === 'Task') {
+    const tableId = taskTableId    
+    const taskId = event.item.id
+
+    const fromTaskGroupId = event.from.parentElement.id
+    const fromTaskIndex = event.oldIndex 
+    const toTaskGroupId = event.to.parentElement.id
+    const toTaskIndex = event.newIndex
+
+    const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
+    const columnValue = columnName ? toTaskGroupId : undefined
+
+    const project = this.model.getProjectByTaskId(taskId)
+    const taskGroup = project.getTaskGroupById(toTaskGroupId)
+    const afterTask = toTaskIndex == 0 ? undefined : taskGroup.getTaskByIndex(toTaskIndex -1)
+
+    if (afterTask) {
+      client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
+    }
+    else {
+      throw new Error(`task index ${toTaskIndex} not found`)
+    }
+  }
+}
+
+
+// export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {
+//   // FIXME: hard-coded group as status here
+//   client.appendRow(tableId, id, [id, name, group])
+// }
+
 // // @ts-ignore
 // // window.eventHandler = onSortingEnd
 // // @ts-ignore
 // // window.appendTask = appendTask
-// window.client = client
+// @ts-ignore
+window.client = client
