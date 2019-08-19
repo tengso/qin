@@ -6,7 +6,7 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure, ErrorCode, RemoverId,
          removeUserFailure, removeUserSuccess,
-         removeTableSuccess, removeTableFailure, insertRowFailure, insertRowSuccess } from './TableFlowMessages'
+         removeTableSuccess, removeTableFailure, insertRowFailure, insertRowSuccess, moveRowAndUpdateCellFailure, moveRowAndUpdateCellSuccess } from './TableFlowMessages'
 
 import {Storage} from './Storage'
 import {RedisStorage} from './RedisStorage'
@@ -14,15 +14,18 @@ import {RedisStorage} from './RedisStorage'
 // FIXME: enforce one user one session
 
 const uuid = require('uuid/v4')
+const yargs = require('yargs')
 
 const root_id = 'root'
 const root_name = 'super'
 const root_password = 'root'
 
+const dbName = yargs.argv.dbName ? yargs.argv.dbName : 'test'
+
 // Transient State
 const sessionIdToSocket = new Map<SessionId, WebSocket>()
 
-const db: Storage = new RedisStorage()
+const db: Storage = new RedisStorage(dbName)
 
 function publish(msg, callback): void {
   db.getSubscribers(sessionIds => {
@@ -271,7 +274,7 @@ function handleRemoveRow(reply, message) {
           const rowIndex = getRowIndex(table, rowId) 
           console.log(rowIndex)
           if (rowIndex != -1) {
-            table.rows.splice(rowIndex, 1)
+            const row = table.rows.splice(rowIndex, 1)[0]
             table.version = table.version + 1
             db.setTableSnap(tableId, table, () => {
               db.setTableUpdate(tableId, table.version, message, () => {
@@ -279,6 +282,7 @@ function handleRemoveRow(reply, message) {
                   updateType: message.msgType,
                   tableId: tableId,
                   rowId: rowId,
+                  values: row.values
                 }
                 const msg = sendTableUpdate(sessionId, updatorId, update)
                 publish(msg, () => {
@@ -356,6 +360,76 @@ function handleUpdateCell(reply, message) {
     }
     else {
       reply(updateCellFailure(tableId, rowId, columnName, 'unknown session'))
+    }
+  }) 
+}
+
+function handleMoveRowAndUpdateCell(reply, message) {
+  const pl = message.payLoad
+  const uncheckedSessionId = pl.sessionId
+  const tableId = pl.tableId 
+  const rowId = pl.rowId
+  const afterRowId = pl.afterRowId
+  const columnName = pl.columnName
+  const value = pl.value
+  const updatorId = pl.updatorId
+
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          const rowIndex = getRowIndex(table, rowId)
+          if (rowIndex != -1) {
+            const row = table.rows[rowIndex]
+            // update cell
+            let columnIndex = undefined
+            if (columnName) {
+              columnIndex = table.columns.indexOf(columnName)
+              if (columnIndex === -1) {
+                reply(moveRowAndUpdateCellFailure(tableId, rowId, afterRowId, columnName, `column ${columnName} not exists`))
+              }
+              else {
+                console.log(JSON.stringify(table))
+                console.log(rowIndex)
+                row.values[columnIndex] = value
+              }
+            }
+
+            // move row
+            const newRowIndex = afterRowId ? getRowIndex(table, afterRowId) : -1 
+            const newRow = table.rows.splice(rowIndex, 1)
+            table.rows.splice(newRowIndex + 1, 0, newRow[0])
+
+            table.version = table.version + 1
+
+            db.setTableSnap(tableId, table, () => {
+              db.setTableUpdate(tableId, table.version, message, () => {
+                const update = {
+                  updateType: message.msgType,
+                  tableId: tableId,
+                  rowId: rowId,
+                  afterRowId: afterRowId,
+                  columnIndex: columnIndex,
+                  value: value,
+                }
+                const msg = sendTableUpdate(sessionId, updatorId, update)
+                publish(msg, () => {
+                  reply(moveRowAndUpdateCellSuccess(tableId, rowId, afterRowId, columnName))
+                })
+              })
+            })
+          }
+          else {
+            reply(moveRowAndUpdateCellFailure(tableId, rowId, afterRowId, columnName, `row ${rowId} not exists`))
+          }
+        }
+        else {
+          reply(moveRowAndUpdateCellFailure(tableId, rowId, afterRowId, columnName, `table ${tableId} not exists`))
+        }
+      })
+    }
+    else {
+      reply(moveRowAndUpdateCellFailure(tableId, rowId, afterRowId, columnName, 'unknown session'))
     }
   }) 
 }
@@ -537,6 +611,9 @@ export class TableFlowServer {
         break
       case MsgType.UpdateCell:
         handleUpdateCell(reply, message)
+        break
+      case MsgType.MoveRowAndUpdateCell:
+        handleMoveRowAndUpdateCell(reply, message)
         break
       default:
         console.log(`Unknown Msg`)

@@ -488,7 +488,7 @@ describe('Test Update Cell', function() {
       subscribeTablesSuccess = () => {
       }
 
-      updateCell = (updatedRowId: RowId, updatedColumnIndex: number, value: Object) => {
+      updateCell = (tableId: TableId, updatedRowId: RowId, updatedColumnIndex: number, value: Object) => {
         expect(updatedRowId).equal(rowId)
         expect(updatedColumnIndex).equal(columnIndex)
         expect(value).deep.equal(newValue)
@@ -798,6 +798,500 @@ describe('Test Insert Row 3', function() {
     }
 
     client.addCallback(new InsertRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+})
+
+describe('Move Row And Update Cell', function() {
+  it('basic cases 1', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId1 = 'row_id_1' 
+    const rowId2 = 'row_id_2' 
+    const rowId3 = 'row_id_3' 
+    const rowValue1 = ['val1', 'val1', 'val1']
+    const rowValue2 = ['val2', 'val2', 'val2']
+    const rowValue3 = ['val3', 'val3', 'val3']
+
+    class MoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        const row1: Row = {
+          rowId: rowId1,
+          values: rowValue1,
+        }
+        client.appendRow(tableId, row1.rowId, row1.values)
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        console.log(table)
+        expect(table.tableId).equal(tableId) 
+        expect(table.tableName).equal(tableName)
+        expect(table.columns).deep.equal(columns)
+        expect(table.version).equal(4)
+        expect(table.rows).deep.equal([
+          {
+            rowId: 'row_id_1', values: ['val1', 'val1', 'val1']
+          },
+          {
+            rowId: 'row_id_2', values: ['val2', 'val22', 'val2']
+          },
+          {
+            rowId: 'row_id_3', values: ['val3', 'val3', 'val3']
+          },
+        ])
+        done()
+      }
+
+      moveRowAndUpdateCellSuccess = (rowId) => {
+        console.log(`moved: ${rowId}`)
+        client.subscribeTables()
+      }
+
+      insertRowSuccess = (rowId) => {
+        client.moveRowAndUpdateCell(tableId, rowId2, rowId1, 'col2', 'val22')
+      }
+
+      appendRowSuccess = (newRowId) => {
+        console.log(newRowId)
+        if (newRowId === rowId1) {
+          const row3: Row = {
+            rowId: rowId3,
+            values: rowValue3,
+          }
+          client.appendRow(tableId, row3.rowId, row3.values)
+        }
+        if (newRowId === rowId3) {
+          client.insertRow(tableId, rowId2, rowId3, rowValue2)
+        }
+     }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new MoveRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+
+  it('basic cases 2', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId1 = 'row_id_1' 
+    const rowId2 = 'row_id_2' 
+    const rowId3 = 'row_id_3' 
+    const rowValue1 = ['val1', 'val1', 'val1']
+    const rowValue2 = ['val2', 'val2', 'val2']
+    const rowValue3 = ['val3', 'val3', 'val3']
+
+    class MoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        const row1: Row = {
+          rowId: rowId1,
+          values: rowValue1,
+        }
+        client.appendRow(tableId, row1.rowId, row1.values)
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        console.log(table)
+        expect(table.tableId).equal(tableId) 
+        expect(table.tableName).equal(tableName)
+        expect(table.columns).deep.equal(columns)
+        expect(table.version).equal(4)
+        expect(table.rows).deep.equal([
+          {
+            rowId: 'row_id_1', values: ['val1', 'val1', 'val1']
+          },
+          {
+            rowId: 'row_id_2', values: ['val2', 'val2', 'val2']
+          },
+          {
+            rowId: 'row_id_3', values: ['val3', 'val3', 'val3']
+          },
+        ])
+        done()
+      }
+
+      moveRowAndUpdateCellSuccess = (rowId) => {
+        console.log(`moved: ${rowId}`)
+        client.subscribeTables()
+      }
+
+      insertRowSuccess = (rowId) => {
+        client.moveRowAndUpdateCell(tableId, rowId2, rowId1, undefined, undefined)
+      }
+
+      appendRowSuccess = (newRowId) => {
+        console.log(newRowId)
+        if (newRowId === rowId1) {
+          const row3: Row = {
+            rowId: rowId3,
+            values: rowValue3,
+          }
+          client.appendRow(tableId, row3.rowId, row3.values)
+        }
+        if (newRowId === rowId3) {
+          client.insertRow(tableId, rowId2, rowId3, rowValue2)
+        }
+     }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new MoveRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+
+  it('basic cases 3', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId1 = 'row_id_1' 
+    const rowId2 = 'row_id_2' 
+    const rowId3 = 'row_id_3' 
+    const rowValue1 = ['val1', 'val1', 'val1']
+    const rowValue2 = ['val2', 'val2', 'val2']
+    const rowValue3 = ['val3', 'val3', 'val3']
+
+    class MoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        const row1: Row = {
+          rowId: rowId1,
+          values: rowValue1,
+        }
+        client.appendRow(tableId, row1.rowId, row1.values)
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        console.log(table)
+        expect(table.tableId).equal(tableId) 
+        expect(table.tableName).equal(tableName)
+        expect(table.columns).deep.equal(columns)
+        expect(table.version).equal(4)
+        expect(table.rows).deep.equal([
+          {
+            rowId: 'row_id_2', values: ['val2', 'val22', 'val2']
+          },
+          {
+            rowId: 'row_id_1', values: ['val1', 'val1', 'val1']
+          },
+          {
+            rowId: 'row_id_3', values: ['val3', 'val3', 'val3']
+          },
+        ])
+        done()
+      }
+
+      moveRowAndUpdateCellSuccess = (rowId) => {
+        console.log(`moved: ${rowId}`)
+        client.subscribeTables()
+      }
+
+      insertRowSuccess = (rowId) => {
+        client.moveRowAndUpdateCell(tableId, rowId2, undefined, 'col2', 'val22')
+      }
+
+      appendRowSuccess = (newRowId) => {
+        console.log(newRowId)
+        if (newRowId === rowId1) {
+          const row3: Row = {
+            rowId: rowId3,
+            values: rowValue3,
+          }
+          client.appendRow(tableId, row3.rowId, row3.values)
+        }
+        if (newRowId === rowId3) {
+          client.insertRow(tableId, rowId2, rowId3, rowValue2)
+        }
+     }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new MoveRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+
+  it('basic cases 4', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId1 = 'row_id_1' 
+    const rowId2 = 'row_id_2' 
+    const rowId3 = 'row_id_3' 
+    const rowValue1 = ['val1', 'val1', 'val1']
+    const rowValue2 = ['val2', 'val2', 'val2']
+    const rowValue3 = ['val3', 'val3', 'val3']
+
+    class MoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        const row1: Row = {
+          rowId: rowId1,
+          values: rowValue1,
+        }
+        client.appendRow(tableId, row1.rowId, row1.values)
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        console.log(table)
+        expect(table.tableId).equal(tableId) 
+        expect(table.tableName).equal(tableName)
+        expect(table.columns).deep.equal(columns)
+        expect(table.version).equal(4)
+        expect(table.rows).deep.equal([
+          {
+            rowId: 'row_id_1', values: ['val1', 'val1', 'val1']
+          },
+          {
+            rowId: 'row_id_3', values: ['val3', 'val3', 'val3']
+          },
+          {
+            rowId: 'row_id_2', values: ['val2', 'val22', 'val2']
+          },
+        ])
+        done()
+      }
+
+      moveRowAndUpdateCellSuccess = (rowId) => {
+        console.log(`moved: ${rowId}`)
+        client.subscribeTables()
+      }
+
+      insertRowSuccess = (rowId) => {
+        client.moveRowAndUpdateCell(tableId, rowId2, rowId3, 'col2', 'val22')
+      }
+
+      appendRowSuccess = (newRowId) => {
+        console.log(newRowId)
+        if (newRowId === rowId1) {
+          const row3: Row = {
+            rowId: rowId3,
+            values: rowValue3,
+          }
+          client.appendRow(tableId, row3.rowId, row3.values)
+        }
+        if (newRowId === rowId3) {
+          client.insertRow(tableId, rowId2, rowId3, rowValue2)
+        }
+     }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+      }
+
+      subscribeTablesSuccess = () => {
+      }
+    }
+
+    client.addCallback(new MoveRowTest((client, sessionId) => {
+      client.createTable(tableId, tableName, columns)
+    }))
+
+    client.connect(host, port) 
+  })
+
+  it('test table update', function(done) {
+
+    const tableId = 'test_table_id'
+    const tableName = 'test_table'
+    const columns = ['col1', 'col2', 'col3']
+    const rowId1 = 'row_id_1' 
+    const rowId2 = 'row_id_2' 
+    const rowId3 = 'row_id_3' 
+    const rowValue1 = ['val1', 'val1', 'val1']
+    const rowValue2 = ['val2', 'val2', 'val2']
+    const rowValue3 = ['val3', 'val3', 'val3']
+
+    class MoveRowTest extends Test {
+      constructor(afterLogin) {
+        super(afterLogin)
+      }
+
+      createTableSuccess = () => {
+        const row1: Row = {
+          rowId: rowId1,
+          values: rowValue1,
+        }
+        client.appendRow(tableId, row1.rowId, row1.values)
+      }
+
+      createTableFailure = (tableId, errorCode, reason) => {
+        if (errorCode === ErrorCode.TableExists) {
+          client.removeTable(tableId)
+        }
+        else {
+          fail(`failed to create table ${reason}`)
+          done()
+        }
+      }
+
+      removeTableSuccess = () => {
+        client.createTable(tableId, tableName, columns)
+      }
+
+      tableSnap = (table: Table) => {
+        console.log(table)
+        // expect(table.tableId).equal(tableId) 
+        // expect(table.tableName).equal(tableName)
+        // expect(table.columns).deep.equal(columns)
+        // expect(table.version).equal(4)
+        // expect(table.rows).deep.equal([
+        //   {
+        //     rowId: 'row_id_1', values: ['val1', 'val1', 'val1']
+        //   },
+        //   {
+        //     rowId: 'row_id_3', values: ['val3', 'val3', 'val3']
+        //   },
+        //   {
+        //     rowId: 'row_id_2', values: ['val2', 'val22', 'val2']
+        //   },
+        // ])
+        // done()
+      }
+
+      moveRowAndUpdateCellSuccess = (movedTableId: TableId, movedRowId: RowId, afterRowId: RowId, movedColumnName: ColumnName) => {
+        console.log(`moved: ${movedRowId}`)
+        expect(movedTableId).equal(tableId) 
+        expect(movedRowId).equal(rowId2) 
+        expect(movedColumnName).equal('col2')
+      }
+
+      moveRowAndUpdateCell = (movedTableId: TableId, movedRowId: RowId, afterRowId: RowId, movedColumnIndex: number, value: ColumnValue) => {
+        console.log(`moved: ${movedRowId}`)
+        expect(movedTableId).equal(tableId) 
+        expect(movedRowId).equal(rowId2) 
+        expect(afterRowId).equal(rowId3) 
+        expect(movedColumnIndex).equal(1)
+        done()
+      }
+
+      insertRowSuccess = (rowId) => {
+        client.subscribeTables()
+      }
+
+      appendRowSuccess = (newRowId) => {
+        console.log(newRowId)
+        if (newRowId === rowId1) {
+          const row3: Row = {
+            rowId: rowId3,
+            values: rowValue3,
+          }
+          client.appendRow(tableId, row3.rowId, row3.values)
+        }
+        if (newRowId === rowId3) {
+          client.insertRow(tableId, rowId2, rowId3, rowValue2)
+        }
+     }
+
+      appendRow = (newTableId: TableId, newRowId: RowId, newRowValue: ColumnValue[]) => {
+      }
+
+      subscribeTablesSuccess = () => {
+        client.moveRowAndUpdateCell(tableId, rowId2, rowId3, 'col2', 'val22')
+      }
+    }
+
+    client.addCallback(new MoveRowTest((client, sessionId) => {
       client.createTable(tableId, tableName, columns)
     }))
 

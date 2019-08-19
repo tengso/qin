@@ -1,6 +1,6 @@
 import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendRow, UserId, Password, removeRow, 
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
-  removeUser, removeTable, Row, TableName, CreatorId, insertRow
+  removeUser, removeTable, Row, TableName, CreatorId, insertRow, moveRowAndUpdateCell
   } from './TableFlowMessages';
 
 
@@ -42,14 +42,17 @@ export interface ClientCallback {
   insertRowSuccess: (rowId: RowId) => void
   insertRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
 
-  removeRow: (rowId: RowId, tableId: TableId) => void
+  removeRow: (rowId: RowId, tableId: TableId, values: ColumnValue[]) => void
   removeRowSuccess: (rowId: RowId) => void
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
 
-  updateCell: (rowId: RowId, columnIndex: number, value: Object) => void
+  updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void
 
+  moveRowAndUpdateCell: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnIndex: number, value: Object) => void
+  moveRowAndUpdateCellSuccess: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName) => void
+  moveRowAndUpdateCellFailure: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void
 }
 
 export class DefaultClientCallback {
@@ -68,7 +71,7 @@ export class DefaultClientCallback {
   removeUserSuccess: () => void = () => {}
   removeUserFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
 
-  createTable: (tableId: TableId, tableName: TableName, columns: ColumnName[], creatorId: CreatorId) => void = (tableId, tableName, columsn, creatorId) => {}
+  createTable: (tableId: TableId, tableName: TableName, columns: ColumnName[], creatorId: CreatorId) => void = (tableId, tableName, columns, creatorId) => {}
   createTableSuccess: (tableId: TableId) => void = tableId => {}
   createTableFailure: (tableId: TableId, errorCode: ErrorCode, reason: string) => void = (tableId, errorCode, reason) => {}
 
@@ -89,11 +92,15 @@ export class DefaultClientCallback {
 
   removeRowSuccess: (rowId: RowId) => void = rowId => {}
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
-  removeRow: (rowId: RowId, tableId: TableId) => void = rowId => {}
+  removeRow: (rowId: RowId, tableId: TableId, values: ColumnValue[]) => void = rowId => {}
 
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
-  updateCell: (rowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
+  updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
+
+  moveRowAndUpdateCellSuccess: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
+  moveRowAndUpdateCellFailure: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
+  moveRowAndUpdateCell: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
 }
 
 export class Client {
@@ -187,6 +194,10 @@ export class Client {
     this.connection.send(updateCell(this.sessionId, tableId, rowId, columnName, newValue, this.userId))
   }
 
+  moveRowAndUpdateCell(tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, newValue: ColumnValue) {
+    this.connection.send(moveRowAndUpdateCell(this.sessionId, tableId, rowId, afterRowId, columnName, newValue, this.userId))
+  }
+
   listen() {
     this.connection.onmessage = (e) => {
       const returnMsg = JSON.parse(e.data.toString())
@@ -275,6 +286,10 @@ export class Client {
             returnMsg.payLoad.columnName)
           break
         }
+        case MsgType.MoveRowAndUpdateCellSuccess: {
+          this.callback.moveRowAndUpdateCellSuccess(returnMsg.payLoad.tableId, returnMsg.payLoad.rowId, returnMsg.payLoad.afterRowId, returnMsg.payLoad.columnName)
+          break
+        }
         case MsgType.TableSnap: {
           this.callback.tableSnap(returnMsg.payLoad.table)
           break
@@ -289,10 +304,13 @@ export class Client {
               this.callback.insertRow(update.tableId, update.rowId, update.afterRowId, update.values)
               break
             case MsgType.RemoveRow:
-              this.callback.removeRow(update.rowId, update.tableId)
+              this.callback.removeRow(update.rowId, update.tableId, update.values)
               break
             case MsgType.UpdateCell:
-              this.callback.updateCell(update.rowId, update.columnIndex, update.value)
+              this.callback.updateCell(update.tableId, update.rowId, update.columnIndex, update.value)
+              break
+            case MsgType.MoveRowAndUpdateCell:
+              this.callback.moveRowAndUpdateCell(update.tableId, update.rowId, update.afterRowId, update.columnIndex, update.value)
               break
             case MsgType.RemoveTable:
               this.callback.removeTable(returnMsg.payLoad.update.tableId)
@@ -321,6 +339,10 @@ export class Client {
         }
         case MsgType.UpdateCellFailure: {
           console.error(`update cell failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.MoveRowAndUpdateCellFailure: {
+          console.error(`move row and update cell failure: ${returnMsg.payLoad.reason}`)
           break
         }
         case MsgType.RemoveRowFailure: {

@@ -73,6 +73,10 @@ export enum MsgType {
   UpdateCellSuccess = 'updateCellSuccess',
   UpdateCellFailure = 'updateCellFailure',
 
+  MoveRowAndUpdateCell = 'moveRowAndUpdateCell',
+  MoveRowAndUpdateCellSuccess = 'moveRowAndUpdateCellSuccess',
+  MoveRowAndUpdateCellFailure = 'moveRowAndUpdateCellFailure',
+
   Login = 'login',
   LoginSuccess = 'loginSuccess',
   LoginFailure = 'loginFailure',
@@ -361,7 +365,7 @@ export function removeRow(sessionId: SessionId, tableId: TableId, rowId: RowId, 
       sessionId: sessionId,
       tableId: tableId,
       rowId: rowId,
-      updatorId: updatorId
+      updatorId: updatorId,
     }
   }
 
@@ -433,6 +437,60 @@ export function updateCellFailure(tableId: TableId, rowId: RowId, columnName: Co
     payLoad: {
       tableId: tableId,
       rowId: rowId,
+      columnName: columnName,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function moveRowAndUpdateCell(
+  sessionId: SessionId,
+  tableId: TableId,
+  rowId: RowId,
+  afterRowId: RowId | undefined,
+  columnName: ColumnName | undefined,
+  value: ColumnValue | undefined,
+  updatorId: UpdatorId,
+) {
+  const msg = {
+    msgType: MsgType.MoveRowAndUpdateCell,
+    payLoad: {
+      sessionId: sessionId,
+      tableId: tableId,
+      rowId: rowId,
+      afterRowId: afterRowId,
+      columnName: columnName,
+      value: value,
+      updatorId: updatorId,
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function moveRowAndUpdateCellSuccess(tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName) { 
+  const msg = {
+    msgType: MsgType.MoveRowAndUpdateCellSuccess,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      afterRowId: afterRowId,
+      columnName: columnName
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function moveRowAndUpdateCellFailure(tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, reason: string) {
+  const msg = {
+    msgType: MsgType.MoveRowAndUpdateCellFailure,
+    payLoad: {
+      tableId: tableId,
+      rowId: rowId,
+      afterRowId: afterRowId,
       columnName: columnName,
       reason: reason
     }

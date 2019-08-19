@@ -18,6 +18,8 @@ export class RedisStorage implements Storage {
   private hash: Hash
 
   constructor(namespace: string = 'test') {
+    console.log(`using db: ${namespace}`)
+
     this.client.on('error', function (err) {
       console.log('Error' + err)
     })

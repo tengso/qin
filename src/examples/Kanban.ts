@@ -178,7 +178,7 @@ class KanbanCallback implements ClientCallback {
     this.logMessage(`update cell success: ${tableId} ${rowId} ${columnName}`)
   }
 
-  updateCell(rowId: RowId, columnIndex: number, value: ColumnValue) {
+  updateCell(tableId: TableId, rowId: RowId, columnIndex: number, value: ColumnValue) {
     this.logMessage(`update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
   }
 
@@ -188,6 +188,18 @@ class KanbanCallback implements ClientCallback {
 
   createTable(tableId: string, tableName: string, columns: string[], creatorId: string) {
     this.logMessage(`create table: ${tableId} ${tableName} ${columns} ${creatorId}`, 'tableUpdate')
+  }
+
+  moveRowAndUpdateCell(tableId: string, rowId: string, afterRowId: string, columnIndex: number, value: Object) {
+
+  }
+
+  moveRowAndUpdateCellSuccess(tableId: string, rowId: string, afterRowId: string, columnName: string) {
+
+  }
+
+  moveRowAndUpdateCellFailure(tableId: string, rowId: string, afterRowId: string, columnName: string, errorCode: ErrorCode, reason: string) {
+
   }
 
 

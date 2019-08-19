@@ -9,7 +9,17 @@
         "sourceMap": true,
     },
     "include": [
-        "./src/**/*",
-        "src/test/**/*"
+        "./src/TableFlowMessages.ts",
+        "./src/TableFlowServer.ts",
+        "./src/TableFlowClient.ts",
+        "./src/examples/team/Core.ts",
+        "./src/examples/team/Model.ts",
+        "./src/examples/team/View.ts",
+        "./src/examples/team/Control.ts",
+        "./src/examples/client.ts",
+        "./src/examples/server.ts",
+        "./src/examples/ClientSim.ts",
+        "./src/examples/Kanban.ts",
+        "./src/test/**/*"
     ]
 }
