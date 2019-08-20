@@ -5,7 +5,7 @@ import { Model } from './Model'
 import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId } from './Core'
 
 class Control implements ClientCallback {
-  view = new View(this.afterSortingCallback)
+  view = new View(document, this.afterSortingCallback)
   model = new Model()
 
   client

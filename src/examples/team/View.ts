@@ -31,43 +31,65 @@ import {ProjectId, TaskGroupId, TaskId } from './Core'
 */
 export class View {
 
-  afterSortingCallback: (event) => void
+  private afterSortingCallback: (event) => void
+  private document
 
-  constructor(afterSortingCallback) {
+  constructor(document, afterSortingCallback) {
     this.afterSortingCallback = afterSortingCallback
+    this.document = document
   }
 
-  createTaskElement(task: Task) {
-    const taskElement = document.createElement('div')
+  private createTaskElement(task: Task) {
+    const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
     taskElement.setAttribute('id', task.id)
+
+    const titleElement = this.document.createElement('div')
+    titleElement.setAttribute('class', 'Title')
+    titleElement.innerHTML = task.title
+
+    const descElement = this.document.createElement('div')
+    descElement.setAttribute('class', 'Description')
+    descElement.innerHTML = task.description
+
+    const dueDateElement = this.document.createElement('div')
+    dueDateElement.setAttribute('class', 'DueDate')
+    dueDateElement.innerHTML = task.dueDate
+
+    taskElement.appendChild(titleElement)
+    taskElement.appendChild(descElement)
+    taskElement.appendChild(dueDateElement)
+    
     return taskElement
   }
 
-  createTaskGroupElement(project: Project, taskGroup: TaskGroup) {
-    const taskGroupElement = document.createElement('div')
+  private createTaskGroupElement(project: Project, taskGroup: TaskGroup) {
+    const taskGroupElement = this.document.createElement('div')
     taskGroupElement.setAttribute('id', taskGroup.id)
     taskGroupElement.setAttribute('class', 'TaskGroup')
 
-    const taskGroupHeadElement = document.createElement('div')
+    const taskGroupHeadElement = this.document.createElement('div')
+    taskGroupHeadElement.setAttribute('class', 'TaskGroupHead')
 
-    const titleElement = document.createElement('div')
+    const titleElement = this.document.createElement('div')
     titleElement.setAttribute('class', 'Title')
+    titleElement.innerHTML = taskGroup.title
 
-    const descElement = document.createElement('div')
+    const descElement = this.document.createElement('div')
     descElement.setAttribute('class', 'Description')
+    descElement.innerHTML = taskGroup.description
 
     taskGroupHeadElement.appendChild(titleElement)
     taskGroupHeadElement.appendChild(descElement)
 
-    const taskGroupListElement = document.createElement('div')
+    const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskList')
 
-    new Sortable(taskGroupListElement, {
-      group: project.id,
-      animation: 150,
-      onEnd: this.afterSortingCallback
-    })
+    // new Sortable(taskGroupListElement, {
+    //   group: project.id,
+    //   animation: 150,
+    //   onEnd: this.afterSortingCallback
+    // })
 
     taskGroupElement.appendChild(taskGroupHeadElement)
     taskGroupElement.appendChild(taskGroupListElement)
@@ -75,31 +97,38 @@ export class View {
     return taskGroupElement
   }
 
-  createProjectElement(project: Project) {
-    const projectElement = document.createElement('div')
+  private createProjectElement(project: Project) {
+    const projectElement = this.document.createElement('div')
     projectElement.setAttribute('class', 'Project')
     projectElement.setAttribute('id', project.id)
 
-    const projectHeadElement = document.createElement('div')
+    const projectHeadElement = this.document.createElement('div')
     projectHeadElement.setAttribute('class', 'ProjectHead')
 
-    const titleElement = document.createElement('div')
+    const titleElement = this.document.createElement('div')
     titleElement.setAttribute('class', 'Title')
+    titleElement.innerHTML = project.title
 
-    const descElement = document.createElement('div')
+    const descElement = this.document.createElement('div')
     descElement.setAttribute('class', 'Description')
+    descElement.innerHTML = project.description
+
+    const dueDateElement = this.document.createElement('div')
+    dueDateElement.setAttribute('class', 'DueDate')
+    dueDateElement.innerHTML = project.dueDate
 
     projectHeadElement.appendChild(titleElement)
     projectHeadElement.appendChild(descElement)
+    projectHeadElement.appendChild(dueDateElement)
 
-    const taskGroupListElement = document.createElement('div')
+    const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskGroupList')
 
-    new Sortable(taskGroupListElement, {
-      group: `${project.id}-TaskGroup`,
-      animation: 150,
-      onEnd: this.afterSortingCallback
-    })
+    // new Sortable(taskGroupListElement, {
+    //   group: `${project.id}-TaskGroup`,
+    //   animation: 150,
+    //   onEnd: this.afterSortingCallback
+    // })
 
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)
@@ -108,13 +137,13 @@ export class View {
   }
 
   appendProject(project: Project) {
-    const appElement = document.getElementById('app')
+    const appElement = this.document.getElementById('app')
     const projectElement = this.createProjectElement(project)
     appElement.appendChild(projectElement)
   }
 
   appendTaskGroup(project: Project, taskGroup: TaskGroup) {
-    const projectElement = document.getElementById(project.id)
+    const projectElement = this.document.getElementById(project.id)
     if (projectElement) {
       const taskGroupElement = this.createTaskGroupElement(project, taskGroup)
       projectElement.children[1].appendChild(taskGroupElement)
@@ -125,7 +154,7 @@ export class View {
   }
 
   removeTaskGroup(taskGroupId: TaskGroupId) {
-    const taskGroupElement = document.getElementById(taskGroupId)
+    const taskGroupElement = this.document.getElementById(taskGroupId)
     if (taskGroupElement) {
       taskGroupElement.parentNode.removeChild(taskGroupElement)
     }
@@ -135,7 +164,7 @@ export class View {
   }
 
   insertTaskGroup(project: Project, taskGroup: TaskGroup, index: number) {
-    const projectElement = document.getElementById(project.id)
+    const projectElement = this.document.getElementById(project.id)
     if (projectElement) {
       if (index < projectElement.children.length - 1) {
         const taskGroupElement = this.createTaskGroupElement(project, taskGroup)
@@ -153,7 +182,7 @@ export class View {
 
   appendTask(taskGroup: TaskGroup, task: Task) {
     const taskElement = this.createTaskElement(task)
-    const taskGroupElement = document.getElementById(taskGroup.id)
+    const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
       taskGroupElement.children[1].appendChild(taskElement)
     }
@@ -163,7 +192,7 @@ export class View {
   }
 
   removeTask(taskId: TaskId) {
-    const taskElement = document.getElementById(taskId)
+    const taskElement = this.document.getElementById(taskId)
     if (taskElement) {
       taskElement.parentNode.removeChild(taskElement)
     }
@@ -173,7 +202,7 @@ export class View {
   }
 
   insertTask(taskGroup: TaskGroup, task: Task, index: number) {
-    const taskGroupElement = document.getElementById(taskGroup.id)
+    const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
       if (index < taskGroupElement.children[1].children.length - 1) {
           const taskElement = this.createTaskElement(task)
@@ -189,7 +218,7 @@ export class View {
     }
   }
 
-  findElementIndex(element): number {
+  private findElementIndex(element): number {
     const children = element.parentElement.children
     for (let i = 0; i < children.length; i++) {
       if (children[i].getAttribute('id') == element.getAttribute('id')) {
@@ -200,13 +229,17 @@ export class View {
   }
 
   moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId | undefined) {
-    const projectElement = document.getElementById(projectId)
+    if (taskGroupId == afterTaskGroupId) {
+      throw new Error(`invalid move from task group ${taskGroupId} is after task group ${afterTaskGroupId}`)
+    }
+
+    const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
-      const taskGroupElement = document.getElementById(taskGroupId)
+      const taskGroupElement = this.document.getElementById(taskGroupId)
       if (taskGroupElement) {
         const parentElement = taskGroupElement.parentElement
         if (afterTaskGroupId) {
-          const afterTaskGroupElement = document.getElementById(afterTaskGroupId)
+          const afterTaskGroupElement = this.document.getElementById(afterTaskGroupId)
           const index = this.findElementIndex(afterTaskGroupElement)
           if (index != -1) {
             if (index == afterTaskGroupElement.parentElement.children.length - 1) {
@@ -215,8 +248,9 @@ export class View {
               parentElement.appendChild(taskGroupElement)
             }
             else {
+              const refElement = parentElement.children[index + 1]
               parentElement.removeChild(taskGroupElement)
-              parentElement.insertBefore(taskGroupElement, parentElement.children[index + 1])
+              parentElement.insertBefore(taskGroupElement, refElement)
             }
           }
           else {
@@ -224,9 +258,11 @@ export class View {
           }
         }
         else {
-          // append at end
-          parentElement.removeChild(taskGroupElement)
-          parentElement.appendChild(taskGroupElement)
+          if (parentElement.children.length > 0) {
+            const refElement = parentElement.children[0]
+            parentElement.removeChild(taskGroupElement)
+            parentElement.insertBefore(taskGroupElement, refElement)
+          }
         }
       }
       else {
@@ -239,28 +275,38 @@ export class View {
   }
 
   moveTask(projectId: ProjectId, taskId: TaskId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined) {
-    const projectElement = document.getElementById(projectId)
+    if (taskId == afterTaskId) {
+      throw new Error(`invalid move from task ${taskId} is after task ${afterTaskId}`)
+    }
+
+    const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
-      const toTaskGroupElement = document.getElementById(toTaskGroupId)
+      const toTaskGroupElement = this.document.getElementById(toTaskGroupId)
       if (toTaskGroupElement) {
-        const taskElement = document.getElementById(taskId)
+        const taskElement = this.document.getElementById(taskId)
         if (taskElement) {
-          const fromTaskGroupElement = taskElement.parentElement
-          const fromParentElement = fromTaskGroupElement.children[1]
+          const fromParentElement = taskElement.parentElement
           const toParentElement = toTaskGroupElement.children[1]
           if (afterTaskId) {
-            const afterTaskElement = document.getElementById(afterTaskId)
+            const afterTaskElement = this.document.getElementById(afterTaskId)
             if (afterTaskElement) {
               const index = this.findElementIndex(afterTaskElement)
               if (index != -1) {
-                if (index == afterTaskElement.parentElement.children.length - 1) {
+                if (index == toParentElement.children.length - 1) {
                   // append at end
                   fromParentElement.removeChild(taskElement)
                   toParentElement.appendChild(taskElement)
                 }
                 else {
-                  fromParentElement.removeChild(taskElement)
-                  toParentElement.insertBefore(taskElement, toParentElement.children[index + 1])
+                  if (fromParentElement != toParentElement) {
+                    fromParentElement.removeChild(taskElement)
+                    toParentElement.insertBefore(taskElement, toParentElement.children[index + 1])
+                  }
+                  else {
+                    const refElement = toParentElement.children[index + 1]
+                    fromParentElement.removeChild(taskElement)
+                    toParentElement.insertBefore(taskElement, refElement)
+                  }
                 }
               }
               else {
@@ -272,9 +318,15 @@ export class View {
             }
           }
           else {
-            // append at end
-            fromParentElement.removeChild(taskElement)
-            toParentElement.appendChild(taskElement)
+            if (toParentElement.children.length == 0) {
+              fromParentElement.removeChild(taskElement)
+              toParentElement.appendChild(taskElement)
+            }
+            else {
+              const refElement = toParentElement.children[0]
+              fromParentElement.removeChild(taskElement)
+              toParentElement.insertBefore(taskElement, refElement)
+            }
           }
         }
       }

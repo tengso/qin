@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "test": "mocha --require ts-node/register src/test/Model.test.ts"
+    "test": "mocha --require ts-node/register src/test/View.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -15,7 +15,9 @@
     "@types/uuid": "^3.4.4",
     "@types/ws": "^6.0.1",
     "chai": "^4.2.0",
+    "jsdom": "^15.1.1",
     "mocha": "^6.2.0",
+    "sortablejs": "^1.10.0-rc3",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3",
     "webpack": "^4.36.1",
@@ -23,8 +25,8 @@
   },
   "dependencies": {
     "@types/yargs": "^13.0.2",
+    "pretty": "^2.0.0",
     "redis": "^2.8.0",
-    "sortablejs": "^1.10.0-rc3",
     "uuid": "^3.3.2",
     "ws": "^7.1.1",
     "yargs": "^13.3.0"
