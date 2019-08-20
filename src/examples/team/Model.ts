@@ -85,6 +85,17 @@ class ProjectImpl implements Project {
     }
   }
 
+  getTaskGroupOfTask(taskId: TaskId): TaskGroupImpl | undefined {
+    for (let i = 0; i < this.taskGroupList.length; i++) {
+      const taskGroup = this.taskGroupList[i]
+      if (taskGroup.getTask(taskId)) {
+        return taskGroup
+      }
+    }
+
+    return undefined
+  }
+
   appendTaskGroup(taskGroup: TaskGroupImpl): void {
     console.log(taskGroup)
     this.taskGroupList.push(taskGroup)
@@ -171,9 +182,8 @@ class TaskGroupImpl implements TaskGroup {
   private taskList = new Array<TaskImpl>()
   private taskMap = new Map<TaskId, TaskImpl>()
 
-  appendTask(task: Task) {
-    this.taskMap.set(task.id, task)
-    this.taskList.push(task)
+  getTask(taskId: TaskId): Task {
+    return this.taskMap.get(taskId)
   }
 
   getTaskIndex(taskId: TaskId): number | undefined {
@@ -189,6 +199,12 @@ class TaskGroupImpl implements TaskGroup {
       return undefined
     }
   }
+
+  appendTask(task: Task) {
+    this.taskMap.set(task.id, task)
+    this.taskList.push(task)
+  }
+
 
   // return the index of the new task
   insertTask(task: Task, afterTaskId: TaskId | undefined): number | undefined {
@@ -437,27 +453,33 @@ export class Model {
     }
   }
 
-  moveTask(projectId: ProjectId, taskId: TaskId, fromTaskGroupId: TaskGroupId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined): number {
-      const project = this.projectMap.get(projectId)
-      if (project) {
-        const toTaskGroup = project.getTaskGroup(toTaskGroupId)
-        if (toTaskGroup) {
-          const fromTaskGroup = project.getTaskGroup(fromTaskGroupId)
+  moveTask(projectId: ProjectId, taskId: TaskId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined): number {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const toTaskGroup = project.getTaskGroup(toTaskGroupId)
+      if (toTaskGroup) {
+        const fromTaskGroup = project.getTaskGroupOfTask(taskId)
+        if (fromTaskGroup) {
           const task = fromTaskGroup.getTask(taskId)
           if (task) {
-            if (fromTaskGroup) {
-              fromTaskGroup.removeTask(taskId)
-              return toTaskGroup.insertTask(task, afterTaskId)
-            }
-            else {
-              throw new Error(`from task group ${fromTaskGroupId} not found`)
-            }
+            fromTaskGroup.removeTask(taskId)
+            return toTaskGroup.insertTask(task, afterTaskId)
           }
+          else {
+            throw new Error(`task ${taskId} not found`)
+          }
+        }
+        else {
+          throw new Error(`from task group not found for task ${taskId}`)
         }
       }
       else {
-        throw new Error(`project ${projectId} not found`)
+        throw new Error(`to task group ${toTaskGroupId} not found`)
       }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
   }
 
   getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId | undefined {
