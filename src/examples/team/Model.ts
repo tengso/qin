@@ -1,78 +1,98 @@
 import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description } from './Core'
 
-class Node<Value> {
-  private id: string
-  private value: Value
-  private childList = new Array<Node<Value>>()
+// class Node<Value> {
+//   private id: string
+//   private value: Value
+//   private childList = new Array<Node<Value>>()
 
-  constructor(value: Value) {
-    this.value = value
-  }
+//   constructor(value: Value) {
+//     this.value = value
+//   }
 
-  getValue(): Value {
-    return this.value
-  }
+//   getValue(): Value {
+//     return this.value
+//   }
 
-  getId(): string {
-    return this.id
-  }
+//   getId(): string {
+//     return this.id
+//   }
 
-  appendChild(child: Node<Value>) {
-    this.childList.push(child)
-  }
+//   appendChild(child: Node<Value>) {
+//     this.childList.push(child)
+//   }
 
-  insertChild(child: Node<Value>, after: string | undefined): number {
-    if (after) {
-      let index = this.childList.findIndex(child => child.id === after)
-      if (index != -1) {
-        index++
-        this.childList.splice(index, 0, child)
-        return index
-      }
-      else {
-        throw new Error(`${after} not found`)
-      }
-    }
-    // insert at first
-    else {
-      this.childList.splice(0, 0, child)
-      return 0
-    }
-  }
+//   insertChild(child: Node<Value>, after: string | undefined): number {
+//     if (after) {
+//       let index = this.childList.findIndex(child => child.id === after)
+//       if (index != -1) {
+//         index++
+//         this.childList.splice(index, 0, child)
+//         return index
+//       }
+//       else {
+//         throw new Error(`${after} not found`)
+//       }
+//     }
+//     // insert at first
+//     else {
+//       this.childList.splice(0, 0, child)
+//       return 0
+//     }
+//   }
 
-  removeChild(childId: string) {
-    const index = this.childList.findIndex(child => child.id === childId)
-    if (index != -1) {
-      this.childList.splice(index, 1)
-    }
-  }
+//   removeChild(childId: string) {
+//     const index = this.childList.findIndex(child => child.id === childId)
+//     if (index != -1) {
+//       this.childList.splice(index, 1)
+//     }
+//   }
 
-  getChildIndex(childId: string): number | undefined {
-    const index = this.childList.findIndex(child => child.id === childId)
-    return index != -1 ? index : undefined
-  }
+//   getChildIndex(childId: string): number | undefined {
+//     const index = this.childList.findIndex(child => child.id === childId)
+//     return index != -1 ? index : undefined
+//   }
+// }
+
+export interface Project {
+  readonly id: ProjectId
+  title: Title
+  description: Description
+  dueDate: Date
 }
 
-export class Project {
+class ProjectImpl implements Project {
   id: ProjectId
   title: Title
   description: Description
   dueDate: Date
 
-  private taskGroupList = new Array<TaskGroup>()
-  private taskGroupMap = new Map<TaskGroupId, TaskGroup>()
+  private taskGroupList = new Array<TaskGroupImpl>()
+  private taskGroupMap = new Map<TaskGroupId, TaskGroupImpl>()
 
-  getTaskGroup(taskGroupId: TaskGroupId): TaskGroup | undefined {
+  constructor() {}
+
+  getTaskGroup(taskGroupId: TaskGroupId): TaskGroupImpl | undefined {
+    console.log(this.taskGroupMap)
     return this.taskGroupMap.get(taskGroupId)
   }
 
-  appendTaskGroup(taskGroup: TaskGroup): void {
+  getTaskGroupByIndex(index: number): TaskGroup | undefined {
+    if (index < this.taskGroupList.length) {
+      return this.taskGroupList[index]
+    }
+    else {
+      return undefined
+    }
+  }
+
+  appendTaskGroup(taskGroup: TaskGroupImpl): void {
+    console.log(taskGroup)
     this.taskGroupList.push(taskGroup)
     this.taskGroupMap.set(taskGroup.id, taskGroup)
   }
 
   // return the index of the new element
-  insertTaskGroup(taskGroup: TaskGroup, afterTaskGroupId: TaskGroupId | undefined): number {
+  insertTaskGroup(taskGroup: TaskGroupImpl, afterTaskGroupId: TaskGroupId | undefined): number {
     if (afterTaskGroupId) {
       let index = this.taskGroupList.findIndex(taskGroup => taskGroup.id === afterTaskGroupId)
       if (index != -1) {
@@ -108,16 +128,48 @@ export class Project {
     const index = this.taskGroupList.findIndex(taskGroup => taskGroup.id === taskGroupId)
     return index != -1 ? index : undefined
   }
+
+  moveTaskGroup(taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId | undefined): number {
+    const taskGroupIndex = this.getTaskGroupIndex(taskGroupId)
+    if (taskGroupIndex != undefined) {
+      if (afterTaskGroupId) {
+        let afterTaskGroupIndex = this.getTaskGroupIndex(afterTaskGroupId)
+        if (afterTaskGroupIndex != undefined) {
+          if (taskGroupIndex > afterTaskGroupIndex) {
+            afterTaskGroupIndex++
+          }
+          const taskGroup = this.taskGroupList.splice(taskGroupIndex, 1)[0]
+          this.taskGroupList.splice(afterTaskGroupIndex, 0, taskGroup)
+          return afterTaskGroupIndex
+        }
+        else {
+          throw new Error(`after task group ${afterTaskGroupId} not found`)
+        }
+      }
+      else {
+        const taskGroup = this.taskGroupList.splice(taskGroupIndex, 1)[0]
+        this.taskGroupList.splice(0, 0, taskGroup)
+      }
+    }
+    else {
+      throw new Error(`task group ${taskGroupId} not found`)
+    }
+  }
 }
 
-export class TaskGroup {
+export interface TaskGroup {
+  readonly id: TaskGroupId
+  title: Title
+  description: Description
+}
+
+class TaskGroupImpl implements TaskGroup {
   id: TaskGroupId
-  // project: Project
   title: Title
   description: Description
 
-  private taskList = new Array<Task>()
-  private taskMap = new Map<TaskId, Task>()
+  private taskList = new Array<TaskImpl>()
+  private taskMap = new Map<TaskId, TaskImpl>()
 
   appendTask(task: Task) {
     this.taskMap.set(task.id, task)
@@ -127,6 +179,15 @@ export class TaskGroup {
   getTaskIndex(taskId: TaskId): number | undefined {
     const index = this.taskList.findIndex(task => task.id === taskId)
     return index != -1 ? index : undefined
+  }
+
+  getTaskByIndex(index: number): Task | undefined {
+    if (index < this.taskList.length) {
+      return this.taskList[index]
+    }
+    else {
+      return undefined
+    }
   }
 
   // return the index of the new task
@@ -158,9 +219,36 @@ export class TaskGroup {
       this.taskMap.delete(taskId)
     }
   }
+
+  moveTask(taskId: TaskId, afterTaskId: TaskId): number {
+    const taskIndex = this.getTaskIndex(taskId)
+    if (taskIndex != undefined) {
+      let afterTaskIndex = this.getTaskIndex(afterTaskId) 
+      if (afterTaskIndex != undefined) {
+        afterTaskIndex++
+        const task = this.taskList.splice(taskIndex, 1)[0]
+        this.taskList.splice(afterTaskIndex++, 0, task)
+
+        return afterTaskIndex
+      }
+      else {
+        throw new Error(`after task ${afterTaskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
 }
 
-export class Task {
+export interface Task {
+  readonly id: TaskId
+  title: Title
+  description: Description
+  dueDate: Date
+}
+
+class TaskImpl implements Task {
   id: TaskId
   title: Title
   description: Description
@@ -168,35 +256,47 @@ export class Task {
 }
 
 export class Model {
-  projectList = new Array<Project>()
-  projectMap = new Map<ProjectId, Project>()
+  private projectList = new Array<ProjectImpl>()
+  private projectMap = new Map<ProjectId, ProjectImpl>()
+
+  private taskToProjectMap = new Map<TaskId, ProjectId>()
+  private taskGroupToProjectMap = new Map<TaskGroupId, ProjectId>()
 
   private createTask(values: TaskRow): Task {
-    const task = new Task() 
+    const task = new TaskImpl() 
     task.id = values.id
     task.title = values.title
     task.description = values.description
     task.dueDate = values.dueDate
 
+    this.taskToProjectMap.set(task.id, values.projectId)
+
     return task
   }
 
-  private createTaskGroup(values: TaskGroupRow): TaskGroup {
-    const taskGroup = new TaskGroup()
+  private createTaskGroup(values: TaskGroupRow): TaskGroupImpl {
+    const taskGroup = new TaskGroupImpl()
+    taskGroup.id = values.id
     taskGroup.title = values.title
     taskGroup.description = values.description
+
+    this.taskGroupToProjectMap.set(taskGroup.id, values.projectId)
 
     return taskGroup
   }
 
-  private createProject(values: ProjectRow): Project {
-    const project = new Project()
+  private createProject(values: ProjectRow): ProjectImpl {
+    const project = new ProjectImpl()
     project.id = values.id
     project.title = values.title
     project.description = values.description
     project.dueDate = values.dueDate
 
     return project
+  }
+
+  getProject(projectId: ProjectId): Project | undefined {
+    return this.projectMap.get(projectId)
   }
 
   appendProject(values: ProjectRow): Project {
@@ -207,14 +307,14 @@ export class Model {
   }
 
   appendTaskGroup(values: TaskGroupRow): [Project, TaskGroup] {
-    const taskGroup = this.createTaskGroup(values)
     const project = this.projectMap.get(values.projectId)
     if (project) {
+      const taskGroup = this.createTaskGroup(values)
       project.appendTaskGroup(taskGroup)
       return [project, taskGroup]
     }
     else {
-      throw new Error(`${values.projectId} not found`)
+      throw new Error(`project ${values.projectId} not found`)
     }
   }
 
@@ -228,25 +328,26 @@ export class Model {
         return [project, taskGroup, task]
       }
       else {
-        throw new Error(`${values.taskGroupId} not found`)
+        throw new Error(`task group ${values.taskGroupId} not found`)
       }
     }
     else {
-      throw new Error(`${values.projectId} not found`)
+      throw new Error(`project ${values.projectId} not found`)
     }
   }
 
   insertProject(afterProjectId: ProjectId, values: ProjectRow): [Project, number] {
     const project = this.createProject(values)
     if (afterProjectId) {
-      const index = this.projectList.findIndex(project => project.id === afterProjectId)
+      let index = this.projectList.findIndex(project => project.id === afterProjectId)
       if (index != -1) {
+        index++
         this.projectList.splice(index, 0, project)
         this.projectMap.set(project.id, project)
         return [project, index]
       }
       else {
-        throw new Error(`${afterProjectId} not found`)
+        throw new Error(`after project ${afterProjectId} not found`)
       }
     }
     else {
@@ -264,7 +365,7 @@ export class Model {
       return [project, taskGroup, index]
     }
     else {
-      throw new Error(`${values.projectId} not found`)
+      throw new Error(`project ${values.projectId} not found`)
     }
   }
 
@@ -290,14 +391,22 @@ export class Model {
     const index = this.projectList.findIndex(project => project.id === projectId)
     if (index != -1) {
       this.projectList.splice(index, 1)
+      this.projectMap.delete(projectId)
+      return index
     }
-    this.projectMap.delete(projectId)
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
   }
 
   removeTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId) {
     const project = this.projectMap.get(projectId)
     if (project) {
       project.removeTaskGroup(taskGroupId)
+      this.taskGroupToProjectMap.delete(taskGroupId)
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
     }
   }
 
@@ -307,23 +416,81 @@ export class Model {
       const taskGroup = project.getTaskGroup(taskGroupId)
       if (taskGroup) {
         taskGroup.removeTask(taskId)
+        this.taskToProjectMap.delete(taskId)
       }
+      else {
+        throw new Error(`task group ${taskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
     }
   }
 
-  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId) {
-
+  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId): number {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      return project.moveTaskGroup(taskGroupId, afterTaskGroupId)
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
   }
 
-  moveTask(projectId: ProjectId, taskId: TaskId, taskGroupId: TaskGroupId | undefined, afterTaskId: TaskId) {
-
+  moveTask(projectId: ProjectId, taskId: TaskId, fromTaskGroupId: TaskGroupId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined): number {
+      const project = this.projectMap.get(projectId)
+      if (project) {
+        const toTaskGroup = project.getTaskGroup(toTaskGroupId)
+        if (toTaskGroup) {
+          const fromTaskGroup = project.getTaskGroup(fromTaskGroupId)
+          const task = fromTaskGroup.getTask(taskId)
+          if (task) {
+            if (fromTaskGroup) {
+              fromTaskGroup.removeTask(taskId)
+              return toTaskGroup.insertTask(task, afterTaskId)
+            }
+            else {
+              throw new Error(`from task group ${fromTaskGroupId} not found`)
+            }
+          }
+        }
+      }
+      else {
+        throw new Error(`project ${projectId} not found`)
+      }
   }
 
-  getProjectByTaskGroupId(taskGroupId: TaskGroupId): Project | undefined {
-    return undefined
+  getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId | undefined {
+    return this.taskGroupToProjectMap.get(taskGroupId)
   }
 
-  getProjectByTaskId(taskId: TaskGroupId): Project | undefined {
-    return undefined
+  getProjectIdByTaskId(taskId: TaskGroupId): ProjectId | undefined {
+    return this.taskToProjectMap.get(taskId)
+  }
+
+  getTaskGroupByIndex(projectId: ProjectId, taskGroupIndex: number): TaskGroup | undefined {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      return project.getTaskGroupByIndex(taskGroupIndex)
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  getTaskByIndex(projectId: ProjectId, taskGroupId: TaskGroupId, taskIndex: number): Task | undefined {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroup(taskGroupId)
+      if (taskGroup) {
+        return taskGroup.getTaskByIndex(taskIndex)
+      }
+      else {
+        throw new Error(`task group ${projectId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
   }
 }

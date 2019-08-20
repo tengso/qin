@@ -1,5 +1,4 @@
 import Sortable from 'sortablejs'
-import {onSortingEnd} from './Control'
 import {Project, TaskGroup, Task } from './Model'
 import {ProjectId, TaskGroupId, TaskId } from './Core'
 
@@ -30,7 +29,13 @@ import {ProjectId, TaskGroupId, TaskId } from './Core'
     </div>
 </div>
 */
-export class KanbanView {
+export class View {
+
+  afterSortingCallback: (event) => void
+
+  constructor(afterSortingCallback) {
+    this.afterSortingCallback = afterSortingCallback
+  }
 
   createTaskElement(task: Task) {
     const taskElement = document.createElement('div')
@@ -61,7 +66,7 @@ export class KanbanView {
     new Sortable(taskGroupListElement, {
       group: project.id,
       animation: 150,
-      onEnd: onSortingEnd
+      onEnd: this.afterSortingCallback
     })
 
     taskGroupElement.appendChild(taskGroupHeadElement)
@@ -93,7 +98,7 @@ export class KanbanView {
     new Sortable(taskGroupListElement, {
       group: `${project.id}-TaskGroup`,
       animation: 150,
-      onEnd: onSortingEnd
+      onEnd: this.afterSortingCallback
     })
 
     projectElement.appendChild(projectHeadElement)
@@ -184,31 +189,101 @@ export class KanbanView {
     }
   }
 
-  // getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId {
-  //   const taskGroupElement = document.getElementById(taskGroupId)
-  //   if (taskGroupElement) {
-  //     return taskGroupElement.parentElement.parentElement.getAttribute('id')
-  //   }
-  //   else {
-  //     throw new Error(`task group element ${taskGroupId} not found`)
-  //   }
-  // }
-
-  // getProjectIdByTaskId(taskId: TaskId): ProjectId {
-  //   const taskElement = document.getElementById(taskId)
-  //   if (taskElement) {
-  //     return taskElement.parentElement.parentElement.parentElement.parentElement.getAttribute('id')
-  //   }
-  //   else {
-  //     throw new Error(`task element ${taskId} not found`)
-  //   }
-  // }
-
-  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId) {
-
+  findElementIndex(element): number {
+    const children = element.parentElement.children
+    for (let i = 0; i < children.length; i++) {
+      if (children[i].getAttribute('id') == element.getAttribute('id')) {
+        return i
+      }
+    }
+    return -1
   }
 
-  moveTask(projectId: ProjectId, taskId: TaskId, taskGroupId: TaskGroupId | undefined, afterTaskId: TaskId) {
+  moveTaskGroup(projectId: ProjectId, taskGroupId: TaskGroupId, afterTaskGroupId: TaskGroupId | undefined) {
+    const projectElement = document.getElementById(projectId)
+    if (projectElement) {
+      const taskGroupElement = document.getElementById(taskGroupId)
+      if (taskGroupElement) {
+        const parentElement = taskGroupElement.parentElement
+        if (afterTaskGroupId) {
+          const afterTaskGroupElement = document.getElementById(afterTaskGroupId)
+          const index = this.findElementIndex(afterTaskGroupElement)
+          if (index != -1) {
+            if (index == afterTaskGroupElement.parentElement.children.length - 1) {
+              // append at end
+              parentElement.removeChild(taskGroupElement)
+              parentElement.appendChild(taskGroupElement)
+            }
+            else {
+              parentElement.removeChild(taskGroupElement)
+              parentElement.insertBefore(taskGroupElement, parentElement.children[index + 1])
+            }
+          }
+          else {
+            throw new Error(`after task group element ${afterTaskGroupId} not found`)
+          }
+        }
+        else {
+          // append at end
+          parentElement.removeChild(taskGroupElement)
+          parentElement.appendChild(taskGroupElement)
+        }
+      }
+      else {
+        throw new Error(`task group element ${afterTaskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
 
+  moveTask(projectId: ProjectId, taskId: TaskId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined) {
+    const projectElement = document.getElementById(projectId)
+    if (projectElement) {
+      const toTaskGroupElement = document.getElementById(toTaskGroupId)
+      if (toTaskGroupElement) {
+        const taskElement = document.getElementById(taskId)
+        if (taskElement) {
+          const fromTaskGroupElement = taskElement.parentElement
+          const fromParentElement = fromTaskGroupElement.children[1]
+          const toParentElement = toTaskGroupElement.children[1]
+          if (afterTaskId) {
+            const afterTaskElement = document.getElementById(afterTaskId)
+            if (afterTaskElement) {
+              const index = this.findElementIndex(afterTaskElement)
+              if (index != -1) {
+                if (index == afterTaskElement.parentElement.children.length - 1) {
+                  // append at end
+                  fromParentElement.removeChild(taskElement)
+                  toParentElement.appendChild(taskElement)
+                }
+                else {
+                  fromParentElement.removeChild(taskElement)
+                  toParentElement.insertBefore(taskElement, toParentElement.children[index + 1])
+                }
+              }
+              else {
+                throw new Error(`after task element index ${afterTaskId} not found`)
+              }
+            }
+            else {
+              throw new Error(`after task element ${afterTaskId} not found`)
+            }
+          }
+          else {
+            // append at end
+            fromParentElement.removeChild(taskElement)
+            toParentElement.appendChild(taskElement)
+          }
+        }
+      }
+      else {
+        throw new Error(`to task group element ${toTaskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
   }
 }

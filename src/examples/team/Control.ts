@@ -1,11 +1,11 @@
 import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue } from '../../TableFlowMessages'
 import { ClientCallback, Client } from '../../TableFlowClient'
-import { KanbanView } from './View'
+import { View } from './View'
 import { Model } from './Model'
 import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId } from './Core'
 
 class Control implements ClientCallback {
-  view = new KanbanView()
+  view = new View(this.afterSortingCallback)
   model = new Model()
 
   client
@@ -134,40 +134,98 @@ class Control implements ClientCallback {
       const taskGroupId = rowId
       const afterTaskGroupId = afterRowId
 
-      const project = this.model.getProjectByTaskGroupId(taskGroupId)
-      if (project) {
-        this.model.moveTaskGroup(project.id, taskGroupId, afterTaskGroupId)
-        this.view.moveTaskGroup(project.id, taskGroupId, afterTaskGroupId)
+      const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
+      if (projectId) {
+        this.model.moveTaskGroup(projectId, taskGroupId, afterTaskGroupId)
+        this.view.moveTaskGroup(projectId, taskGroupId, afterTaskGroupId)
       }
       else {
-        throw new Error(`task group ${rowId} not found`)
+        throw new Error(`task group ${taskGroupId} not found`)
       }
     }
     else if (tableId === taskTableId) {
       const taskId = rowId
       const afterTaskId = afterRowId
 
-      const project = this.model.getProjectByTaskId(rowId)
-      if (project) {
+      const projectId = this.model.getProjectIdByTaskId(taskId)
+      if (projectId) {
         const taskGroupId = value ? value as string : undefined
-        this.model.moveTask(project.id, taskId, taskGroupId, afterTaskId)
-        this.view.moveTask(project.id, taskId, taskGroupId, afterTaskId)
+        this.model.moveTask(projectId, taskId, taskGroupId, afterTaskId)
+        this.view.moveTask(projectId, taskId, taskGroupId, afterTaskId)
       }
       else {
         throw new Error(`task ${rowId} not found`)
       }
     }
     else {
-      throw new Error(`unknown ${tableId}`)
+      throw new Error(`unknown table id ${tableId}`)
     }
   }
 
-  moveRowAndUpdateCellSuccess(tableId: string, rowId: string, afterRowId: string, columnName: string) {
+  afterSortingCallback(event) {
+    // const itemId = event.item.id
+    // const from = event.from.id
+    // const fromIndex = event.oldIndex 
+    // const to = event.to.id
+    // const toIndex = event.newIndex
 
-  }
+    // console.log(`moved item: ${itemId}`)
+    // console.log(`from: ${from} ${fromIndex}`)
+    // console.log(`to: ${to} ${toIndex}`)
 
-  moveRowAndUpdateCellFailure(tableId: string, rowId: string, afterRowId: string, columnName: string, errorCode: ErrorCode, reason: string) {
+    const elementClass = event.item.getAttribute('class')
+    if (elementClass === 'TaskGroup') {
+      const tableId = taskGroupTableId    
+      const taskGroupId = event.item.id
+      const toTaskGroupIndex = event.newIndex
 
+      const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
+      if (projectId) {
+        if (toTaskGroupIndex === 0) {
+          client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
+        }
+        else {
+          const afterTaskGroup = this.model.getTaskGroupByIndex(projectId, toTaskGroupIndex -1)
+          if (afterTaskGroup) {
+            client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
+          }
+          else {
+            throw new Error(`task group index ${toTaskGroupIndex} not found`)
+          }
+        }
+      }
+      else {
+        throw new Error(`task group id ${taskGroupId} not found`)
+      }
+    }
+    else if (elementClass === 'Task') {
+      const tableId = taskTableId    
+      const taskId = event.item.id
+
+      const fromTaskGroupId = event.from.parentElement.id
+      const fromTaskIndex = event.oldIndex 
+      const toTaskGroupId = event.to.parentElement.id
+      const toTaskIndex = event.newIndex
+
+      const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
+      const columnValue = columnName ? toTaskGroupId : undefined
+
+      const projectId = this.model.getProjectIdByTaskId(taskId)
+      if (projectId) {
+        if (toTaskIndex == 0) {
+          client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
+        }
+        else {
+          const afterTask = this.model.getTaskByIndex(projectId, toTaskGroupId, toTaskIndex -1)
+          if (afterTask) {
+            client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
+          }
+          else {
+            throw new Error(`task index ${toTaskIndex} not found`)
+          }
+        }
+      }
+    }
   }
 
   connectSuccess(client: Client): void {
@@ -222,6 +280,10 @@ class Control implements ClientCallback {
     this.logMessage(`update cell failure ${tableId} ${rowId} ${reason} ${errorCode}`)
   }
 
+  moveRowAndUpdateCellFailure(tableId: string, rowId: string, afterRowId: string, columnName: string, errorCode: ErrorCode, reason: string) {
+    this.logMessage(`move row and update cell failure ${tableId} ${rowId} ${reason} ${errorCode}`)
+  }
+
   loginSuccess(sessionId: SessionId) {
     this.logMessage(`login success ${sessionId}`)
     client.subscribeTables()
@@ -262,12 +324,14 @@ class Control implements ClientCallback {
 
   removeRowSuccess(rowId: RowId) {
     this.logMessage(`remove row success: ${rowId}`)
-
-    this.onRemoveRowSuccess()
   }
 
   updateCellSuccess(tableId: TableId, rowId: RowId, columnName: ColumnName) {
     this.logMessage(`update cell success: ${tableId} ${rowId} ${columnName}`)
+  }
+
+  moveRowAndUpdateCellSuccess(tableId: string, rowId: string, afterRowId: string, columnName: string) {
+    this.logMessage(`move row and update cell success: ${tableId} ${rowId} ${columnName}`)
   }
 
   updateCell(tableId: TableId, rowId: RowId, columnIndex: number, value: ColumnValue) {
@@ -304,57 +368,6 @@ function getClient(host: string, port: number) {
 
 let client = getClient('localhost', 8080)
 
-export function onSortingEnd(event) {
-  // const itemId = event.item.id
-  // const from = event.from.id
-  // const fromIndex = event.oldIndex 
-  // const to = event.to.id
-  // const toIndex = event.newIndex
-
-  // console.log(`moved item: ${itemId}`)
-  // console.log(`from: ${from} ${fromIndex}`)
-  // console.log(`to: ${to} ${toIndex}`)
-
-  const elementClass = event.item.getAttribute('class')
-  if (elementClass === 'TaskGroup') {
-    const tableId = taskGroupTableId    
-    const taskGroupId = event.item.id
-    const toTaskGroupIndex = event.newIndex
-
-    const project = this.model.getProjectByTaskGroupId(taskGroupId)
-    const afterTaskGroup = toTaskGroupIndex == 0 ? undefined : project.getTaskGroupByIndex(toTaskGroupIndex -1)
-
-    if (afterTaskGroup) {
-      client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
-    }
-    else {
-      throw new Error(`task group index ${toTaskGroupIndex} not found`)
-    }
-  }
-  else if (elementClass === 'Task') {
-    const tableId = taskTableId    
-    const taskId = event.item.id
-
-    const fromTaskGroupId = event.from.parentElement.id
-    const fromTaskIndex = event.oldIndex 
-    const toTaskGroupId = event.to.parentElement.id
-    const toTaskIndex = event.newIndex
-
-    const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
-    const columnValue = columnName ? toTaskGroupId : undefined
-
-    const project = this.model.getProjectByTaskId(taskId)
-    const taskGroup = project.getTaskGroupById(toTaskGroupId)
-    const afterTask = toTaskIndex == 0 ? undefined : taskGroup.getTaskByIndex(toTaskIndex -1)
-
-    if (afterTask) {
-      client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
-    }
-    else {
-      throw new Error(`task index ${toTaskIndex} not found`)
-    }
-  }
-}
 
 
 // export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {

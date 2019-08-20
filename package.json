@@ -4,7 +4,7 @@
   "description": "",
   "private": true,
   "scripts": {
-    "test": "mocha --require ts-node/register src/test/TableFlow.test.ts"
+    "test": "mocha --require ts-node/register src/test/Model.test.ts"
   },
   "keywords": [],
   "author": "",
