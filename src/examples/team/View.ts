@@ -1,6 +1,7 @@
-import Sortable from 'sortablejs'
 import {Project, TaskGroup, Task } from './Model'
 import {ProjectId, TaskGroupId, TaskId } from './Core'
+
+const Sortable = require('sortablejs')
 
 /*
 <div id='app'>
@@ -85,11 +86,11 @@ export class View {
     const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskList')
 
-    // new Sortable(taskGroupListElement, {
-    //   group: project.id,
-    //   animation: 150,
-    //   onEnd: this.afterSortingCallback
-    // })
+    new Sortable(taskGroupListElement, {
+      group: project.id,
+      animation: 150,
+      onEnd: this.afterSortingCallback
+    })
 
     taskGroupElement.appendChild(taskGroupHeadElement)
     taskGroupElement.appendChild(taskGroupListElement)
@@ -124,11 +125,11 @@ export class View {
     const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskGroupList')
 
-    // new Sortable(taskGroupListElement, {
-    //   group: `${project.id}-TaskGroup`,
-    //   animation: 150,
-    //   onEnd: this.afterSortingCallback
-    // })
+    new Sortable(taskGroupListElement, {
+      group: `${project.id}-TaskGroup`,
+      animation: 150,
+      onEnd: this.afterSortingCallback
+    })
 
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)

@@ -1,10 +1,29 @@
 const jsdom = require('jsdom')
 const pretty = require('pretty')
 
+const { JSDOM } = jsdom
+
+const dom = new JSDOM('<!DOCTYPE html><head/><body></body>', {
+  url: 'http://localhost/',
+  referrer: 'https://example.com/',
+  contentType: 'text/html',
+  userAgent: 'Mellblomenator/9000',
+  includeNodeLocations: true,
+  storageQuota: 10000000,
+})
+// @ts-ignore
+global.window = dom.window
+// @ts-ignore
+global.document = window.document
+// @ts-ignore
+global.navigator = window.navigator
+
 import { expect } from 'chai'
 import { describe } from 'mocha'
 import { View } from '../examples/team/View'
 import { Project, TaskGroup, Task } from '../examples/team/Model'
+
+const DEFAULT_HTML = '<html><body></body></html>'
 
 before(() => {
 })
@@ -14,7 +33,6 @@ after(() => {
 
 describe('Test Model', function() {
   it('test basic', function() {
-    const { JSDOM } = jsdom
     const dom = new JSDOM()
     const { document } = dom.window 
     const appElement = document.createElement('div')
