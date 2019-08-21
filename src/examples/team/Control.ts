@@ -4,17 +4,20 @@ import { View } from './View'
 import { Model } from './Model'
 import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId } from './Core'
 
-class Control implements ClientCallback {
-  view = new View(document, this.afterSortingCallback)
-  model = new Model()
-
-  client
+export class Control implements ClientCallback {
+  private view: View 
+  private model: Model
+  private client
 
   // note: order matters
-  expectedTables = [projectTableId, taskGroupTableId, taskTableId]
-  receivedTables = new Map<TableId, Table>()
+  private expectedTables = [projectTableId, taskGroupTableId, taskTableId]
+  private receivedTables = new Map<TableId, Table>()
 
-  onRemoveRowSuccess: () => void
+  constructor(client, document) {
+    this.client = client
+    this.view = new View(document, this.afterSortingCallback)
+    this.model = new Model()
+  }
 
   tableSnap(table: Table) {
     this.logMessage(`table - ${JSON.stringify(table)}`)
@@ -94,41 +97,6 @@ class Control implements ClientCallback {
     }
   }
 
-  createTaskRow(values: ColumnValue[]): TaskRow {
-    const row: TaskRow = {
-      id: values[0] as TaskId,
-      title: values[1] as Title,
-      description: values[2] as Description,
-      dueDate: values[3] as Date,
-      projectId: values[4] as ProjectId,
-      taskGroupId: values[5] as TaskGroupId,
-    }
-
-    return row
-  }
-
-  createTaskGroupRow(values: ColumnValue[]): TaskGroupRow {
-    const row: TaskGroupRow = {
-      id: values[0] as TaskGroupId,
-      title: values[1] as Title,
-      description: values[2] as Description,
-      projectId: values[3] as ProjectId,
-    }
-
-    return row
-  }
-
-  createProjectRow(values: ColumnValue[]): ProjectRow {
-    const row: ProjectRow = {
-      id: values[0] as ProjectId,
-      title: values[1] as Title,
-      description: values[2] as Description,
-      dueDate: values[3] as Date,
-    }
-
-    return row
-  }
-
   moveRowAndUpdateCell(tableId: string, rowId: string, afterRowId: string, columnIndex: number, value: Object) {
     if (tableId === taskGroupTableId) {
       const taskGroupId = rowId
@@ -149,7 +117,7 @@ class Control implements ClientCallback {
 
       const projectId = this.model.getProjectIdByTaskId(taskId)
       if (projectId) {
-        const taskGroupId = value ? value as string : undefined
+        const taskGroupId = value as string 
         this.model.moveTask(projectId, taskId, taskGroupId, afterTaskId)
         this.view.moveTask(projectId, taskId, taskGroupId, afterTaskId)
       }
@@ -162,7 +130,7 @@ class Control implements ClientCallback {
     }
   }
 
-  afterSortingCallback(event) {
+  private afterSortingCallback(event) {
     // const itemId = event.item.id
     // const from = event.from.id
     // const fromIndex = event.oldIndex 
@@ -182,12 +150,12 @@ class Control implements ClientCallback {
       const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
       if (projectId) {
         if (toTaskGroupIndex === 0) {
-          client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
+          this.client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
         }
         else {
           const afterTaskGroup = this.model.getTaskGroupByIndex(projectId, toTaskGroupIndex -1)
           if (afterTaskGroup) {
-            client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
+            this.client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
           }
           else {
             throw new Error(`task group index ${toTaskGroupIndex} not found`)
@@ -213,12 +181,12 @@ class Control implements ClientCallback {
       const projectId = this.model.getProjectIdByTaskId(taskId)
       if (projectId) {
         if (toTaskIndex == 0) {
-          client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
+          this.client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
         }
         else {
           const afterTask = this.model.getTaskByIndex(projectId, toTaskGroupId, toTaskIndex -1)
           if (afterTask) {
-            client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
+            this.client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
           }
           else {
             throw new Error(`task index ${toTaskIndex} not found`)
@@ -227,6 +195,43 @@ class Control implements ClientCallback {
       }
     }
   }
+
+  private createTaskRow(values: ColumnValue[]): TaskRow {
+    const row: TaskRow = {
+      id: values[0] as TaskId,
+      title: values[1] as Title,
+      description: values[2] as Description,
+      dueDate: values[3] as Date,
+      projectId: values[4] as ProjectId,
+      taskGroupId: values[5] as TaskGroupId,
+    }
+
+    return row
+  }
+
+  private createTaskGroupRow(values: ColumnValue[]): TaskGroupRow {
+    const row: TaskGroupRow = {
+      id: values[0] as TaskGroupId,
+      title: values[1] as Title,
+      description: values[2] as Description,
+      projectId: values[3] as ProjectId,
+    }
+
+    return row
+  }
+
+  private createProjectRow(values: ColumnValue[]): ProjectRow {
+    const row: ProjectRow = {
+      id: values[0] as ProjectId,
+      title: values[1] as Title,
+      description: values[2] as Description,
+      dueDate: values[3] as Date,
+    }
+
+    return row
+  }
+
+
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
@@ -286,20 +291,20 @@ class Control implements ClientCallback {
 
   loginSuccess(sessionId: SessionId) {
     this.logMessage(`login success ${sessionId}`)
-    client.subscribeTables()
+    this.client.subscribeTables()
   }
 
   loginFailure(errorCode: ErrorCode, reason: string): void {
     this.logMessage(`login failure ${reason} ${errorCode}`)
 
     if (errorCode === ErrorCode.UserAlreadyLogin) {
-      client.logout()
+      this.client.logout()
     }
   }
 
   logoutSuccess() {
     this.logMessage(`logout success`)
-    client.login(client.userId, client.password)
+    this.client.login(this.client.userId, this.client.password)
   }
 
   createUserSuccess() {
@@ -353,20 +358,20 @@ class Control implements ClientCallback {
   }
 }
 
-function getClient(host: string, port: number) {
-  if (!client) {
-    client = new Client(WebSocket)
-    const control = new Control()
-    client.addCallback(control)
-    client.connect(host, port)
-    return client
-  }
-  else {
-    return client
-  }
-}
+// function getClient(host: string, port: number) {
+//   if (!client) {
+//     client = new Client(WebSocket)
+//     const control = new Control()
+//     client.addCallback(control)
+//     client.connect(host, port)
+//     return client
+//   }
+//   else {
+//     return client
+//   }
+// }
 
-let client = getClient('localhost', 8080)
+// let client = getClient('localhost', 8080)
 
 
 
@@ -376,8 +381,6 @@ let client = getClient('localhost', 8080)
 // }
 
 // // @ts-ignore
-// // window.eventHandler = onSortingEnd
-// // @ts-ignore
 // // window.appendTask = appendTask
 // @ts-ignore
-window.client = client
+// window.client = client
