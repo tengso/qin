@@ -39,7 +39,7 @@ describe('Test Model', function() {
     appElement.setAttribute('id', 'app')
     document.body.appendChild(appElement)
 
-    const view = new View(document, undefined)
+    const view = new View(document)
 
     const project1: Project = {
       id: 'project_id_1',
@@ -129,7 +129,7 @@ describe('Test Model', function() {
     appElement.setAttribute('id', 'app')
     document.body.appendChild(appElement)
 
-    const view = new View(document, undefined)
+    const view = new View(document)
 
     const project1: Project = {
       id: 'project_id_1',

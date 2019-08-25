@@ -9,7 +9,7 @@ module.exports = {
   ],
   mode: 'development',
   output: {
-    filename: 'kanban_main.js',
+    filename: 'kanban_index.js',
     path: path.resolve(__dirname, 'dist'),
   }
 }

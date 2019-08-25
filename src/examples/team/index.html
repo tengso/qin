@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<script src='../../../dist/kanban_index.js'></script>
+<style>
+
+  .Project {
+    display: flex;
+    flex-flow: column;
+  }
+
+  .ProjectHead {
+    display: flex;
+    flex-flow: row;
+    margin: 10px;
+    border: 1px solid;
+  }
+
+  .TaskGroupList {
+    display: flex;
+    justify-content: space-between;
+    flex-basis: 40%;
+    flex-flow: row;
+    border: 1px solid;
+  }
+
+  .TaskGroup {
+    display: flex;
+    margin: 10px;
+    border: 1px solid;
+    width: 20%;
+    flex-flow: column;
+  }
+
+  .TaskGroupHead {
+    border: 1px solid;
+    margin: 10px;
+  }
+
+  .TaskList {
+    display: flex;
+    flex-flow: column;
+    border: 1px solid;
+    margin: 10px;
+  }
+
+  .Task {
+    display: flex;
+    flex-flow: column;
+    border: 1px solid;
+    margin: 10px;
+    background-color: green;
+  }
+
+  /* .remove-task {
+    position: absolute;
+    left: 70%;
+    width: 30%;
+  } */
+</style>
+<body>
+  <script>
+    function login() {
+      client.login(document.getElementById('user').value, document.getElementById('password').value)
+    }
+  </script>
+  user <input id='user'></input>password<input id='password'></input>
+  <button id='login' onclick="login()">login</button>
+  <div id="app">
+  </div>
+</body>
+</html>

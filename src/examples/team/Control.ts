@@ -15,8 +15,11 @@ export class Control implements ClientCallback {
 
   constructor(client, document) {
     this.client = client
-    this.view = new View(document, this.afterSortingCallback)
-    this.model = new Model()
+    const model = new Model()
+    this.model = model
+    this.view = new View(document)
+    const callback = this.createSortingCallBack(model, client, this.view)
+    this.view.setSortingCallback(callback)
   }
 
   tableSnap(table: Table) {
@@ -28,7 +31,7 @@ export class Control implements ClientCallback {
 
     if (this.expectedTables.length == this.receivedTables.size) {
       for (const tableId of this.expectedTables) {
-        const table = this.receivedTables[tableId]
+        const table = this.receivedTables.get(tableId)
         table.rows.forEach((row, index) => {
           this.appendRow(tableId, row.rowId, row.values)
         })
@@ -117,9 +120,9 @@ export class Control implements ClientCallback {
 
       const projectId = this.model.getProjectIdByTaskId(taskId)
       if (projectId) {
-        const taskGroupId = value as string 
-        this.model.moveTask(projectId, taskId, taskGroupId, afterTaskId)
-        this.view.moveTask(projectId, taskId, taskGroupId, afterTaskId)
+        const toTaskGroupId = value as string 
+        this.model.moveTask(projectId, taskId, toTaskGroupId, afterTaskId)
+        this.view.moveTask(projectId, taskId, toTaskGroupId, afterTaskId)
       }
       else {
         throw new Error(`task ${rowId} not found`)
@@ -130,70 +133,78 @@ export class Control implements ClientCallback {
     }
   }
 
-  private afterSortingCallback(event) {
-    // const itemId = event.item.id
-    // const from = event.from.id
-    // const fromIndex = event.oldIndex 
-    // const to = event.to.id
-    // const toIndex = event.newIndex
+  createSortingCallBack(model: Model, client, view: View) {
 
-    // console.log(`moved item: ${itemId}`)
-    // console.log(`from: ${from} ${fromIndex}`)
-    // console.log(`to: ${to} ${toIndex}`)
+    const callback = (event) => {
+      // const itemId = event.item.id
+      // const from = event.from.id
+      // const fromIndex = event.oldIndex 
+      // const to = event.to.id
+      // const toIndex = event.newIndex
 
-    const elementClass = event.item.getAttribute('class')
-    if (elementClass === 'TaskGroup') {
-      const tableId = taskGroupTableId    
-      const taskGroupId = event.item.id
-      const toTaskGroupIndex = event.newIndex
+      // console.log(`moved item: ${itemId}`)
+      // console.log(`from: ${from} ${fromIndex}`)
+      // console.log(`to: ${to} ${toIndex}`)
 
-      const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
-      if (projectId) {
-        if (toTaskGroupIndex === 0) {
-          this.client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
-        }
-        else {
-          const afterTaskGroup = this.model.getTaskGroupByIndex(projectId, toTaskGroupIndex -1)
-          if (afterTaskGroup) {
-            this.client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroup.id, undefined, undefined) 
+      const elementClass = event.item.getAttribute('class')
+      console.log(elementClass)
+
+      if (elementClass === 'TaskGroup') {
+        const tableId = taskGroupTableId    
+        const taskGroupId = event.item.id
+        const toTaskGroupIndex = event.newIndex
+
+        const projectId = model.getProjectIdByTaskGroupId(taskGroupId)
+        if (projectId) {
+          if (toTaskGroupIndex === 0) {
+            client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
           }
           else {
-            throw new Error(`task group index ${toTaskGroupIndex} not found`)
+            view
+            const afterTaskGroupId = event.item.parentElement.children[toTaskGroupIndex - 1].getAttribute('id')
+            if (afterTaskGroupId) {
+              client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroupId, undefined, undefined) 
+            }
+            else {
+              throw new Error(`task group index ${toTaskGroupIndex} not found`)
+            }
           }
-        }
-      }
-      else {
-        throw new Error(`task group id ${taskGroupId} not found`)
-      }
-    }
-    else if (elementClass === 'Task') {
-      const tableId = taskTableId    
-      const taskId = event.item.id
-
-      const fromTaskGroupId = event.from.parentElement.id
-      const fromTaskIndex = event.oldIndex 
-      const toTaskGroupId = event.to.parentElement.id
-      const toTaskIndex = event.newIndex
-
-      const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
-      const columnValue = columnName ? toTaskGroupId : undefined
-
-      const projectId = this.model.getProjectIdByTaskId(taskId)
-      if (projectId) {
-        if (toTaskIndex == 0) {
-          this.client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
         }
         else {
-          const afterTask = this.model.getTaskByIndex(projectId, toTaskGroupId, toTaskIndex -1)
-          if (afterTask) {
-            this.client.moveRowAndUpdateCell(tableId, taskId, afterTask.id, columnName, columnValue) 
+          throw new Error(`task group id ${taskGroupId} not found`)
+        }
+      }
+      else if (elementClass === 'Task') {
+        const tableId = taskTableId    
+        const taskId = event.item.id
+
+        const fromTaskGroupId = event.from.parentElement.id
+        const fromTaskIndex = event.oldIndex 
+        const toTaskGroupId = event.to.parentElement.id
+        const toTaskIndex = event.newIndex
+
+        const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
+        const columnValue = columnName ? toTaskGroupId : undefined
+
+        const projectId = model.getProjectIdByTaskId(taskId)
+        if (projectId) {
+          if (toTaskIndex == 0) {
+            client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
           }
           else {
-            throw new Error(`task index ${toTaskIndex} not found`)
+            const afterTaskId = event.item.parentElement.children[toTaskIndex - 1].getAttribute('id')
+            if (afterTaskId) {
+              client.moveRowAndUpdateCell(tableId, taskId, afterTaskId, columnName, columnValue) 
+            }
+            else {
+              throw new Error(`task index ${toTaskIndex} not found`)
+            }
           }
         }
       }
     }
+
+    return callback
   }
 
   private createTaskRow(values: ColumnValue[]): TaskRow {
@@ -358,20 +369,20 @@ export class Control implements ClientCallback {
   }
 }
 
-// function getClient(host: string, port: number) {
-//   if (!client) {
-//     client = new Client(WebSocket)
-//     const control = new Control()
-//     client.addCallback(control)
-//     client.connect(host, port)
-//     return client
-//   }
-//   else {
-//     return client
-//   }
-// }
+function getClient(host: string, port: number) {
+  if (!client) {
+    client = new Client(WebSocket)
+    const control = new Control(client, document)
+    client.addCallback(control)
+    client.connect(host, port)
+    return client
+  }
+  else {
+    return client
+  }
+}
 
-// let client = getClient('localhost', 8080)
+let client = getClient('localhost', 8080)
 
 
 
@@ -383,4 +394,4 @@ export class Control implements ClientCallback {
 // // @ts-ignore
 // // window.appendTask = appendTask
 // @ts-ignore
-// window.client = client
+window.client = client

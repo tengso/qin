@@ -3,7 +3,7 @@ import { ClientCallback, Client } from '../TableFlowClient'
 
 import { v4 } from 'uuid'
 import uuid = require('uuid');
-import Sortable from 'sortablejs'
+import {create as createSortable } from 'sortablejs'
 
 const defaultTableId = 'tasks_table_id'
 
@@ -258,7 +258,7 @@ function createOrGetGroupElement(group: TaskGroup) {
     group: 'share'
   }
 
-  new Sortable(groupList, {
+  createSortable(groupList, {
     group: 'shared',
     animation: 150,
     onEnd: onSortingEnd

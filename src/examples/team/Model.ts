@@ -453,10 +453,10 @@ export class Model {
     }
   }
 
-  moveTask(projectId: ProjectId, taskId: TaskId, toTaskGroupId: TaskGroupId, afterTaskId: TaskId | undefined): number {
+  moveTask(projectId: ProjectId, taskId: TaskId, toTaskGroupId: TaskGroupId | undefined, afterTaskId: TaskId | undefined): number {
     const project = this.projectMap.get(projectId)
     if (project) {
-      const toTaskGroup = project.getTaskGroup(toTaskGroupId)
+      const toTaskGroup = toTaskGroupId ? project.getTaskGroup(toTaskGroupId) : project.getTaskGroupOfTask(taskId)
       if (toTaskGroup) {
         const fromTaskGroup = project.getTaskGroupOfTask(taskId)
         if (fromTaskGroup) {
