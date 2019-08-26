@@ -1,8 +1,9 @@
 import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue } from '../../TableFlowMessages'
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
-import { Model } from './Model'
+import { Model, TaskGroup } from './Model'
 import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId } from './Core'
+import uuid = require('uuid');
 
 export class Control implements ClientCallback {
   private view: View 
@@ -20,6 +21,10 @@ export class Control implements ClientCallback {
     this.view = new View(document)
     const callback = this.createSortingCallBack(model, client, this.view)
     this.view.setSortingCallback(callback)
+    this.view.setAddTaskCallback(addTaskCallback)
+    this.view.setAddTaskGroupCallback(addTaskGroupCallback)
+    this.view.setRemoveTaskCallback(removeTaskCallback)
+    this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
   }
 
   tableSnap(table: Table) {
@@ -160,7 +165,6 @@ export class Control implements ClientCallback {
             client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
           }
           else {
-            view
             const afterTaskGroupId = event.item.parentElement.children[toTaskGroupIndex - 1].getAttribute('id')
             if (afterTaskGroupId) {
               client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroupId, undefined, undefined) 
@@ -369,10 +373,12 @@ export class Control implements ClientCallback {
   }
 }
 
-function getClient(host: string, port: number) {
+let control: Control
+
+function getClient(host: string, port: number): Client {
   if (!client) {
     client = new Client(WebSocket)
-    const control = new Control(client, document)
+    control = new Control(client, document)
     client.addCallback(control)
     client.connect(host, port)
     return client
@@ -382,16 +388,49 @@ function getClient(host: string, port: number) {
   }
 }
 
-let client = getClient('localhost', 8080)
+let client: Client = getClient('localhost', 8080)
 
+function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'new', description: Description = 'desc', dueDate: Date = new Date()) {
+  // @ts-ignore
+  const projectId = control.model.getProjectIdByTaskGroupId(taskGroupId)
+  if (projectId) {
+    const taskId = uuid()
 
+    const row: ColumnValue[] = [
+      taskId,
+      title,
+      description,
+      dueDate,
+      projectId,
+      taskGroupId,
+    ]
 
-// export function appendTask(group: TaskGroup, tableId: TableId = defaultTableId, id: TaskId = uuid(), name: TaskName = id.substring(0, 8)) {
-//   // FIXME: hard-coded group as status here
-//   client.appendRow(tableId, id, [id, name, group])
-// }
+    client.insertRow(taskTableId, taskId, undefined, row)
+  }
+  else {
+    throw new Error(`project not found for task group ${taskGroupId}`)
+  }
+}
 
-// // @ts-ignore
-// // window.appendTask = appendTask
+function addTaskGroupCallback(projectId: ProjectId, title: Title = 'new task group', description: Description = 'desc') {
+  const taskGroupId = uuid()
+  const row: ColumnValue[] = [
+    taskGroupId,
+    title,
+    description,
+    projectId,
+  ]
+
+  client.appendRow(taskGroupTableId, taskGroupId, row)
+}
+
+function removeTaskGroupCallback(taskGroupId: TaskGroupId) {
+  client.removeRow(taskGroupTableId, taskGroupId)
+}
+
+function removeTaskCallback(taskId: TaskId) {
+  client.removeRow(taskTableId, taskId)
+}
+
 // @ts-ignore
 window.client = client

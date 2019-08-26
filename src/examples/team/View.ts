@@ -33,6 +33,13 @@ import Sortable from 'sortablejs'
 export class View {
 
   private afterSortingCallback: (event) => void
+
+  private addTaskCallback
+  private addTaskGroupCallback
+
+  private removeTaskCallback
+  private removeTaskGroupCallback
+
   private document
 
   constructor(document) {
@@ -41,6 +48,22 @@ export class View {
 
   setSortingCallback(callback) {
     this.afterSortingCallback = callback
+  }
+
+  setAddTaskCallback(callback) {
+    this.addTaskCallback = callback
+  }
+
+  setAddTaskGroupCallback(callback) {
+    this.addTaskGroupCallback = callback
+  }
+
+  setRemoveTaskCallback(callback) {
+    this.removeTaskCallback = callback
+  }
+
+  setRemoveTaskGroupCallback(callback) {
+    this.removeTaskGroupCallback = callback
   }
 
   private createTaskElement(task: Task) {
@@ -60,9 +83,19 @@ export class View {
     dueDateElement.setAttribute('class', 'DueDate')
     // dueDateElement.innerHTML = task.dueDate
 
+    const removeTaskElement = this.document.createElement('div')
+    removeTaskElement.setAttribute('class', 'RemoveTask')
+    const removeTaskButton = this.document.createElement('button')
+    removeTaskButton.innerHTML = '(-)'
+    removeTaskButton.addEventListener('click', () => {
+      this.removeTaskCallback(task.id)
+    })
+    removeTaskElement.appendChild(removeTaskButton)
+
     taskElement.appendChild(titleElement)
     taskElement.appendChild(descElement)
     taskElement.appendChild(dueDateElement)
+    taskElement.appendChild(removeTaskElement)
     
     return taskElement
   }
@@ -75,6 +108,15 @@ export class View {
     const taskGroupHeadElement = this.document.createElement('div')
     taskGroupHeadElement.setAttribute('class', 'TaskGroupHead')
 
+    const removeTaskGroupElement = this.document.createElement('div')
+    removeTaskGroupElement.setAttribute('class', 'RemoveTaskGroup')
+    const removeTaskGroupButton = this.document.createElement('button')
+    removeTaskGroupButton.innerHTML = '(-)'
+    removeTaskGroupButton.addEventListener('click', () => {
+      this.removeTaskGroupCallback(taskGroup.id)
+    })
+    removeTaskGroupElement.appendChild(removeTaskGroupButton)
+
     const titleElement = this.document.createElement('div')
     titleElement.setAttribute('class', 'Title')
     titleElement.innerHTML = taskGroup.title
@@ -83,8 +125,19 @@ export class View {
     descElement.setAttribute('class', 'Description')
     descElement.innerHTML = taskGroup.description
 
+    const addTaskElement = this.document.createElement('div')
+    addTaskElement.setAttribute('class', 'AddTask')
+    const addTaskButton = this.document.createElement('button')
+    addTaskButton.innerHTML = '(+)'
+    addTaskButton.addEventListener('click', () => {
+      this.addTaskCallback(taskGroup.id)
+    })
+    addTaskElement.appendChild(addTaskButton)
+
+    taskGroupHeadElement.appendChild(removeTaskGroupElement)
     taskGroupHeadElement.appendChild(titleElement)
     taskGroupHeadElement.appendChild(descElement)
+    taskGroupHeadElement.appendChild(addTaskElement)
 
     const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskList')
@@ -122,9 +175,19 @@ export class View {
     dueDateElement.setAttribute('class', 'DueDate')
     dueDateElement.innerHTML = project.dueDate
 
+    const addTaskGroupElement = this.document.createElement('div')
+    addTaskGroupElement.setAttribute('class', 'AddTaskGroup')
+    const addTaskGroupButton = this.document.createElement('button')
+    addTaskGroupButton.innerHTML = '(+)'
+    addTaskGroupButton.addEventListener('click', () => {
+      this.addTaskGroupCallback(project.id)
+    })
+    addTaskGroupElement.appendChild(addTaskGroupButton)
+
     projectHeadElement.appendChild(titleElement)
     projectHeadElement.appendChild(descElement)
     projectHeadElement.appendChild(dueDateElement)
+    projectHeadElement.appendChild(addTaskGroupElement)
 
     const taskGroupListElement = this.document.createElement('div')
     taskGroupListElement.setAttribute('class', 'TaskGroupList')
@@ -224,7 +287,7 @@ export class View {
     }
   }
 
-  findElementIndex(element): number {
+  private findElementIndex(element): number {
     const children = element.parentElement.children
     for (let i = 0; i < children.length; i++) {
       if (children[i].getAttribute('id') == element.getAttribute('id')) {
@@ -252,6 +315,7 @@ export class View {
           const afterTaskGroupElement = this.document.getElementById(afterTaskGroupId)
           const index = this.findElementIndex(afterTaskGroupElement)
           if (index != -1) {
+            // TODO: add unit test
             if (taskGroupElementIndex == index + 1) {
               // already in right order, no need to move
               return
@@ -315,6 +379,7 @@ export class View {
               const index = this.findElementIndex(afterTaskElement)
               if (index != -1) {
                 if (index == toParentElement.children.length - 1) {
+                  // TODO: add unit test
                   // test if it's already sorted 
                   if (toParentElement.children[toParentElement.children.length - 1] != taskElement) {
                     // append at end
@@ -331,13 +396,7 @@ export class View {
                     }
                   }
                   else {
-                    // test if it's already sorted
-                    console.log('index', index)
-                    console.log('child length', toParentElement.children.length)
-                    console.log('0', toParentElement.children[0])
-                    console.log('1', toParentElement.children[1])
-                    console.log('2', toParentElement.children[2])
-                    console.log('target', taskElement)
+                    // TODO: add unit test
                     if (taskElement != toParentElement.children[index + 1]) {
                       const refElement = toParentElement.children[index + 1]
                       fromParentElement.removeChild(taskElement)
@@ -360,6 +419,7 @@ export class View {
               toParentElement.appendChild(taskElement)
             }
             else {
+              // TODO: add unit test
               if (toParentElement.children[0] != taskElement) {
                 const refElement = toParentElement.children[0]
                 fromParentElement.removeChild(taskElement)
