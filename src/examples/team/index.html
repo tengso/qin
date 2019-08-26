@@ -32,8 +32,11 @@
   }
 
   .TaskGroupHead {
+    display: flex;
     border: 1px solid;
     margin: 10px;
+    padding: 10px;
+    flex-flow: column;
   }
 
   .TaskList {
@@ -48,14 +51,31 @@
     flex-flow: column;
     border: 1px solid;
     margin: 10px;
-    background-color: green;
+    background-color: aqua;
   }
 
-  /* .remove-task {
-    position: absolute;
-    left: 70%;
-    width: 30%;
-  } */
+  .RemoveTaskGroup {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .AddTask {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .RemoveTask {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .TaskGroupTitleInput {
+    width: 100%;
+  }
+
 </style>
 <body>
   <script>

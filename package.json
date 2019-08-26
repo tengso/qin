@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "test": "mocha --require ts-node/register src/test/Control.test.ts",
-    "build": "tsc -p .; npx webpack --config kanban.webpack.config.js"
+    "build": "tsc -p . && npx webpack --config kanban.webpack.config.js"
   },
   "keywords": [],
   "author": "",

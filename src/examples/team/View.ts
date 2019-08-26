@@ -1,5 +1,7 @@
 import {Project, TaskGroup, Task } from './Model'
-import {ProjectId, TaskGroupId, TaskId } from './Core'
+import {ProjectId, TaskGroupId, TaskId, Title } from './Core'
+
+// TODO: disable delete remove task group when non-empty task list
 
 import Sortable from 'sortablejs'
 
@@ -14,8 +16,16 @@ import Sortable from 'sortablejs'
         <div class="TaskGroupList">
             <div class="TaskGroup" id="TaskGroupId">
                 <div class="TaskGroupHead">
-                    <div class="Title"></div>
+                    <div class="RemoveTaskGroup">
+                        <button></button>
+                    </div>
+                    <div class="Title">
+                      <input class="TaskGroupTitleInput"><input>
+                    </div>
                     <div class="Description"></div>
+                    <div class="AddTask">
+                        <button></button>
+                    </div>
                 </div>
                 <div class="TaskList>
                     <div class="Task" id="TaskId">
@@ -39,6 +49,8 @@ export class View {
 
   private removeTaskCallback
   private removeTaskGroupCallback
+
+  private updateTaskGroupTitleCallback
 
   private document
 
@@ -64,6 +76,10 @@ export class View {
 
   setRemoveTaskGroupCallback(callback) {
     this.removeTaskGroupCallback = callback
+  }
+
+  setUpdateTaskGroupTitleCallback(callback) {
+    this.updateTaskGroupTitleCallback = callback
   }
 
   private createTaskElement(task: Task) {
@@ -119,7 +135,14 @@ export class View {
 
     const titleElement = this.document.createElement('div')
     titleElement.setAttribute('class', 'Title')
-    titleElement.innerHTML = taskGroup.title
+    const titleInput = this.document.createElement('input')
+    titleInput.setAttribute('class', 'TaskGroupTitleInput')
+    titleInput.value = taskGroup.title
+    titleElement.appendChild(titleInput)
+    titleInput.onblur = () => {
+      console.log(`update task group title ${taskGroup.id}`)
+      this.updateTaskGroupTitleCallback(taskGroup.id, titleInput.value)
+    }
 
     const descElement = this.document.createElement('div')
     descElement.setAttribute('class', 'Description')
@@ -284,6 +307,22 @@ export class View {
     }
     else {
       throw new Error(`${taskGroup.id} not found`)
+    }
+  }
+
+  updateTaskGroupTitle(projectId: ProjectId, taskGroupId: TaskGroupId, title: Title) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const taskGroupElement = this.document.getElementById(taskGroupId)
+      if (taskGroupElement) {
+        taskGroupElement.children[0].children[1].children[0].value = title
+      }
+      else {
+        throw new Error(`task group element ${taskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
     }
   }
 

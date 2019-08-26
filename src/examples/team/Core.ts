@@ -23,6 +23,20 @@ export interface TaskGroupRow {
   projectId: ProjectId
 }
 
+export enum TaskGroupColumnName {
+  Id = 'id',
+  Title = 'title',
+  Description = 'description',
+  ProjectId = 'projectId',
+}
+
+export const taskGroupColumns = [
+  TaskGroupColumnName.Id,
+  TaskGroupColumnName.Title, 
+  TaskGroupColumnName.Description,
+  TaskGroupColumnName.ProjectId,
+]
+
 export interface TaskRow {
   id: TaskId
   title: Title

@@ -482,6 +482,38 @@ export class Model {
     }
   }
 
+  updateTaskGroupTitle(projectId: ProjectId, taskGroupId: TaskGroupId, title: Title) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroup(taskGroupId)
+      if (taskGroup) {
+        taskGroup.title = title
+      }
+      else {
+        throw new Error(`task group element ${taskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
+
+  updateTaskGroupDescription(projectId: ProjectId, taskGroupId: TaskGroupId, description: Description) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroup(taskGroupId)
+      if (taskGroup) {
+        taskGroup.description = description
+      }
+      else {
+        throw new Error(`task group element ${taskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
+
   getProjectIdByTaskGroupId(taskGroupId: TaskGroupId): ProjectId | undefined {
     return this.taskGroupToProjectMap.get(taskGroupId)
   }

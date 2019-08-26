@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue } 
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId, taskGroupColumns, TaskGroupColumnName } from './Core'
 import uuid = require('uuid');
 
 export class Control implements ClientCallback {
@@ -25,6 +25,7 @@ export class Control implements ClientCallback {
     this.view.setAddTaskGroupCallback(addTaskGroupCallback)
     this.view.setRemoveTaskCallback(removeTaskCallback)
     this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
+    this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
   }
 
   tableSnap(table: Table) {
@@ -105,7 +106,32 @@ export class Control implements ClientCallback {
     }
   }
 
+  updateCell(tableId: TableId, rowId: RowId, columnIndex: number, value: ColumnValue) {
+    this.logMessage(`update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
+
+    if (tableId === taskGroupTableId) {
+      const taskGroupId = rowId
+      const column = taskGroupColumns[columnIndex]
+      const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
+      if (projectId) {
+        if (column === TaskGroupColumnName.Title) {
+          const title = value as string
+          this.model.updateTaskGroupTitle(projectId, taskGroupId, title)
+          this.view.updateTaskGroupTitle(projectId, taskGroupId, title)
+        }
+        else {
+          throw new Error(`unknown column ${value}`)
+        }
+      }
+      else {
+        throw new Error(`project for task group ${taskGroupId} not found`)
+      }
+    }
+  }
+
   moveRowAndUpdateCell(tableId: string, rowId: string, afterRowId: string, columnIndex: number, value: Object) {
+    this.logMessage(`move & update cell - tableId [${tableId}] rowId [${rowId}] afterRowId [${afterRowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
+  
     if (tableId === taskGroupTableId) {
       const taskGroupId = rowId
       const afterTaskGroupId = afterRowId
@@ -246,8 +272,6 @@ export class Control implements ClientCallback {
     return row
   }
 
-
-
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
   }
@@ -354,10 +378,6 @@ export class Control implements ClientCallback {
     this.logMessage(`move row and update cell success: ${tableId} ${rowId} ${columnName}`)
   }
 
-  updateCell(tableId: TableId, rowId: RowId, columnIndex: number, value: ColumnValue) {
-    this.logMessage(`update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
-  }
-
   removeTable(tableId: TableId) {
     this.logMessage(`remove table: ${tableId}`, 'tableUpdate')
   }
@@ -431,6 +451,11 @@ function removeTaskGroupCallback(taskGroupId: TaskGroupId) {
 function removeTaskCallback(taskId: TaskId) {
   client.removeRow(taskTableId, taskId)
 }
+
+function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
+  client.updateCell(taskGroupTableId, taskGroupId, 'title', title)
+}
+
 
 // @ts-ignore
 window.client = client
