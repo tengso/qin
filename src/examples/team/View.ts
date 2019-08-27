@@ -29,6 +29,15 @@ import Sortable from 'sortablejs'
                 </div>
                 <div class="TaskList>
                     <div class="Task" id="TaskId">
+                      <div class="Title">
+                        <input class="TaskTitleInput"></input>
+                      </div>
+                      <div class="Description"></div>
+                      <div class="DueDate"></div>
+                      <div class="RemoveTask">
+                        <button></button>
+                      </div>
+                      </div>
                         ...
                     </div>
                     <div class="Task" id="TaskId">
@@ -51,6 +60,7 @@ export class View {
   private removeTaskGroupCallback
 
   private updateTaskGroupTitleCallback
+  private updateTaskTitleCallback
 
   private document
 
@@ -82,6 +92,10 @@ export class View {
     this.updateTaskGroupTitleCallback = callback
   }
 
+  setUpdateTaskTitleCallback(callback) {
+    this.updateTaskTitleCallback = callback
+  }
+
   private createTaskElement(task: Task) {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
@@ -89,7 +103,14 @@ export class View {
 
     const titleElement = this.document.createElement('div')
     titleElement.setAttribute('class', 'Title')
-    titleElement.innerHTML = task.title
+    const titleInput = this.document.createElement('input')
+    titleInput.setAttribute('class', 'TaskTitleInput')
+    titleInput.value = task.title
+    titleInput.onblur = () => {
+      console.log(`update task title ${task.id}`)
+      this.updateTaskTitleCallback(task.id, titleInput.value)
+    }
+    titleElement.appendChild(titleInput)
 
     const descElement = this.document.createElement('div')
     descElement.setAttribute('class', 'Description')
@@ -319,6 +340,22 @@ export class View {
       }
       else {
         throw new Error(`task group element ${taskGroupId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
+
+  updateTaskTitle(projectId: ProjectId, taskId: TaskId, title: Title) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const taskElement = this.document.getElementById(taskId)
+      if (taskElement) {
+        taskElement.children[0].children[0].value = title
+      }
+      else {
+        throw new Error(`task element ${taskId} not found`)
       }
     }
     else {

@@ -490,11 +490,33 @@ export class Model {
         taskGroup.title = title
       }
       else {
-        throw new Error(`task group element ${taskGroupId} not found`)
+        throw new Error(`task group ${taskGroupId} not found`)
       }
     }
     else {
-      throw new Error(`project element ${projectId} not found`)
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  updateTaskTitle(projectId: ProjectId, taskId: TaskId, title: Title) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroupOfTask(taskId)
+      if (taskGroup) {
+        const task = taskGroup.getTask(taskId)
+        if (task) {
+          task.title = title
+        }
+        else {
+          throw new Error(`task ${taskId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task group of task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
     }
   }
 

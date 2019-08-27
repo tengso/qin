@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue } 
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId, taskGroupColumns, TaskGroupColumnName } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId, taskGroupTableColumns, TaskGroupTableColumnName, taskTableColumns, TaskTableColumnName } from './Core'
 import uuid = require('uuid');
 
 export class Control implements ClientCallback {
@@ -26,6 +26,7 @@ export class Control implements ClientCallback {
     this.view.setRemoveTaskCallback(removeTaskCallback)
     this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
     this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
+    this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
   }
 
   tableSnap(table: Table) {
@@ -111,10 +112,10 @@ export class Control implements ClientCallback {
 
     if (tableId === taskGroupTableId) {
       const taskGroupId = rowId
-      const column = taskGroupColumns[columnIndex]
+      const column = taskGroupTableColumns[columnIndex]
       const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
       if (projectId) {
-        if (column === TaskGroupColumnName.Title) {
+        if (column === TaskGroupTableColumnName.Title) {
           const title = value as string
           this.model.updateTaskGroupTitle(projectId, taskGroupId, title)
           this.view.updateTaskGroupTitle(projectId, taskGroupId, title)
@@ -125,6 +126,25 @@ export class Control implements ClientCallback {
       }
       else {
         throw new Error(`project for task group ${taskGroupId} not found`)
+      }
+    }
+    else if (tableId === taskTableId) {
+      const taskId = rowId
+      const column = taskTableColumns[columnIndex]
+      const projectId = this.model.getProjectIdByTaskId(taskId)
+      if (projectId) {
+        const project = this.model.getProject(projectId)
+        if (column === TaskTableColumnName.Title) {
+          const title = value as string
+          this.model.updateTaskTitle(projectId, taskId, title)
+          this.view.updateTaskTitle(projectId, taskId, title)
+        }
+        else {
+          throw new Error(`unknown column ${value}`)
+        }
+      }
+      else {
+        throw new Error(`project for task ${taskId} not found`)
       }
     }
   }
@@ -454,6 +474,10 @@ function removeTaskCallback(taskId: TaskId) {
 
 function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
   client.updateCell(taskGroupTableId, taskGroupId, 'title', title)
+}
+
+function updateTaskTitleCallback(taskId: TaskId, title: Title) {
+  client.updateCell(taskTableId, taskId, 'title', title)
 }
 
 

@@ -23,20 +23,6 @@ export interface TaskGroupRow {
   projectId: ProjectId
 }
 
-export enum TaskGroupColumnName {
-  Id = 'id',
-  Title = 'title',
-  Description = 'description',
-  ProjectId = 'projectId',
-}
-
-export const taskGroupColumns = [
-  TaskGroupColumnName.Id,
-  TaskGroupColumnName.Title, 
-  TaskGroupColumnName.Description,
-  TaskGroupColumnName.ProjectId,
-]
-
 export interface TaskRow {
   id: TaskId
   title: Title
@@ -45,3 +31,50 @@ export interface TaskRow {
   projectId: ProjectId
   taskGroupId: TaskGroupId
 }
+
+export enum ProjectTableColumnName {
+  Id = 'id',
+  Title = 'title',
+  Description = 'description',
+  DueDate = 'dueDate',
+}
+
+export enum TaskGroupTableColumnName {
+  Id = 'id',
+  Title = 'title',
+  Description = 'description',
+  ProjectId = 'projectId',
+}
+
+export enum TaskTableColumnName {
+  Id = 'id',
+  Title = 'title',
+  Description = 'description',
+  DueDate = 'dueDate',
+  ProjectId = 'projectId',
+  TaskGroupId = 'taskGroupId'
+}
+
+export const projectTableColumns = [
+  ProjectTableColumnName.Id,
+  ProjectTableColumnName.Title, 
+  ProjectTableColumnName.Description,
+  ProjectTableColumnName.DueDate,
+]
+
+export const taskGroupTableColumns = [
+  TaskGroupTableColumnName.Id,
+  TaskGroupTableColumnName.Title, 
+  TaskGroupTableColumnName.Description,
+  TaskGroupTableColumnName.ProjectId,
+]
+
+export const taskTableColumns = [
+  TaskTableColumnName.Id,
+  TaskTableColumnName.Title, 
+  TaskTableColumnName.Description,
+  TaskTableColumnName.DueDate,
+  TaskTableColumnName.ProjectId,
+  TaskTableColumnName.TaskGroupId,
+]
+
