@@ -1,6 +1,7 @@
 import { Client, DefaultClientCallback } from '../TableFlowClient'
-import { UserId, TableId, RowId, ColumnValue, ErrorCode } from '../TableFlowMessages'
+import { UserId, TableId, RowId, ColumnValue, ErrorCode, SessionId } from '../TableFlowMessages'
 import { AssetTableColumnName, AssetId, AssetName, AssetRow, AssetType, assetTableColumns } from './team/Core'
+import { runInThisContext } from 'vm';
 
 const uuid = require('uuid/v4')
 
@@ -16,8 +17,24 @@ class Callback extends DefaultClientCallback {
     this.client = client
   }
 
+  loginSuccess = (sessionId: SessionId) => {
+    this.client.subscribeTables()
+  }
+
   appendRow = (tableId: TableId, rowId: RowId, values: Object[]) => {
     console.log(`appended: ${tableId}, ${rowId}`)
+
+    const image = document.getElementById('image') as HTMLImageElement
+    if (image) {
+      const i = assetTableColumns.indexOf(AssetTableColumnName.Content)
+      console.log(i)
+      console.log(values.length)
+      const content = values[i] as string
+      image.src = content
+    }
+    else {
+      console.log(`image element not found`)
+    }
   }
 
   removeRow = (rowId: RowId, tableId: TableId, values: ColumnValue[]) => {
