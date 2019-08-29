@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<script src='../../dist/asset_main.js'></script>
+<head>digital asset loader</head>
+<style>
+  p {
+    margin: 10px;
+  }
+
+  input {
+    margin: 10px;
+  }
+</style>
+<body>
+  <p>
+  name: <input id="name"/> <br>
+  type: <input id="type"/> <br>
+  description: <input id="description"/> <br>
+  file: <input id="path" type="file"/> <br>
+  image: <img src="" id="image"/> <br>
+  </p>
+</body>
+<script>
+  const f = document.getElementById('path')
+  f.addEventListener('input', (event) => {
+    if (f.files.length > 0) {
+      const file = f.files[0]
+      const name = document.getElementById('name').value.trim()
+      const type = document.getElementById('type').value.trim()
+      const description = document.getElementById('description').value.trim()
+      uploadAsset(name, type, description, file)
+    }
+  })
+</script>

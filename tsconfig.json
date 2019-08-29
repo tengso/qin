@@ -20,6 +20,7 @@
         "./src/examples/client.ts",
         "./src/examples/server.ts",
         "./src/examples/ClientSim.ts",
+        "./src/examples/AssetLoader.ts",
         "./src/examples/Kanban.ts",
         "./src/test/**/*"
     ]
