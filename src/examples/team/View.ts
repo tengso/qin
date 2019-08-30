@@ -1,5 +1,6 @@
-import {Project, TaskGroup, Task } from './Model'
-import {ProjectId, TaskGroupId, TaskId, Title } from './Core'
+import { UserId } from '../../TableFlowMessages'
+import { Project, TaskGroup, Task, Member } from './Model'
+import { ProjectId, TaskGroupId, TaskId, Title } from './Core'
 
 // TODO: disable delete remove task group when non-empty task list
 
@@ -12,6 +13,18 @@ import Sortable from 'sortablejs'
             <div class="Title"></div>
             <div class="Description"></div>
             <div class="DueDate"></div>
+            <div class="MemberList">
+              <div class="Member" id="MemberId">
+                <img Class="ProjectMemberImage" src=/>
+              </div>
+              <div class="Member" id="MemberId">
+                <img Class="ProjectMemberImage" src=/>
+              </div>
+            </div>
+            <div class="AddTaskGroup">
+              <button></button>
+            </div>
+            </div>
         </div>
         <div class="TaskGroupList">
             <div class="TaskGroup" id="TaskGroupId">
@@ -219,6 +232,9 @@ export class View {
     dueDateElement.setAttribute('class', 'DueDate')
     dueDateElement.innerHTML = project.dueDate
 
+    const memberListElement = this.document.createElement('div')
+    memberListElement.setAttribute('class', 'MemberList')
+
     const addTaskGroupElement = this.document.createElement('div')
     addTaskGroupElement.setAttribute('class', 'AddTaskGroup')
     const addTaskGroupButton = this.document.createElement('button')
@@ -231,6 +247,7 @@ export class View {
     projectHeadElement.appendChild(titleElement)
     projectHeadElement.appendChild(descElement)
     projectHeadElement.appendChild(dueDateElement)
+    projectHeadElement.appendChild(memberListElement)
     projectHeadElement.appendChild(addTaskGroupElement)
 
     const taskGroupListElement = this.document.createElement('div')
@@ -513,4 +530,59 @@ export class View {
       throw new Error(`project element ${projectId} not found`)
     }
   }
+
+  /** 
+    <div class="Project" id="ProjectId">
+        <div class="ProjectHead">
+            <div class="Title"></div>
+            <div class="Description"></div>
+            <div class="DueDate"></div>
+            <div class="MemberList">
+              <div class="Member" id="MemberId">
+                <img Class="ProjectMemberImage" src=/>
+              </div>
+              <div class="Member" id="MemberId">
+                <img Class="ProjectMemberImage" src=/>
+              </div>
+            </div>
+  */
+  appendProjectMember(projectId: ProjectId, member: Member, image: string): void {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      // TODO: remove hard-coded index
+      const memberList = projectElement.children[0].children[3]
+
+      const memberElement = this.document.createElement('div')
+      memberElement.setAttribute('id', member.id)
+      memberElement.setAttribute('class', 'Member')
+
+      const memberImageElement = this.document.createElement('img')
+      memberImageElement.setAttribute('class', 'ProjectMemberImage')
+      memberImageElement.setAttribute('src', image)
+
+      memberElement.appendChild(memberImageElement)
+
+      memberList.appendChild(memberElement)
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  removeProjectMember(projectId: ProjectId, memberId: UserId): void {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const memberElement = this.document.getElementById(memberId)
+      if (memberElement) {
+        memberElement.parentElement.removeChild(memberElement)
+      }
+      else {
+        throw new Error(`member ${memberId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
 }
+

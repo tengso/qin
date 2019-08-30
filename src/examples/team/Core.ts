@@ -7,7 +7,7 @@ export type Description = string
  * Project
  */
 export type ProjectId = string
-export const projectTableId = 'project_table_id'
+export const ProjectTableId = 'project_table_id'
 
 export interface ProjectRow {
   id: ProjectId
@@ -23,7 +23,7 @@ export enum ProjectTableColumnName {
   DueDate = 'dueDate',
 }
 
-export const projectTableColumns = [
+export const ProjectTableColumns = [
   ProjectTableColumnName.Id,
   ProjectTableColumnName.Title, 
   ProjectTableColumnName.Description,
@@ -35,7 +35,7 @@ export const projectTableColumns = [
  */
 export type TaskGroupId = string
 
-export const taskGroupTableId = 'task_group_table_id'
+export const TaskGroupTableId = 'task_group_table_id'
 
 export interface TaskGroupRow {
   id: TaskGroupId
@@ -51,7 +51,7 @@ export enum TaskGroupTableColumnName {
   ProjectId = 'projectId',
 }
 
-export const taskGroupTableColumns = [
+export const TaskGroupTableColumns = [
   TaskGroupTableColumnName.Id,
   TaskGroupTableColumnName.Title, 
   TaskGroupTableColumnName.Description,
@@ -63,7 +63,7 @@ export const taskGroupTableColumns = [
  */
 export type TaskId = string
 
-export const taskTableId = 'task_table_id'
+export const TaskTableId = 'task_table_id'
 
 export interface TaskRow {
   id: TaskId
@@ -83,7 +83,7 @@ export enum TaskTableColumnName {
   TaskGroupId = 'taskGroupId'
 }
 
-export const taskTableColumns = [
+export const TaskTableColumns = [
   TaskTableColumnName.Id,
   TaskTableColumnName.Title, 
   TaskTableColumnName.Description,
@@ -99,7 +99,7 @@ export type AssetId = string
 export type AssetName = string
 export type AssetType = string
 
-export const assetTableId = 'asset_table_id'
+export const AssetTableId = 'asset_table_id'
 
 export interface AssetRow {
   id: AssetId
@@ -125,7 +125,7 @@ export enum AssetTableColumnName {
   Content = 'content',
 }
 
-export const assetTableColumns = [
+export const AssetTableColumns = [
   AssetTableColumnName.Id,
   AssetTableColumnName.Name,
   AssetTableColumnName.Type,
@@ -135,4 +135,76 @@ export const assetTableColumns = [
   AssetTableColumnName.UpdatorId,
   AssetTableColumnName.UpdateTime,
   AssetTableColumnName.Content,
+]
+
+/**
+ * Member
+ */
+
+export const MemberTableId = 'member_table_id'
+
+export interface MemberRow {
+  id: UserId
+  name: string
+  title: string
+  description: Description
+  avatar: AssetId
+}
+
+export enum MemberTableColumnName {
+  Id = 'id',
+  Name = 'name',
+  Title = 'title',
+  Description = 'description',
+  Avatar = 'avatar',
+}
+
+export const MemberTableColumns = [
+  MemberTableColumnName.Id,
+  MemberTableColumnName.Name,
+  MemberTableColumnName.Title,
+  MemberTableColumnName.Description,
+  MemberTableColumnName.Avatar,
+]
+
+/**
+ * Project Member
+ */
+
+export const ProjectMemberTableId = 'project_member_table_id'
+
+export interface ProjectMemberRow {
+  memberId: UserId
+  projectId: ProjectId
+}
+
+export enum ProjectMemberTableColumnName {
+  MemberId = 'memberId',
+  ProjectId = 'projectId',
+}
+
+export const ProjectMemberTableColumns = [
+  ProjectMemberTableColumnName.MemberId,
+  ProjectMemberTableColumnName.ProjectId,
+]
+
+/**
+ * Task Owner
+ */
+
+export const TaskOwnerTableId = 'task_owner_table_id'
+
+export interface TaskOwnerRow {
+  memberId: UserId
+  taskId: TaskId
+}
+
+export enum TaskOwnerTableColumnName {
+  MemberId = 'memberId',
+  TaskId = 'taskId',
+}
+
+export const TaskOwnerTableColumns = [
+  TaskOwnerTableColumnName.MemberId,
+  TaskOwnerTableColumnName.TaskId,
 ]

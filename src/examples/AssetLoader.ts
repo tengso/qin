@@ -1,6 +1,6 @@
 import { Client, DefaultClientCallback } from '../TableFlowClient'
 import { UserId, TableId, RowId, ColumnValue, ErrorCode, SessionId } from '../TableFlowMessages'
-import { AssetTableColumnName, AssetId, AssetName, AssetRow, AssetType, assetTableColumns } from './team/Core'
+import { AssetTableColumnName, AssetId, AssetName, AssetRow, AssetType, AssetTableColumns } from './team/Core'
 import { runInThisContext } from 'vm';
 
 const uuid = require('uuid/v4')
@@ -26,7 +26,7 @@ class Callback extends DefaultClientCallback {
 
     const image = document.getElementById('image') as HTMLImageElement
     if (image) {
-      const i = assetTableColumns.indexOf(AssetTableColumnName.Content)
+      const i = AssetTableColumns.indexOf(AssetTableColumnName.Content)
       console.log(i)
       console.log(values.length)
       const content = values[i] as string

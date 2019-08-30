@@ -41,6 +41,8 @@ describe('Test Model', function() {
 
     const view = new View(document)
 
+    // FIXME: project interface
+    // @ts-ignore
     const project1: Project = {
       id: 'project_id_1',
       title: 'title',
@@ -131,6 +133,8 @@ describe('Test Model', function() {
 
     const view = new View(document)
 
+    // FIXME: project interface
+    // @ts-ignore
     const project1: Project = {
       id: 'project_id_1',
       title: 'title',

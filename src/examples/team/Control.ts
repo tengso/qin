@@ -1,8 +1,8 @@
-import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue } from '../../TableFlowMessages'
+import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, UserId } from '../../TableFlowMessages'
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, taskGroupTableId, taskTableId, projectTableId, taskGroupTableColumns, TaskGroupTableColumnName, taskTableColumns, TaskTableColumnName } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow } from './Core'
 import uuid = require('uuid');
 
 export class Control implements ClientCallback {
@@ -11,7 +11,7 @@ export class Control implements ClientCallback {
   private client
 
   // note: order matters
-  private expectedTables = [projectTableId, taskGroupTableId, taskTableId]
+  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId]
   private receivedTables = new Map<TableId, Table>()
 
   constructor(client, document) {
@@ -49,39 +49,63 @@ export class Control implements ClientCallback {
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
     this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
     
-    if (tableId === taskTableId) {
+    if (tableId === TaskTableId) {
       const row = this.createTaskRow(values)
       const [_, taskGroup, task] = this.model.appendTask(row)
       this.view.appendTask(taskGroup, task)
     }
-    else if (tableId === taskGroupTableId) {
+    else if (tableId === TaskGroupTableId) {
       const row = this.createTaskGroupRow(values) 
       const [project, taskGroup] = this.model.appendTaskGroup(row)
       this.view.appendTaskGroup(project, taskGroup)
     }
-    else if (tableId === projectTableId) {
+    else if (tableId === ProjectTableId) {
       const row = this.createProjectRow(values)
       const project = this.model.appendProject(row)
       this.view.appendProject(project)
+    }
+    else if (tableId === MemberTableId) {
+      const row = this.createMemberRow(values)
+      this.model.appendMember(row)
+    }
+    else if (tableId === AssetTableId) {
+      const row = this.createAssetRow(values)
+      this.model.appendAsset(row)
+    }
+    else if (tableId === ProjectMemberTableId) {
+      const row = this.createProjectMemberRow(values)
+      const member = this.model.getMember(row.memberId)
+      if (member) {
+        console.log(member.avatar)
+        const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
+        console.log(asset)
+        const image = asset ? asset.content : undefined
+
+        this.model.appendProjectMember(row.projectId, member)
+        this.view.appendProjectMember(row.projectId, member, image)
+      }
+      else {
+        throw new Error(`member ${row.memberId} not found`)
+      }
     }
   }
 
   insertRow(tableId: string, rowId: string, afterRowId: string, values: Object[]) {
     this.logMessage(`insert row - tableId [${tableId}] rowId [${rowId}] aRowId [${afterRowId}] value [${values}]`, 'tableUpdate')
 
-    if (tableId === taskTableId) {
+    if (tableId === TaskTableId) {
       // row id === task id
       const row = this.createTaskRow(values)
       const [_, taskGroup, task, index] = this.model.insertTask(afterRowId, row)
       this.view.insertTask(taskGroup, task, index)
     }
-    else if (tableId === taskGroupTableId) {
+    else if (tableId === TaskGroupTableId) {
       // row id === task group id
       const row = this.createTaskGroupRow(values)
       const [project, taskGroup, index] = this.model.insertTaskGroup(afterRowId, row) 
       this.view.insertTaskGroup(project, taskGroup, index)
     }
-    else if (tableId === projectTableId) {
+    else if (tableId === ProjectTableId) {
       // row id === project id
       const row = this.createProjectRow(values)
       throw new Error('insert project not supported yet')
@@ -91,17 +115,22 @@ export class Control implements ClientCallback {
   removeRow(rowId: RowId, tableId: TableId, values: ColumnValue[]) {
     this.logMessage(`remove row - rowId [${rowId}]`, 'tableUpdate')
 
-    if (tableId == taskTableId) {
+    if (tableId == TaskTableId) {
       const row = this.createTaskRow(values)
       this.model.removeTask(row.projectId, row.taskGroupId, row.id)
       this.view.removeTask(row.id)
     }
-    else if (tableId === taskGroupTableId) {
+    else if (tableId === TaskGroupTableId) {
       const row = this.createTaskGroupRow(values)
       this.model.removeTaskGroup(row.projectId, row.id)
       this.view.removeTaskGroup(row.id)
     }
-    else if (tableId === projectTableId) {
+    else if (tableId === ProjectMemberTableId) {
+      const row = this.createProjectMemberRow(values)
+      this.model.removeProjectMember(row.projectId, row.memberId)
+      this.view.removeProjectMember(row.projectId, row.memberId)
+    }
+    else if (tableId === ProjectTableId) {
       const row = this.createProjectRow(values)
       throw new Error('remove project not supported yet')
     }
@@ -110,9 +139,9 @@ export class Control implements ClientCallback {
   updateCell(tableId: TableId, rowId: RowId, columnIndex: number, value: ColumnValue) {
     this.logMessage(`update cell - rowId [${rowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
 
-    if (tableId === taskGroupTableId) {
+    if (tableId === TaskGroupTableId) {
       const taskGroupId = rowId
-      const column = taskGroupTableColumns[columnIndex]
+      const column = TaskGroupTableColumns[columnIndex]
       const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
       if (projectId) {
         if (column === TaskGroupTableColumnName.Title) {
@@ -128,9 +157,9 @@ export class Control implements ClientCallback {
         throw new Error(`project for task group ${taskGroupId} not found`)
       }
     }
-    else if (tableId === taskTableId) {
+    else if (tableId === TaskTableId) {
       const taskId = rowId
-      const column = taskTableColumns[columnIndex]
+      const column = TaskTableColumns[columnIndex]
       const projectId = this.model.getProjectIdByTaskId(taskId)
       if (projectId) {
         const project = this.model.getProject(projectId)
@@ -152,7 +181,7 @@ export class Control implements ClientCallback {
   moveRowAndUpdateCell(tableId: string, rowId: string, afterRowId: string, columnIndex: number, value: Object) {
     this.logMessage(`move & update cell - tableId [${tableId}] rowId [${rowId}] afterRowId [${afterRowId}] column [${columnIndex}] value [${value}]`, 'tableUpdate')
   
-    if (tableId === taskGroupTableId) {
+    if (tableId === TaskGroupTableId) {
       const taskGroupId = rowId
       const afterTaskGroupId = afterRowId
 
@@ -165,7 +194,7 @@ export class Control implements ClientCallback {
         throw new Error(`task group ${taskGroupId} not found`)
       }
     }
-    else if (tableId === taskTableId) {
+    else if (tableId === TaskTableId) {
       const taskId = rowId
       const afterTaskId = afterRowId
 
@@ -201,7 +230,7 @@ export class Control implements ClientCallback {
       console.log(elementClass)
 
       if (elementClass === 'TaskGroup') {
-        const tableId = taskGroupTableId    
+        const tableId = TaskGroupTableId    
         const taskGroupId = event.item.id
         const toTaskGroupIndex = event.newIndex
 
@@ -225,7 +254,7 @@ export class Control implements ClientCallback {
         }
       }
       else if (elementClass === 'Task') {
-        const tableId = taskTableId    
+        const tableId = TaskTableId    
         const taskId = event.item.id
 
         const fromTaskGroupId = event.from.parentElement.id
@@ -287,6 +316,49 @@ export class Control implements ClientCallback {
       title: values[1] as Title,
       description: values[2] as Description,
       dueDate: values[3] as Date,
+    }
+
+    return row
+  }
+
+  private createMemberRow(values: ColumnValue[]): MemberRow {
+    const row: MemberRow = {
+      id: values[0] as UserId,
+      name: values[1] as string,
+      title: values[2] as string,
+      description: values[3] as string,
+      avatar: values[4] as string,
+    }
+
+    return row
+  }
+
+  private createAssetRow(values: ColumnValue[]): AssetRow {
+    const row: AssetRow = {
+      id: values[0] as AssetId,
+      name: values[1] as AssetName,
+      type: values[2] as AssetType,
+      description: values[3] as Description,
+      creatorId: values[4] as UserId,
+      creationTime: values[5] as Date,
+      updatorId: values[6] as UserId,
+      updateTime: values[7] as Date,
+      content: values[8],
+    }
+
+    return row
+  }
+
+  private createProjectMemberRow(values: ColumnValue[]): ProjectMemberRow {
+    const memberIdIndex = ProjectMemberTableColumns.indexOf(ProjectMemberTableColumnName.MemberId)
+    const memberId = values[memberIdIndex] as UserId
+
+    const projectIdIndex = ProjectMemberTableColumns.indexOf(ProjectMemberTableColumnName.ProjectId)
+    const projectId = values[projectIdIndex] as ProjectId
+
+    const row: ProjectMemberRow = {
+      memberId: memberId,
+      projectId: projectId,
     }
 
     return row
@@ -445,7 +517,7 @@ function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'new', descrip
       taskGroupId,
     ]
 
-    client.insertRow(taskTableId, taskId, undefined, row)
+    client.insertRow(TaskTableId, taskId, undefined, row)
   }
   else {
     throw new Error(`project not found for task group ${taskGroupId}`)
@@ -461,23 +533,23 @@ function addTaskGroupCallback(projectId: ProjectId, title: Title = 'new task gro
     projectId,
   ]
 
-  client.appendRow(taskGroupTableId, taskGroupId, row)
+  client.appendRow(TaskGroupTableId, taskGroupId, row)
 }
 
 function removeTaskGroupCallback(taskGroupId: TaskGroupId) {
-  client.removeRow(taskGroupTableId, taskGroupId)
+  client.removeRow(TaskGroupTableId, taskGroupId)
 }
 
 function removeTaskCallback(taskId: TaskId) {
-  client.removeRow(taskTableId, taskId)
+  client.removeRow(TaskTableId, taskId)
 }
 
 function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
-  client.updateCell(taskGroupTableId, taskGroupId, 'title', title)
+  client.updateCell(TaskGroupTableId, taskGroupId, 'title', title)
 }
 
 function updateTaskTitleCallback(taskId: TaskId, title: Title) {
-  client.updateCell(taskTableId, taskId, 'title', title)
+  client.updateCell(TaskTableId, taskId, 'title', title)
 }
 
 

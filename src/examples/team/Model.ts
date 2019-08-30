@@ -1,4 +1,5 @@
-import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description } from './Core'
+import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType } from './Core'
+import { UserId } from '../../TableFlowMessages'
 
 // class Node<Value> {
 //   private id: string
@@ -58,6 +59,10 @@ export interface Project {
   title: Title
   description: Description
   dueDate: Date
+
+  appendMember(member: Member): void
+  removeMember(memberId: UserId): void
+  getMembers(): Array<Member>
 }
 
 class ProjectImpl implements Project {
@@ -69,7 +74,39 @@ class ProjectImpl implements Project {
   private taskGroupList = new Array<TaskGroupImpl>()
   private taskGroupMap = new Map<TaskGroupId, TaskGroupImpl>()
 
+  private memberList = new Array<Member>()
+  private memberMap = new Map<UserId, Member>()
+
   constructor() {}
+
+  appendMember(member: Member) {
+    console.log(`append project member ${member.id}`)
+    if (!this.memberMap.get(member.id)) {
+      this.memberList.push(member)
+      this.memberMap.set(member.id, member)
+    }
+    else {
+      throw new Error(`member ${member.id} already exists`)
+    }
+  }
+
+  removeMember(memberId: UserId) {
+    console.log(`remove project member ${memberId}`)
+    const index = this.memberList.findIndex((member) => {
+      return member.id === memberId})
+    if (index != -1) {
+      this.memberList.splice(index, 1)
+      this.memberMap.delete(memberId)
+    }
+    else {
+      throw new Error(`member ${memberId} not found`)
+    }
+  }
+
+  getMembers() {
+    // FIXME: should return a copy
+    return this.memberList
+  }
 
   getTaskGroup(taskGroupId: TaskGroupId): TaskGroupImpl | undefined {
     console.log(this.taskGroupMap)
@@ -271,12 +308,74 @@ class TaskImpl implements Task {
   dueDate: Date
 }
 
+export interface Member {
+  id: UserId
+  name: string
+  title: string
+  description: Description
+  avatar: AssetId
+}
+
+class MemberImpl implements Member {
+  id: UserId
+  name: string
+  title: string
+  description: Description
+  avatar: AssetId
+}
+
+export interface Asset {
+  id: AssetId
+  name: AssetName
+  type: AssetType 
+  description: Description
+  content: any
+}
+
+class AssetImpl implements Asset {
+  id: AssetId
+  name: AssetName
+  type: AssetType 
+  description: Description
+  content: any
+}
+
 export class Model {
   private projectList = new Array<ProjectImpl>()
   private projectMap = new Map<ProjectId, ProjectImpl>()
 
   private taskToProjectMap = new Map<TaskId, ProjectId>()
   private taskGroupToProjectMap = new Map<TaskGroupId, ProjectId>()
+
+  private memberList = new Array<Member>()
+  private memberMap = new Map<UserId, MemberImpl>()
+
+  private assetList = new Array<Asset>()
+  private assetMap = new Map<AssetId, AssetImpl>()
+
+
+  private createMember(values: MemberRow): MemberImpl {
+    const member = new MemberImpl()
+    member.id = values.id
+    member.name = values.name
+    member.title = values.title
+    member.description = values.description
+    member.avatar = values.avatar
+
+    return member
+  }
+
+  private createAsset(values: AssetRow): AssetImpl {
+    const asset = new AssetImpl()
+    asset.id = values.id
+    asset.name = values.name
+    asset.type = values.type
+    asset.description = values.description
+    asset.content = values.content
+
+    return asset
+  }
+
 
   private createTask(values: TaskRow): Task {
     const task = new TaskImpl() 
@@ -567,6 +666,47 @@ export class Model {
     }
     else {
       throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  appendMember(values: MemberRow) {
+    const member = this.createMember(values)
+    this.memberList.push(member)
+    this.memberMap.set(member.id, member)
+  }
+
+  getMember(userId: UserId): Member | undefined {
+    return this.memberMap.get(userId)
+  }
+
+  appendAsset(values: AssetRow) {
+    const asset = this.createAsset(values)
+    console.log(`append asset ${asset.id}`)
+    this.assetList.push(asset)
+    this.assetMap.set(asset.id, asset)
+  }
+
+  getAsset(assetId: AssetId): Asset | undefined {
+    return this.assetMap.get(assetId)
+  }
+
+  appendProjectMember(projectId: ProjectId, member: Member) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      project.appendMember(member)
+    }
+    else {
+      throw new Error(`project ${projectId}  not found`)
+    }
+  }
+
+  removeProjectMember(projectId: ProjectId, memberId: UserId) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      project.removeMember(memberId)
+    }
+    else {
+      throw new Error(`project ${projectId}  not found`)
     }
   }
 }
