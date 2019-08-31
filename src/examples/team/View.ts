@@ -47,6 +47,11 @@ import Sortable from 'sortablejs'
                       </div>
                       <div class="Description"></div>
                       <div class="DueDate"></div>
+                      <div class="TaskOwnerList">
+                        <div id="MemberId" class="TaskOwner">
+                          <img class="TaskOwnerImage" src=''></img>
+                        </div>
+                      </div>
                       <div class="RemoveTask">
                         <button></button>
                       </div>
@@ -133,6 +138,9 @@ export class View {
     dueDateElement.setAttribute('class', 'DueDate')
     // dueDateElement.innerHTML = task.dueDate
 
+    const ownerListElement = this.document.createElement('div')
+    ownerListElement.setAttribute('class', 'TaskOwnerList')
+
     const removeTaskElement = this.document.createElement('div')
     removeTaskElement.setAttribute('class', 'RemoveTask')
     const removeTaskButton = this.document.createElement('button')
@@ -145,6 +153,7 @@ export class View {
     taskElement.appendChild(titleElement)
     taskElement.appendChild(descElement)
     taskElement.appendChild(dueDateElement)
+    taskElement.appendChild(ownerListElement)
     taskElement.appendChild(removeTaskElement)
     
     return taskElement
@@ -583,6 +592,40 @@ export class View {
     else {
       throw new Error(`project ${projectId} not found`)
     }
+  }
+
+  appendTaskOwner(taskId: TaskId, member: Member, image: string) {
+    const taskElement = this.document.getElementById(taskId)
+    if (taskElement) {
+      // FIXME: remove hard coded index
+      const ownerElement = this.document.createElement('div')
+      ownerElement.setAttribute('id', member.id)
+      ownerElement.setAttribute('class', 'TaskOwner')
+
+      const ownerImageElement = this.document.createElement('img')
+      ownerImageElement.setAttribute('class', 'TaskOwnerImage')
+      ownerImageElement.setAttribute('src', image)
+
+      ownerElement.appendChild(ownerImageElement)
+
+      taskElement.children[3].appendChild(ownerElement)
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
+
+  removeTaskOwner(taskId: TaskId, memberId: UserId) {
+    const taskElement = this.document.getElementById(taskId)
+    // FIXME: remove hard-coded index
+    const ownerList = taskElement.children[3].children
+    for (let i = 0; i < ownerList.length; i++) {
+      if (ownerList[i].getAttribute('id') === memberId) {
+        ownerList[i].parentElement.removeChild(ownerList[i])
+        return
+      }
+    }
+    throw new Error(`owner ${memberId} not found`)
   }
 }
 

@@ -195,16 +195,16 @@ export const ProjectMemberTableColumns = [
 export const TaskOwnerTableId = 'task_owner_table_id'
 
 export interface TaskOwnerRow {
-  memberId: UserId
+  ownerId: UserId
   taskId: TaskId
 }
 
 export enum TaskOwnerTableColumnName {
-  MemberId = 'memberId',
+  OwnerId = 'ownerId',
   TaskId = 'taskId',
 }
 
 export const TaskOwnerTableColumns = [
-  TaskOwnerTableColumnName.MemberId,
+  TaskOwnerTableColumnName.OwnerId,
   TaskOwnerTableColumnName.TaskId,
 ]

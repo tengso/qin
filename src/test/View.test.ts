@@ -68,6 +68,7 @@ describe('Test Model', function() {
       description: 'description',
     }
 
+    // @ts-ignore
     const task1: Task = {
       id: 'task_id_1',
       title: 'title',
@@ -75,6 +76,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // @ts-ignore
     const task2: Task = {
       id: 'task_id_2',
       title: 'title',
@@ -82,6 +84,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // @ts-ignore
     const task3: Task = {
       id: 'task_id_3',
       title: 'title',
@@ -160,6 +163,7 @@ describe('Test Model', function() {
       description: 'description',
     }
 
+    // @ts-ignore
     const task1: Task = {
       id: 'task_id_1',
       title: 'title',
@@ -167,6 +171,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // @ts-ignore
     const task2: Task = {
       id: 'task_id_2',
       title: 'title',
@@ -174,6 +179,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // @ts-ignore
     const task3: Task = {
       id: 'task_id_3',
       title: 'title',

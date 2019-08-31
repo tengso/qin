@@ -216,8 +216,8 @@ class TaskGroupImpl implements TaskGroup {
   title: Title
   description: Description
 
-  private taskList = new Array<TaskImpl>()
-  private taskMap = new Map<TaskId, TaskImpl>()
+  private taskList: Array<Task> = new Array<TaskImpl>()
+  private taskMap: Map<TaskId, Task>  = new Map<TaskId, TaskImpl>()
 
   getTask(taskId: TaskId): Task {
     return this.taskMap.get(taskId)
@@ -299,6 +299,9 @@ export interface Task {
   title: Title
   description: Description
   dueDate: Date
+
+  appendOwner(member: Member)
+  removeOwner(memberId: UserId)
 }
 
 class TaskImpl implements Task {
@@ -306,6 +309,30 @@ class TaskImpl implements Task {
   title: Title
   description: Description
   dueDate: Date
+
+  private ownerList = new Array<Member>()
+  private ownerMap = new Map<UserId, Member>()
+
+  appendOwner(member: Member) {
+    if (!this.ownerMap.get(member.id)) {
+      this.ownerList.push(member)
+      this.ownerMap.set(member.id, member)
+    }
+    else {
+      throw new Error(`owner ${member.id} exists`)
+    }
+  }
+
+  removeOwner(memberId: UserId) {
+    const index = this.ownerList.findIndex(owner => {return owner.id === memberId})
+    if (index != -1) {
+      this.ownerList.splice(index, 1)
+      this.ownerMap.delete(memberId)
+    }
+    else {
+      throw new Error(`owner ${memberId} not found`)
+    }
+  }
 }
 
 export interface Member {
@@ -707,6 +734,52 @@ export class Model {
     }
     else {
       throw new Error(`project ${projectId}  not found`)
+    }
+  }
+
+  appendTaskOwner(taskId: TaskId, member: Member) {
+    const projectId = this.getProjectIdByTaskId(taskId)
+    if (projectId) {
+      const project = this.projectMap.get(projectId)
+      const taskGroup = project.getTaskGroupOfTask(taskId)
+      if (taskGroup) {
+        const task = taskGroup.getTask(taskId)
+        if (task) {
+          task.appendOwner(member)
+        }
+        else {
+          throw new Error(`task for ${taskId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task group for ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project for ${taskId} not found`)
+    }
+  }
+
+  removeTaskOwner(taskId: TaskId, ownerId: UserId) {
+    const projectId = this.getProjectIdByTaskId(taskId)
+    if (projectId) {
+      const project = this.projectMap.get(projectId)
+      const taskGroup = project.getTaskGroupOfTask(taskId)
+      if (taskGroup) {
+        const task = taskGroup.getTask(taskId)
+        if (task) {
+          task.removeOwner(ownerId)
+        }
+        else {
+          throw new Error(`task for ${taskId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task group for ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project for ${taskId} not found`)
     }
   }
 }

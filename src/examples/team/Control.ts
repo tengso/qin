@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, U
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName } from './Core'
 import uuid = require('uuid');
 
 export class Control implements ClientCallback {
@@ -11,7 +11,7 @@ export class Control implements ClientCallback {
   private client
 
   // note: order matters
-  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId]
+  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId]
   private receivedTables = new Map<TableId, Table>()
 
   constructor(client, document) {
@@ -88,6 +88,20 @@ export class Control implements ClientCallback {
         throw new Error(`member ${row.memberId} not found`)
       }
     }
+    else if (tableId === TaskOwnerTableId) {
+      const row = this.createTaskOwnerRow(values)
+      const member = this.model.getMember(row.ownerId)
+      if (member) {
+        const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
+        const image = asset ? asset.content : undefined
+
+        this.model.appendTaskOwner(row.taskId, member)
+        this.view.appendTaskOwner(row.taskId, member, image)
+      }
+      else {
+        throw new Error(`member ${row.ownerId} not found`)
+      }
+    }
   }
 
   insertRow(tableId: string, rowId: string, afterRowId: string, values: Object[]) {
@@ -129,6 +143,11 @@ export class Control implements ClientCallback {
       const row = this.createProjectMemberRow(values)
       this.model.removeProjectMember(row.projectId, row.memberId)
       this.view.removeProjectMember(row.projectId, row.memberId)
+    }
+    else if (tableId === TaskOwnerTableId) {
+      const row = this.createTaskOwnerRow(values)
+      this.model.removeTaskOwner(row.taskId, row.ownerId)
+      this.view.removeTaskOwner(row.taskId, row.ownerId)
     }
     else if (tableId === ProjectTableId) {
       const row = this.createProjectRow(values)
@@ -359,6 +378,21 @@ export class Control implements ClientCallback {
     const row: ProjectMemberRow = {
       memberId: memberId,
       projectId: projectId,
+    }
+
+    return row
+  }
+
+  private createTaskOwnerRow(values: ColumnValue[]): TaskOwnerRow {
+    const ownerIdIndex = TaskOwnerTableColumns.indexOf(TaskOwnerTableColumnName.OwnerId)
+    const ownerId = values[ownerIdIndex] as UserId
+
+    const taskIdIndex = TaskOwnerTableColumns.indexOf(TaskOwnerTableColumnName.TaskId)
+    const taskId = values[taskIdIndex] as TaskId
+
+    const row: TaskOwnerRow = {
+      ownerId: ownerId,
+      taskId: taskId,
     }
 
     return row
