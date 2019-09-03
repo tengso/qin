@@ -208,3 +208,40 @@ export const TaskOwnerTableColumns = [
   TaskOwnerTableColumnName.OwnerId,
   TaskOwnerTableColumnName.TaskId,
 ]
+
+/**
+ * Check List
+ */
+
+export type ItemId = string
+
+export enum ItemStatus {
+  Open = 'open',
+  Closed = 'closed'
+}
+
+export const CheckListTableId = 'check_list_table_id'
+
+export interface CheckListRow {
+  id: ItemId
+  projectId: ProjectId
+  taskId: TaskId
+  description: Description
+  status: ItemStatus
+}
+
+export enum CheckListTableColumnName {
+  Id = 'id',
+  ProjectId = 'projectId',
+  TaskId = 'taskId',
+  Description = 'description',
+  Status = 'status'
+}
+
+export const CheckListTableColumns = [
+  CheckListTableColumnName.Id,
+  CheckListTableColumnName.ProjectId,
+  CheckListTableColumnName.TaskId,
+  CheckListTableColumnName.Description,
+  CheckListTableColumnName.Status,
+]

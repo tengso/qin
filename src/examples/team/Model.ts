@@ -1,4 +1,4 @@
-import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType } from './Core'
+import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId } from './Core'
 import { UserId } from '../../TableFlowMessages'
 
 // class Node<Value> {
@@ -63,6 +63,8 @@ export interface Project {
   appendMember(member: Member): void
   removeMember(memberId: UserId): void
   getMembers(): Array<Member>
+
+  getTask(taskId: TaskId): Task | undefined
 }
 
 class ProjectImpl implements Project {
@@ -78,6 +80,17 @@ class ProjectImpl implements Project {
   private memberMap = new Map<UserId, Member>()
 
   constructor() {}
+
+  getTask(taskId: TaskId): Task | undefined {
+    for(const taskGroup of this.taskGroupList) {
+      const task = taskGroup.getTask(taskId)
+      if (task) {
+        return task
+      }
+    }
+
+    return undefined
+  }
 
   appendMember(member: Member) {
     console.log(`append project member ${member.id}`)
@@ -205,6 +218,7 @@ class ProjectImpl implements Project {
   }
 }
 
+
 export interface TaskGroup {
   readonly id: TaskGroupId
   title: Title
@@ -294,14 +308,24 @@ class TaskGroupImpl implements TaskGroup {
   }
 }
 
+export class CheckListItem {
+  id: ItemId
+  description: Description
+  status: ItemStatus
+}
+
 export interface Task {
   readonly id: TaskId
   title: Title
   description: Description
   dueDate: Date
 
-  appendOwner(member: Member)
-  removeOwner(memberId: UserId)
+  appendOwner(member: Member): void
+  removeOwner(memberId: UserId): void
+
+  appendItem(item: CheckListItem): CheckListItem
+  removeItem(itemId: ItemId): CheckListItem
+  updateItemStatus(itemId: ItemId, status: ItemStatus): CheckListItem
 }
 
 class TaskImpl implements Task {
@@ -313,7 +337,10 @@ class TaskImpl implements Task {
   private ownerList = new Array<Member>()
   private ownerMap = new Map<UserId, Member>()
 
-  appendOwner(member: Member) {
+  private itemList = new Array<CheckListItem>()
+  private itemMap = new Map<ItemId, CheckListItem>()
+
+  appendOwner(member: Member): void {
     if (!this.ownerMap.get(member.id)) {
       this.ownerList.push(member)
       this.ownerMap.set(member.id, member)
@@ -323,7 +350,7 @@ class TaskImpl implements Task {
     }
   }
 
-  removeOwner(memberId: UserId) {
+  removeOwner(memberId: UserId): void {
     const index = this.ownerList.findIndex(owner => {return owner.id === memberId})
     if (index != -1) {
       this.ownerList.splice(index, 1)
@@ -333,7 +360,50 @@ class TaskImpl implements Task {
       throw new Error(`owner ${memberId} not found`)
     }
   }
+
+  appendItem(item: CheckListItem): CheckListItem {
+    if (!this.itemMap.get(item.id)) {
+      this.itemMap.set(item.id, item)
+      this.itemList.push(item)
+      return item
+    }
+    else {
+      throw new Error(`item ${item.id} exists`)
+    }
+  }
+
+  removeItem(itemId: ItemId): CheckListItem {
+    const index = this.itemList.findIndex(item => {
+      return item.id === itemId
+    })
+
+    if (index != -1) {
+      const item = this.itemList.splice(index, 1)
+      this.itemMap.delete(itemId)
+      return item[0]
+    }
+    else {
+      throw new Error(`item ${itemId} not found`)
+    }
+  }
+
+  updateItemStatus(itemId: ItemId, status: ItemStatus): CheckListItem {
+    const index = this.itemList.findIndex(item => {
+      return item.id === itemId
+    })
+
+    if (index != -1) {
+      this.itemList[index].status = status
+      this.itemMap.get(itemId).status = status
+      return this.itemList[index]
+    }
+    else {
+      throw new Error(`item ${itemId} not found`)
+    }
+
+  }
 }
+
 
 export interface Member {
   id: UserId
@@ -780,6 +850,65 @@ export class Model {
     }
     else {
       throw new Error(`project for ${taskId} not found`)
+    }
+  }
+
+  private createCheckListItem(row: CheckListRow): CheckListItem {
+    const item = new CheckListItem()
+    item.id = row.id
+    item.description = row.description
+    item.status = row.status
+    return item
+  }
+
+  appendCheckListItem(row: CheckListRow): CheckListItem {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        const item = this.createCheckListItem(row)
+        return task.appendItem(item)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
+    }
+  }
+
+  removeCheckListItem(row: CheckListRow): CheckListItem {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        const item = this.createCheckListItem(row)
+        return task.removeItem(item.id)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
+    }
+  }
+
+  updateCheckListItemStatus(row: CheckListRow): CheckListItem {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        const item = this.createCheckListItem(row)
+        return task.updateItemStatus(item.id, item.status)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
     }
   }
 }

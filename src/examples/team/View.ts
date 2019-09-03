@@ -1,6 +1,6 @@
 import { UserId } from '../../TableFlowMessages'
-import { Project, TaskGroup, Task, Member } from './Model'
-import { ProjectId, TaskGroupId, TaskId, Title } from './Core'
+import { Project, TaskGroup, Task, Member, CheckListItem } from './Model'
+import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus } from './Core'
 
 // TODO: disable delete remove task group when non-empty task list
 
@@ -54,6 +54,23 @@ import { eventNames } from 'cluster';
                           <button''>(-)</button>
                         </div>
                       </div>
+                      <div class="CheckList">
+                        <div class="CheckListHead">
+                        </div>
+                        <div class="ItemList">
+                          <div class="Item">
+                            <div class="ItemHead">
+                            </div>
+                            <div class="ItemStatus">
+                            </div>
+                            <div class="ItemDescription">
+                            </div>
+                            <div>
+                              <button>(-)</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       <div class="RemoveTask">
                         <button></button>
                       </div>
@@ -84,6 +101,9 @@ export class View {
 
   private addTaskOwnerCallback
   private removeTaskOwnerCallback
+
+  private addCheckListItemCallback
+  private removeCheckListItemCallback
 
   private document
 
@@ -125,6 +145,14 @@ export class View {
 
   setRemoveTaskOwnerCallback(callback) {
     this.removeTaskOwnerCallback = callback
+  }
+
+  setAddCheckListItemCallback(callback) {
+    this.addCheckListItemCallback = callback
+  }
+
+  setRemoveCheckListItemCallback(callback) {
+    this.removeCheckListItemCallback = callback
   }
 
   private createTaskElement(task: Task) {
@@ -203,6 +231,26 @@ export class View {
       // }
     }
 
+    const checkListElement = this.document.createElement('div')
+    checkListElement.setAttribute('class', 'CheckList')
+
+    const checkListHeadElement = this.document.createElement('div')
+    checkListHeadElement.setAttribute('class', 'CheckListHead')
+    const appendItemButton = this.document.createElement('button')
+    appendItemButton.innerHTML = '(+)'
+    appendItemButton.addEventListener('click', () => {
+      const status = ItemStatus.Open
+      const description = 'new item'
+      this.addCheckListItemCallback(task.id, description, status)
+    })
+    checkListHeadElement.appendChild(appendItemButton)
+
+    const itemListElement = this.document.createElement('div')
+    itemListElement.setAttribute('class', 'ItemList')
+
+    checkListElement.appendChild(checkListHeadElement)
+    checkListElement.appendChild(itemListElement)
+
     const removeTaskElement = this.document.createElement('div')
     removeTaskElement.setAttribute('class', 'RemoveTask')
     const removeTaskButton = this.document.createElement('button')
@@ -216,6 +264,7 @@ export class View {
     taskElement.appendChild(descElement)
     taskElement.appendChild(dueDateElement)
     taskElement.appendChild(ownerListElement)
+    taskElement.appendChild(checkListElement)
     taskElement.appendChild(removeTaskElement)
     
     return taskElement
@@ -702,6 +751,105 @@ export class View {
       }
     }
     throw new Error(`owner ${memberId} not found`)
+  }
+
+  setUserImage(image: string) {
+    const imageElement = this.document.getElementById('UserImage')
+    if (imageElement) {
+      imageElement.src = image
+    }
+    else {
+      throw new Error(`Login Image not found`)
+    }
+  }
+  /** 
+                      <div class="CheckList">
+                        <div class="CheckListHead">
+                        </div>
+                        <div class="ItemList">
+                          <div class="Item" id="ItemId">
+                            <div class="ItemHead">
+                            </div>
+                            <div class="ItemStatus">
+                            </div>
+                            <div class="ItemDescription">
+                            </div>
+                            <div>
+                              <button>(-)</button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+  */
+  appendCheckListItem(projectId: ProjectId, taskId: TaskId, item: CheckListItem) {
+    const project = this.document.getElementById(projectId)
+    if (project) {
+      const task = this.document.getElementById(taskId)
+      if (task) {
+        const checkList = task.children[4]
+
+        const itemElement = this.document.createElement('div')
+        itemElement.setAttribute('class', 'Item')
+        itemElement.setAttribute('id', item.id)
+
+        const head = this.document.createElement('div')
+        head.setAttribute('class', 'ItemHead')
+        const status = this.document.createElement('div')
+        status.setAttribute('class', 'ItemStatus')
+        status.innerHTML = item.status
+        const desc = this.document.createElement('div')
+        desc.setAttribute('class', 'ItemDescription')
+        desc.innerHTML = item.description
+        const remove = this.document.createElement('div')
+        remove.setAttribute('class', 'RemoveItem')
+        const removeButton = this.document.createElement('button')
+        removeButton.innerHTML = '(-)'
+        removeButton.setAttribute('class', 'RemoveItemButton')
+        removeButton.addEventListener('click', () => {
+          this.removeCheckListItemCallback(item.id)
+        })
+        remove.appendChild(removeButton)
+
+        itemElement.appendChild(head)
+        itemElement.appendChild(status)
+        itemElement.appendChild(desc)
+        itemElement.appendChild(remove)
+
+        checkList.children[1].appendChild(itemElement)
+      }
+      else {
+        throw new Error(`task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  removeCheckListItem(projectId: ProjectId, taskId: TaskId, itemId: ItemId) {
+    const project = this.document.getElementById(projectId)
+    if (project) {
+      const task = this.document.getElementById(taskId)
+      if (task) {
+        const item = this.document.getElementById(itemId)
+        if (item) {
+          item.parentNode.removeChild(item)
+        }
+        else {
+          throw new Error(`item ${itemId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  updateCheckListItemStatus(projectId: ProjectId, taskId: TaskId, itemId: ItemId, status: ItemStatus) {
+
   }
 }
 

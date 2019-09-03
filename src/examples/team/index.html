@@ -125,6 +125,68 @@
     height: 40px;
   }
 
+  .Login {
+    display: flex;
+    flex-flow: row;
+  }
+
+  #UserImage {
+    width: 40px;
+    height: 40px;
+  }
+
+  .CheckList {
+    display: flex;
+    flex-flow: column;
+    margin: 10px;
+    border: 1px solid;
+  }
+
+  .ItemList {
+    display: flex;
+    flex-flow: column;
+    margin: 5px;
+  }
+
+  .Item {
+    display: flex;
+    flex-flow: row;
+    margin: 5px;
+    justify-content: flex-start
+  }
+
+  .ItemHead {
+    flex-basis: 0%
+  }
+
+  .ItemStatus {
+    flex-basis: 20%
+  }
+
+  .ItemDescription {
+    flex-basis: 60%
+  }
+
+  .RemoveItem {
+    flex-basis: 20%;
+  }
+/*
+  .ItemDescription {
+    display: flex;
+    flex-flow: row;
+    width: 200px;
+    height: 40px;
+  }
+*/
+/*
+  .ItemStatus {
+    display: flex;
+    flex-flow: row;
+    width: 40px;
+    height: 40px;
+  }
+*/
+
 </style>
 <body>
   <script>
@@ -132,8 +194,22 @@
       client.login(document.getElementById('user').value, document.getElementById('password').value)
     }
   </script>
-  user <input id='user'></input>password<input id='password'></input>
-  <button id='login' onclick="login()">login</button>
+
+  <div class="Login">
+    <div class="User">
+    user <input id='user'></input>
+    </div>
+    <div class="Password">
+      password<input id='password'></input>
+    </div>
+    <div>
+      <button id='login' onclick="login()">login</button>
+    </div>
+    <div>
+      <img id="UserImage"></imag>
+    </div>
+  </div>
+
   <div id="app">
   </div>
 </body>
