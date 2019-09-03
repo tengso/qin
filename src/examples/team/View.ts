@@ -5,6 +5,7 @@ import { ProjectId, TaskGroupId, TaskId, Title } from './Core'
 // TODO: disable delete remove task group when non-empty task list
 
 import Sortable from 'sortablejs'
+import { eventNames } from 'cluster';
 
 /*
 <div id='app'>
@@ -50,6 +51,7 @@ import Sortable from 'sortablejs'
                       <div class="TaskOwnerList">
                         <div id="MemberId" class="TaskOwner">
                           <img class="TaskOwnerImage" src=''></img>
+                          <button''>(-)</button>
                         </div>
                       </div>
                       <div class="RemoveTask">
@@ -79,6 +81,9 @@ export class View {
 
   private updateTaskGroupTitleCallback
   private updateTaskTitleCallback
+
+  private addTaskOwnerCallback
+  private removeTaskOwnerCallback
 
   private document
 
@@ -114,6 +119,14 @@ export class View {
     this.updateTaskTitleCallback = callback
   }
 
+  setAddTaskOwnerCallback(callback) {
+    this.addTaskOwnerCallback = callback
+  }
+
+  setRemoveTaskOwnerCallback(callback) {
+    this.removeTaskOwnerCallback = callback
+  }
+
   private createTaskElement(task: Task) {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
@@ -140,6 +153,55 @@ export class View {
 
     const ownerListElement = this.document.createElement('div')
     ownerListElement.setAttribute('class', 'TaskOwnerList')
+    ownerListElement.ondrop = (event) => {
+      event.preventDefault()
+      if (event.dataTransfer) {
+        const memberId = event.dataTransfer.getData('memberId')
+        console.log(`add owner ${memberId}`)
+        if (memberId) {
+          const members = ownerListElement.children
+          for (let i = 0; i < members.length; i++) {
+            const existingMemberId = members[i].getAttribute('id')
+            console.log(`existing member ${memberId}`)
+            if (existingMemberId === memberId) {
+              console.log(`member ${memberId} exists`)
+              return
+            }
+          }
+          this.addTaskOwnerCallback(task.id, memberId)
+        }
+        else {
+          throw new Error(`unknown member id ${memberId}`)
+        }
+      }
+      else {
+        throw new Error(`dataTransfer not found on event`)
+      }
+      console.log('dropped')
+    }
+
+    ownerListElement.ondragover = (event) => {
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'copy'
+
+      // to disable "copy" icon if member already exists, BUT
+      // // FIXME: dataTransfer object doesn't seem to have the transmitted memberId
+      // if (event.dataTransfer) {
+      //   const memberId = event.dataTransfer.getData('memberId')
+      //   console.log(`drag member ${memberId}`)
+      //   if (memberId) {
+      //     const members = ownerListElement.children
+      //     for (let i = 0; i < members.length; i++) {
+      //       const existingMemberId = members[i].getAttribute('id')
+      //       console.log(`existing member ${memberId}`)
+      //       if (existingMemberId === memberId) {
+      //         return
+      //       }
+      //     }
+      //     event.dataTransfer.dropEffect = 'copy'
+      //   }
+      // }
+    }
 
     const removeTaskElement = this.document.createElement('div')
     removeTaskElement.setAttribute('class', 'RemoveTask')
@@ -568,6 +630,12 @@ export class View {
       const memberImageElement = this.document.createElement('img')
       memberImageElement.setAttribute('class', 'ProjectMemberImage')
       memberImageElement.setAttribute('src', image)
+      memberImageElement.setAttribute('draggable', 'true')
+      memberImageElement.ondragstart = (event) => {
+        console.log('drag start')
+        event.dataTransfer.setData("memberId", member.id)
+        event.dataTransfer.dropEffect = 'copy'
+      }
 
       memberElement.appendChild(memberImageElement)
 
@@ -606,7 +674,15 @@ export class View {
       ownerImageElement.setAttribute('class', 'TaskOwnerImage')
       ownerImageElement.setAttribute('src', image)
 
+      const removeOwnerButton = this.document.createElement('button')
+      removeOwnerButton.innerHTML = '(-)'
+      removeOwnerButton.addEventListener('click', () => {
+        console.log(`remove owner ${member.id} from ${taskId}`)
+        this.removeTaskOwnerCallback(taskId, member.id)
+      })
+
       ownerElement.appendChild(ownerImageElement)
+      ownerElement.appendChild(removeOwnerButton)
 
       taskElement.children[3].appendChild(ownerElement)
     }

@@ -27,6 +27,8 @@ export class Control implements ClientCallback {
     this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
     this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
     this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
+    this.view.setAddTaskOwnerCallback(addTaskOwnerCallback)
+    this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
   }
 
   tableSnap(table: Table) {
@@ -584,6 +586,22 @@ function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
 
 function updateTaskTitleCallback(taskId: TaskId, title: Title) {
   client.updateCell(TaskTableId, taskId, 'title', title)
+}
+
+function getTaskOwnerRowId(taskId: TaskId, ownerId: UserId) {
+  return `${TaskOwnerTableId}-${taskId}-${ownerId}`
+}
+
+function addTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
+  const row = [
+    ownerId,
+    taskId
+  ]
+  client.appendRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId), row)
+}
+
+function removeTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
+  client.removeRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId))
 }
 
 
