@@ -1,5 +1,5 @@
 import { UserId } from '../../TableFlowMessages'
-import { Project, TaskGroup, Task, Member, CheckListItem } from './Model'
+import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
 
 // TODO: disable delete remove task group when non-empty task list
@@ -9,6 +9,14 @@ import { eventNames } from 'cluster';
 
 /*
 <div id='app'>
+    <div class="ProjectChat" id="Chat-${ProjectId}">
+      <div class="ChatMessage" id="MessageId">
+        <div class=PosterId></div>
+        <div class=Message></div>
+        <div class=ReplyToId></div>
+        <div class=PostTime></div>
+      </div>
+    </div>
     <div class="Project" id="ProjectId">
         <div class="ProjectHead">
             <div class="Title"></div>
@@ -893,6 +901,81 @@ export class View {
     else {
       throw new Error(`item ${itemId} not found`)
     }
+  }
+
+  /*
+    <div class="ProjectChat" id="Chat-${ProjectId}">
+      <div class="ChatMessage" id="MessageId">
+        <div class=PosterId><img src></img></div>
+        <div class=Content></div>
+        <div class=ReplyToId></div>
+        <div class=PostTime></div>
+      </div>
+    </div>
+  */
+  appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage, model: Model) {
+    const id = `chat-${projectId}`
+    let chat = this.document.getElementById(id)
+    if (!chat) {
+      const openChat = this.document.createElement('button')
+      openChat.setAttribute('id', 'OpenChatButton')
+      openChat.innerHTML = '(open)'
+
+      chat = this.document.createElement('div')
+      chat.setAttribute('class', 'ProjectChat')
+      chat.setAttribute('id', id)
+
+      const app = this.document.getElementById('app')
+
+      app.appendChild(openChat)
+      app.appendChild(chat)
+    }
+
+    const messageElement = this.document.createElement('div')
+    messageElement.setAttribute('id', message.id)
+
+    const posterId = this.document.createElement('div')
+    posterId.setAttribute('class', 'posterId')
+
+    const member = model.getMember(message.posterId)
+    console.log(member)
+    if (member) {
+      const asset = model.getAsset(member.avatar)
+      console.log(asset)
+      if (asset) {
+        const posterImage = this.document.createElement('img')
+        posterImage.setAttribute('class', 'ChatPosterImage')
+        posterImage.src = asset.content
+        posterId.appendChild(posterImage)
+      }
+    }
+
+    // posterId.innerHTML = message.posterId
+    const content = this.document.createElement('div')
+    content.setAttribute('class', 'content')
+    content.innerHTML = message.message
+    // const replyTo = this.document.createElement('div')
+    // replyTo.setAttribute('class', 'replyTo')
+    // const postTime = this.document.createElement('div')
+    // postTime.setAttribute('class', 'postTime')
+
+    if (userId === message.posterId) {
+      messageElement.appendChild(content)
+      messageElement.appendChild(posterId)
+      messageElement.setAttribute('class', 'MyChatMessage')
+    }
+    else {
+      messageElement.appendChild(posterId)
+      messageElement.appendChild(content)
+      messageElement.setAttribute('class', 'ChatMessage')
+    }
+
+    const close = this.document.createElement('span')
+    close.setAttribute('class', 'CloseProjectChat')
+    close.innerHTML = '&times;'
+
+    chat.appendChild(close)
+    chat.appendChild(messageElement)
   }
 }
 

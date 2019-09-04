@@ -1,4 +1,4 @@
-import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId } from './Core'
+import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId, ProjectChatRow, Message, MessageId, PosterId } from './Core'
 import { UserId } from '../../TableFlowMessages'
 
 // class Node<Value> {
@@ -54,6 +54,14 @@ import { UserId } from '../../TableFlowMessages'
 //   }
 // }
 
+export class ChatMessage {
+  id: MessageId
+  replyToId: MessageId
+  posterId: PosterId
+  message: Message 
+  postTime: Date
+}
+
 export interface Project {
   readonly id: ProjectId
   title: Title
@@ -66,6 +74,8 @@ export interface Project {
 
   getTask(taskId: TaskId): Task | undefined
   getAllTasks(): Array<Task>
+
+  appendChatMessage(message: ChatMessage): ChatMessage
 }
 
 class ProjectImpl implements Project {
@@ -80,7 +90,21 @@ class ProjectImpl implements Project {
   private memberList = new Array<Member>()
   private memberMap = new Map<UserId, Member>()
 
+  private chatMessageList = new Array<ChatMessage>()
+  private chatMessageMap = new Map<MessageId, ChatMessage>()
+
   constructor() {}
+
+  appendChatMessage(message: ChatMessage): ChatMessage {
+    if (!this.chatMessageMap.get(message.id)) {
+      this.chatMessageList.push(message)
+      this.chatMessageMap.set(message.id, message)
+      return message
+    }
+    else {
+      throw new Error(`message ${message.id} already exists`)
+    }
+  }
 
   getAllTasks(): Array<Task> {
     const allTasks = new Array<Task>()
@@ -951,6 +975,28 @@ export class Model {
     }
     else {
       throw new Error(`item ${itemId} not found`)
+    }
+  }
+
+  private createProjectChatMessage(row: ProjectChatRow): ChatMessage {
+    const message = new ChatMessage()
+    message.id = row.id
+    message.message = row.message
+    message.postTime = row.postTime
+    message.posterId = row.posterId
+    message.replyToId = row.replyToId
+
+    return message
+  }
+
+  appendProjectChatMessage(row: ProjectChatRow): ChatMessage {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const message = this.createProjectChatMessage(row)
+      return project.appendChatMessage(message)
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
     }
   }
 }

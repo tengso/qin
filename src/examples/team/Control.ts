@@ -1,9 +1,10 @@
-import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, UserId } from '../../TableFlowMessages'
+import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, UserId, logoutFailure, createUserFailure, removeUserSuccess, removeUserFailure, createTableFailure, removeTableSuccess, removeTableFailure, appendRowFailure, insertRowFailure, removeRowFailure, updateCellFailure, moveRowAndUpdateCellFailure, loginSuccess, loginFailure } from '../../TableFlowMessages'
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message } from './Core'
 import uuid = require('uuid');
+import { string } from 'yargs';
 
 export class Control implements ClientCallback {
   private view: View 
@@ -11,7 +12,7 @@ export class Control implements ClientCallback {
   private client: Client
 
   // note: order matters
-  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId]
+  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId]
   private receivedTables = new Map<TableId, Table>()
 
   constructor(client: Client, document) {
@@ -123,6 +124,11 @@ export class Control implements ClientCallback {
       const row = this.createCheckListRow(values)
       const item = this.model.appendCheckListItem(row)
       this.view.appendCheckListItem(row.projectId, row.taskId, item)
+    }
+    else if (tableId === ProjectChatTableId) {
+      const row = this.createProjectChatRow(values)
+      const message = this.model.appendProjectChatMessage(row)
+      this.view.appendProjectChatMessage(client.userId, row.projectId, message, this.model)
     }
   }
 
@@ -448,6 +454,20 @@ export class Control implements ClientCallback {
       taskId: values[2] as TaskId,
       description: values[3] as Description,
       status: values[4] as ItemStatus,
+    }
+
+    return row
+  }
+
+  private createProjectChatRow(values: ColumnValue[]): ProjectChatRow {
+
+    const row: ProjectChatRow = {
+      id: values[0] as MessageId ,
+      projectId: values[1] as ProjectId,
+      replyToId: values[2] as MessageId,
+      posterId: values[3] as PosterId,
+      message: values[4] as Message,
+      postTime: values[5] as Date,
     }
 
     return row

@@ -245,3 +245,54 @@ export const CheckListTableColumns = [
   CheckListTableColumnName.Description,
   CheckListTableColumnName.Status,
 ]
+
+/**
+ * Chat
+ */
+
+export type MessageId = string
+export type PosterId = string
+export type Message = string
+
+
+export const ProjectChatTableId = 'project_chat_table_id'
+export const TaskChatTableId = 'task_chat_table_id'
+
+export interface BaseChatRow {
+  id: MessageId
+  projectId: ProjectId
+  replyToId: MessageId
+  posterId: PosterId
+  message: Message 
+  postTime: Date
+}
+
+export interface TaskChatRow extends BaseChatRow {
+  taskId: TaskId
+}
+
+export interface ProjectChatRow extends BaseChatRow {
+}
+
+export enum ChatTableColumnName {
+  MessageId = 'messageId',
+  ProjectId = 'projectId',
+  TaskId = 'taskId',
+  ReplyToId = 'replyToId',
+  PosterId = 'posterId',
+  Message = 'message',
+  PostTime = 'postTime',
+}
+
+export const BaseChatTableColumns = [
+  ChatTableColumnName.MessageId,
+  ChatTableColumnName.ProjectId,
+  ChatTableColumnName.ReplyToId,
+  ChatTableColumnName.PosterId,
+  ChatTableColumnName.Message,
+  ChatTableColumnName.PostTime,
+]
+
+export const TaskChatTableColumns = BaseChatTableColumns.concat([ChatTableColumnName.TaskId])
+
+export const ProjectChatTableColumns = BaseChatTableColumns
