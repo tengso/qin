@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, U
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName } from './Core'
 import uuid = require('uuid');
 
 export class Control implements ClientCallback {
@@ -31,6 +31,8 @@ export class Control implements ClientCallback {
     this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
     this.view.setAddCheckListItemCallback(addCheckListItemCallback)
     this.view.setRemoveCheckListItemCallback(removeCheckListItemCallback)
+    this.view.setUpdateCheckListItemStatusCallback(updateCheckListItemStatusCallback)
+    this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
   }
 
   tableSnap(table: Table) {
@@ -218,6 +220,21 @@ export class Control implements ClientCallback {
       }
       else {
         throw new Error(`project for task ${taskId} not found`)
+      }
+    }
+    else if (tableId === CheckListTableId) {
+      const itemId = rowId
+      const column = CheckListTableColumns[columnIndex]
+      if (column === CheckListTableColumnName.Status) {
+        this.model.updateCheckListItemStatus(itemId, value as ItemStatus)
+        this.view.updateCheckListItemStatus(itemId, value as ItemStatus)
+      }
+      else if (column === CheckListTableColumnName.Description) {
+        this.model.updateCheckListItemDescription(itemId, value as Description)
+        this.view.updateCheckListItemDescription(itemId, value as Description)
+      }
+      else {
+        throw new Error(`unknown column ${value}`)
       }
     }
   }
@@ -657,6 +674,14 @@ function addCheckListItemCallback(taskId: TaskId, description: Description, stat
 
 function removeCheckListItemCallback(itemId: ItemId) {
   client.removeRow(CheckListTableId, itemId)
+}
+
+function updateCheckListItemStatusCallback(itemId: ItemId, status: ItemStatus) {
+  client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Status, status)
+}
+
+function updateCheckListItemDescriptionCallback(itemId: ItemId, description: Description) {
+  client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Description, description)
 }
 
 

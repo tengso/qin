@@ -50,18 +50,21 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // @ts-ignore
     const taskGroup1: TaskGroup = {
       id: 'task_group_id_1',
       title: 'title',
       description: 'description',
     }
 
+    // @ts-ignore
     const taskGroup2: TaskGroup = {
       id: 'task_group_id_2',
       title: 'title',
       description: 'description',
     }
 
+    // @ts-ignore
     const taskGroup3: TaskGroup = {
       id: 'task_group_id_3',
       title: 'title',
@@ -145,18 +148,24 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
+    // FIXME: project interface
+    // @ts-ignore
     const taskGroup1: TaskGroup = {
       id: 'task_group_id_1',
       title: 'title',
       description: 'description',
     }
 
+    // FIXME: project interface
+    // @ts-ignore
     const taskGroup2: TaskGroup = {
       id: 'task_group_id_2',
       title: 'title',
       description: 'description',
     }
 
+    // FIXME: project interface
+    // @ts-ignore
     const taskGroup3: TaskGroup = {
       id: 'task_group_id_3',
       title: 'title',

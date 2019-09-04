@@ -65,6 +65,7 @@ export interface Project {
   getMembers(): Array<Member>
 
   getTask(taskId: TaskId): Task | undefined
+  getAllTasks(): Array<Task>
 }
 
 class ProjectImpl implements Project {
@@ -80,6 +81,18 @@ class ProjectImpl implements Project {
   private memberMap = new Map<UserId, Member>()
 
   constructor() {}
+
+  getAllTasks(): Array<Task> {
+    const allTasks = new Array<Task>()
+    for(const taskGroup of this.taskGroupList) {
+      const tasks = taskGroup.getAllTasks()
+      for (const task of tasks) {
+        allTasks.push(task)
+      }
+    }
+
+    return allTasks
+  }
 
   getTask(taskId: TaskId): Task | undefined {
     for(const taskGroup of this.taskGroupList) {
@@ -223,6 +236,8 @@ export interface TaskGroup {
   readonly id: TaskGroupId
   title: Title
   description: Description
+
+  getAllTasks(): Array<Task>
 }
 
 class TaskGroupImpl implements TaskGroup {
@@ -232,6 +247,10 @@ class TaskGroupImpl implements TaskGroup {
 
   private taskList: Array<Task> = new Array<TaskImpl>()
   private taskMap: Map<TaskId, Task>  = new Map<TaskId, TaskImpl>()
+
+  getAllTasks(): Array<Task> {
+    return this.taskList
+  }
 
   getTask(taskId: TaskId): Task {
     return this.taskMap.get(taskId)
@@ -326,6 +345,7 @@ export interface Task {
   appendItem(item: CheckListItem): CheckListItem
   removeItem(itemId: ItemId): CheckListItem
   updateItemStatus(itemId: ItemId, status: ItemStatus): CheckListItem
+  getItem(itemId: ItemId): CheckListItem | undefined
 }
 
 class TaskImpl implements Task {
@@ -359,6 +379,10 @@ class TaskImpl implements Task {
     else {
       throw new Error(`owner ${memberId} not found`)
     }
+  }
+
+  getItem(itemId: ItemId): CheckListItem | undefined {
+    return this.itemMap.get(itemId)
   }
 
   appendItem(item: CheckListItem): CheckListItem {
@@ -895,20 +919,38 @@ export class Model {
     }
   }
 
-  updateCheckListItemStatus(row: CheckListRow): CheckListItem {
-    const project = this.projectMap.get(row.projectId)
-    if (project) {
-      const task = project.getTask(row.taskId)
-      if (task) {
-        const item = this.createCheckListItem(row)
-        return task.updateItemStatus(item.id, item.status)
-      }
-      else {
-        throw new Error(`task ${row.taskId} not found`)
+  // FIXME: use map to make this more efficient
+  findCheckListItem(itemId: ItemId): CheckListItem | undefined {
+    for (const project of this.projectList) {
+      for (const task of project.getAllTasks()) {
+        const item = task.getItem(itemId)
+        if (item) {
+          return item
+        }
       }
     }
+    return undefined
+  }
+
+  updateCheckListItemStatus(itemId: ItemId, status: ItemStatus) {
+    const item = this.findCheckListItem(itemId)
+    console.log('update item ${item}')
+    if (item) {
+      item.status = status
+    }
     else {
-      throw new Error(`project ${project.id} not found`)
+      throw new Error(`item ${itemId} not found`)
+    }
+  }
+
+  updateCheckListItemDescription(itemId: ItemId, description: Description) {
+    const item = this.findCheckListItem(itemId)
+    console.log('update item ${item}')
+    if (item) {
+      item.description = description
+    }
+    else {
+      throw new Error(`item ${itemId} not found`)
     }
   }
 }

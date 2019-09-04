@@ -1,6 +1,6 @@
 import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem } from './Model'
-import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus } from './Core'
+import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
 
 // TODO: disable delete remove task group when non-empty task list
 
@@ -104,6 +104,8 @@ export class View {
 
   private addCheckListItemCallback
   private removeCheckListItemCallback
+  private updateCheckListItemStatusCallback
+  private updateCheckListItemDescriptionCallback
 
   private document
 
@@ -153,6 +155,14 @@ export class View {
 
   setRemoveCheckListItemCallback(callback) {
     this.removeCheckListItemCallback = callback
+  }
+
+  setUpdateCheckListItemStatusCallback(callback) {
+    this.updateCheckListItemStatusCallback = callback
+  }
+
+  setUpdateCheckListItemDescriptionCallback(callback) {
+    this.updateCheckListItemDescriptionCallback = callback
   }
 
   private createTaskElement(task: Task) {
@@ -771,8 +781,10 @@ export class View {
                             <div class="ItemHead">
                             </div>
                             <div class="ItemStatus">
+                              <input type="checkbox"></input>
                             </div>
                             <div class="ItemDescription">
+                              <input></input>
                             </div>
                             <div>
                               <button>(-)</button>
@@ -794,12 +806,27 @@ export class View {
 
         const head = this.document.createElement('div')
         head.setAttribute('class', 'ItemHead')
+        
         const status = this.document.createElement('div')
         status.setAttribute('class', 'ItemStatus')
-        status.innerHTML = item.status
+        const statusCheck = this.document.createElement('input')
+        statusCheck.setAttribute('type', 'checkbox')
+        statusCheck.checked = item.status === ItemStatus.Closed ? true : false
+        statusCheck.addEventListener('change', () => {
+          const status = (statusCheck.checked) ? ItemStatus.Closed : ItemStatus.Open
+          this.updateCheckListItemStatusCallback(item.id, status)
+        })
+        status.appendChild(statusCheck)
+
         const desc = this.document.createElement('div')
         desc.setAttribute('class', 'ItemDescription')
-        desc.innerHTML = item.description
+        const descInput = this.document.createElement('input')
+        descInput.value = item.description
+        descInput.onblur = () => {
+          this.updateCheckListItemDescriptionCallback(item.id, descInput.value)
+        }
+        desc.appendChild(descInput)
+
         const remove = this.document.createElement('div')
         remove.setAttribute('class', 'RemoveItem')
         const removeButton = this.document.createElement('button')
@@ -848,8 +875,24 @@ export class View {
     }
   }
 
-  updateCheckListItemStatus(projectId: ProjectId, taskId: TaskId, itemId: ItemId, status: ItemStatus) {
+  updateCheckListItemStatus(itemId: ItemId, status: ItemStatus) {
+    const item = this.document.getElementById(itemId)
+    if (item) {
+      item.children[1].children[0].checked = status === ItemStatus.Open ? false : true
+    }
+    else {
+      throw new Error(`item ${itemId} not found`)
+    }
+  }
 
+  updateCheckListItemDescription(itemId: ItemId, description: Description) {
+    const item = this.document.getElementById(itemId)
+    if (item) {
+      item.children[2].children[0].value = description
+    }
+    else {
+      throw new Error(`item ${itemId} not found`)
+    }
   }
 }
 
