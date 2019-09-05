@@ -170,18 +170,18 @@
   .RemoveItem {
     flex-basis: 10%;
   }
-
+/*
   .ProjectChat {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    display: none; 
+    position: fixed; 
+    z-index: 1; 
     left: 0;
     top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgb(0,0,0); /* Fallback color */
-    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgb(0,0,0); 
+    background-color: rgba(0,0,0,0.4); 
     flex-flow: column;
     width: 50%;
   }
@@ -198,6 +198,54 @@
     color: black;
     text-decoration: none;
     cursor: pointer;
+  }
+  */
+
+  .ProjectChat {
+    display: flex;
+    flex-flow: column;
+    border: 1px solid;
+    margin: 10px;
+    width: 50%;
+  }
+
+  .ProjectChat .MessageList {
+    display: flex;
+    flex-flow: column;
+  }
+
+  .ProjectChat .MessageInput {
+    width: 100%;
+    display: flex;
+    flex-flow: row;
+  }
+
+  .TaskChat {
+    display: flex;
+    flex-flow: column;
+    width: 100%;
+  }
+
+  .TaskChat .MessageList {
+    display: flex;
+    flex-flow: column;
+  }
+
+  .TaskChat .MessageInput {
+    display: flex;
+    width: 100%;
+    flex-flow: row;
+  }
+
+  .MessageInput .InputText {
+    width: 60%;
+    justify-content: flex-start;
+  }
+
+  .MessageInput .SendButton {
+    display: flex;
+    width: 20%;
+    justify-content: flex-end;
   }
 
   .ChatMessage {
@@ -249,9 +297,6 @@
     <div>
       <img id="UserImage"></imag>
     </div>
-    <div>
-      <button id='OpenProjectChat'>OpenProjectChat</button>
-    </div>
   </div>
 
   <div id="app"></div>
@@ -261,34 +306,34 @@
       client.login(document.getElementById('user').value, document.getElementById('password').value)
     }
 
-    // Get the modal
+    // // Get the modal
 
-    // Get the button that opens the modal
-    var openChat = document.getElementById("OpenProjectChat");
+    // // Get the button that opens the modal
+    // var openChat = document.getElementById("OpenProjectChat");
 
-    // Get the <span> element that closes the modal
-    // var closeChat = document.getElementsByClassName("CloseProjectChat")[0];
+    // // Get the <span> element that closes the modal
+    // // var closeChat = document.getElementsByClassName("CloseProjectChat")[0];
 
-    // When the user clicks on the button, open the modal 
-    openChat.onclick = function() {
-      console.log('open clicked')
-      var chat = document.getElementsByClassName("ProjectChat")[0];
-      chat.style.display = "flex";
-    }
-
-    // When the user clicks on <span> (x), close the modal
-    // closeChat.onclick = function() {
-    //   modal.style.display = "none";
+    // // When the user clicks on the button, open the modal 
+    // openChat.onclick = function() {
+    //   console.log('open clicked')
+    //   var chat = document.getElementsByClassName("ProjectChat")[0];
+    //   chat.style.display = "flex";
     // }
 
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function(event) {
-      console.log(`window click`)
-      var chat = document.getElementsByClassName("ProjectChat")[0];
-      console.log(`${event.target}`)
-      if (event.target == chat) {
-        chat.style.display = "none";
-      }
-    }
+    // // When the user clicks on <span> (x), close the modal
+    // // closeChat.onclick = function() {
+    // //   modal.style.display = "none";
+    // // }
+
+    // // When the user clicks anywhere outside of the modal, close it
+    // window.onclick = function(event) {
+    //   console.log(`window click`)
+    //   var chat = document.getElementsByClassName("ProjectChat")[0];
+    //   console.log(`${event.target}`)
+    //   if (event.target == chat) {
+    //     chat.style.display = "none";
+    //   }
+    // }
   </script>
 </html>

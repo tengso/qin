@@ -1,4 +1,4 @@
-import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId, ProjectChatRow, Message, MessageId, PosterId } from './Core'
+import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId, ProjectChatRow, Message, MessageId, PosterId, TaskChatRow } from './Core'
 import { UserId } from '../../TableFlowMessages'
 
 // class Node<Value> {
@@ -370,6 +370,8 @@ export interface Task {
   removeItem(itemId: ItemId): CheckListItem
   updateItemStatus(itemId: ItemId, status: ItemStatus): CheckListItem
   getItem(itemId: ItemId): CheckListItem | undefined
+
+  appendChatMessage(message: ChatMessage): ChatMessage
 }
 
 class TaskImpl implements Task {
@@ -383,6 +385,21 @@ class TaskImpl implements Task {
 
   private itemList = new Array<CheckListItem>()
   private itemMap = new Map<ItemId, CheckListItem>()
+
+  private chatMessageList = new Array<ChatMessage>()
+  private chatMessageMap = new Map<MessageId, ChatMessage>()
+
+  appendChatMessage(message: ChatMessage): ChatMessage {
+    if (!this.chatMessageMap.get(message.id)) {
+      this.chatMessageList.push(message)
+      this.chatMessageMap.set(message.id, message)
+
+      return message
+    }
+    else {
+      throw new Error(`message ${message.id} exists`)
+    }
+  }
 
   appendOwner(member: Member): void {
     if (!this.ownerMap.get(member.id)) {
@@ -978,7 +995,7 @@ export class Model {
     }
   }
 
-  private createProjectChatMessage(row: ProjectChatRow): ChatMessage {
+  private createChatMessage(row: ProjectChatRow | TaskChatRow): ChatMessage {
     const message = new ChatMessage()
     message.id = row.id
     message.message = row.message
@@ -992,11 +1009,28 @@ export class Model {
   appendProjectChatMessage(row: ProjectChatRow): ChatMessage {
     const project = this.projectMap.get(row.projectId)
     if (project) {
-      const message = this.createProjectChatMessage(row)
+      const message = this.createChatMessage(row)
       return project.appendChatMessage(message)
     }
     else {
-      throw new Error(`project ${project.id} not found`)
+      throw new Error(`project ${row.projectId} not found`)
+    }
+  }
+
+  appendTaskChatMessage(row: TaskChatRow): ChatMessage {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        const message = this.createChatMessage(row)
+        return task.appendChatMessage(message)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${row.projectId} not found`)
     }
   }
 }

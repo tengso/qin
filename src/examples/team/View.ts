@@ -9,15 +9,21 @@ import { eventNames } from 'cluster';
 
 /*
 <div id='app'>
-    <div class="ProjectChat" id="Chat-${ProjectId}">
-      <div class="ChatMessage" id="MessageId">
-        <div class=PosterId></div>
-        <div class=Message></div>
-        <div class=ReplyToId></div>
-        <div class=PostTime></div>
-      </div>
-    </div>
     <div class="Project" id="ProjectId">
+        <div class="ProjectChat">
+          <MessageList>
+            <div class="ChatMessage" id="MessageId">
+              <div class=PosterId></div>
+              <div class=Message></div>
+              <div class=ReplyToId></div>
+              <div class=PostTime></div>
+            </div>
+          </MessageList>
+          <div class="MessageInput">
+            <input></input>
+            <button></button>
+          </div>
+        </div>
         <div class="ProjectHead">
             <div class="Title"></div>
             <div class="Description"></div>
@@ -115,6 +121,9 @@ export class View {
   private updateCheckListItemStatusCallback
   private updateCheckListItemDescriptionCallback
 
+  private sendProjectChatCallback
+  private sendTaskChatCallback
+
   private document
 
   constructor(document) {
@@ -171,6 +180,14 @@ export class View {
 
   setUpdateCheckListItemDescriptionCallback(callback) {
     this.updateCheckListItemDescriptionCallback = callback
+  }
+
+  setSendProjectChatCallback(callback) {
+    this.sendProjectChatCallback = callback
+  }
+
+  setSendTaskChatCallback(callback) {
+    this.sendTaskChatCallback = callback
   }
 
   private createTaskElement(task: Task) {
@@ -278,12 +295,21 @@ export class View {
     })
     removeTaskElement.appendChild(removeTaskButton)
 
+    const chatClassName = 'TaskChat'
+    const callback = (inputElement) => {
+      return () => {
+        this.sendTaskChatCallback(task.id, inputElement.value, '')
+      }
+    }
+    const chatElement = this.createChatElement(chatClassName, callback)
+
     taskElement.appendChild(titleElement)
     taskElement.appendChild(descElement)
     taskElement.appendChild(dueDateElement)
     taskElement.appendChild(ownerListElement)
     taskElement.appendChild(checkListElement)
     taskElement.appendChild(removeTaskElement)
+    taskElement.appendChild(chatElement)
     
     return taskElement
   }
@@ -350,11 +376,49 @@ export class View {
     return taskGroupElement
   }
 
+  private createChatElement(className: string, callback) {
+    const chatElement = this.document.createElement('div')
+    chatElement.setAttribute('class', className)
+
+    const messageListElement = this.document.createElement('div')
+    messageListElement.setAttribute('class', 'MessageList')
+
+    const messageInputElement = this.document.createElement('div')
+    messageInputElement.setAttribute('class', 'MessageInput')
+    const inputElement = this.document.createElement('input')
+    inputElement.setAttribute('class', 'InputText')
+
+    const sendElement = this.document.createElement('div')
+    sendElement.setAttribute('class', 'SendButton')
+
+    const sendButton = this.document.createElement('button')
+    sendButton.addEventListener('click', callback(inputElement))
+    sendElement.appendChild(sendButton)
+    sendButton.innerHTML = 'send'
+
+    messageInputElement.appendChild(inputElement)
+    messageInputElement.appendChild(sendElement)
+
+    chatElement.appendChild(messageListElement)
+    chatElement.appendChild(messageInputElement)
+
+    return chatElement
+  }
+
   private createProjectElement(project: Project) {
     const projectElement = this.document.createElement('div')
     projectElement.setAttribute('class', 'Project')
     projectElement.setAttribute('id', project.id)
 
+    const chatElementClass = 'ProjectChat'
+    const chatCallback = (inputElement) => {
+      return () => {
+        this.sendProjectChatCallback(project.id, inputElement.value, '')
+        inputElement.value = ''
+      } 
+    }
+    const chatElement = this.createChatElement(chatElementClass, chatCallback)
+    
     const projectHeadElement = this.document.createElement('div')
     projectHeadElement.setAttribute('class', 'ProjectHead')
 
@@ -400,6 +464,7 @@ export class View {
 
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)
+    projectElement.appendChild(chatElement)
 
     return projectElement
   }
@@ -904,33 +969,24 @@ export class View {
   }
 
   /*
-    <div class="ProjectChat" id="Chat-${ProjectId}">
-      <div class="ChatMessage" id="MessageId">
-        <div class=PosterId><img src></img></div>
-        <div class=Content></div>
-        <div class=ReplyToId></div>
-        <div class=PostTime></div>
-      </div>
+    <div class="Project" id="ProjectId">
+        <div class="ProjectChat">
+          <MessageList>
+            <div class="ChatMessage" id="MessageId">
+              <div class=PosterId></div>
+              <div class=Message></div>
+              <div class=ReplyToId></div>
+              <div class=PostTime></div>
+            </div>
+          </MessageList>
+          <div class="MessageInput">
+            <input></input>
+            <button></button>
+          </div>
+        </div>
     </div>
   */
-  appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage, model: Model) {
-    const id = `chat-${projectId}`
-    let chat = this.document.getElementById(id)
-    if (!chat) {
-      const openChat = this.document.createElement('button')
-      openChat.setAttribute('id', 'OpenChatButton')
-      openChat.innerHTML = '(open)'
-
-      chat = this.document.createElement('div')
-      chat.setAttribute('class', 'ProjectChat')
-      chat.setAttribute('id', id)
-
-      const app = this.document.getElementById('app')
-
-      app.appendChild(openChat)
-      app.appendChild(chat)
-    }
-
+  private appendChatMessage(userId: UserId, messageList, message: ChatMessage, model: Model) {
     const messageElement = this.document.createElement('div')
     messageElement.setAttribute('id', message.id)
 
@@ -970,12 +1026,54 @@ export class View {
       messageElement.setAttribute('class', 'ChatMessage')
     }
 
-    const close = this.document.createElement('span')
-    close.setAttribute('class', 'CloseProjectChat')
-    close.innerHTML = '&times;'
+    messageList.appendChild(messageElement)
+  }
 
-    chat.appendChild(close)
-    chat.appendChild(messageElement)
+  appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage, model: Model) {
+    let project = this.document.getElementById(projectId)
+    if (project) {
+      const chat = project.querySelector('.ProjectChat')
+      if (chat) {
+        const messageList = chat.querySelector('.MessageList')
+        if (messageList) {
+          this.appendChatMessage(userId, messageList, message, model)
+        }
+        else {
+          throw new Error(`project ${projectId} chat message list not found`)
+        }
+      }
+      else {
+        throw new Error(`project ${projectId} chat not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  appendTaskChatMessage(userId: UserId, projectId: ProjectId, taskId: TaskId, message: ChatMessage, model: Model) {
+    let project = this.document.getElementById(projectId)
+    if (project) {
+      const task = this.document.getElementById(taskId)
+      if (task) {
+        const chat = task.querySelector('.TaskChat')
+        if (chat) {
+          const messageList = chat.querySelector('.MessageList')
+          if (messageList) {
+            this.appendChatMessage(userId, messageList, message, model)
+          }
+          else {
+            throw new Error(`project ${projectId} chat message list not found`)
+          }
+        }
+      }
+      else {
+        throw new Error(`project ${projectId} chat not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
   }
 }
 

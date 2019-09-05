@@ -275,13 +275,13 @@ export interface ProjectChatRow extends BaseChatRow {
 }
 
 export enum ChatTableColumnName {
-  MessageId = 'messageId',
+  MessageId = 'id',
   ProjectId = 'projectId',
-  TaskId = 'taskId',
   ReplyToId = 'replyToId',
   PosterId = 'posterId',
   Message = 'message',
   PostTime = 'postTime',
+  TaskId = 'taskId',
 }
 
 export const BaseChatTableColumns = [
