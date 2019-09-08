@@ -2,6 +2,8 @@ import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
 
+import Quill from 'quill'
+
 // TODO: disable delete remove task group when non-empty task list
 
 import Sortable from 'sortablejs'
@@ -298,7 +300,9 @@ export class View {
     const chatClassName = 'TaskChat'
     const callback = (inputElement) => {
       return () => {
-        this.sendTaskChatCallback(task.id, inputElement.value, '')
+        const message = inputElement.querySelector('.ql-editor').innerHTML
+        this.sendTaskChatCallback(task.id, message, '')
+        inputElement.value = ''
       }
     }
     const chatElement = this.createChatElement(chatClassName, callback)
@@ -378,29 +382,35 @@ export class View {
 
   private createChatElement(className: string, callback) {
     const chatElement = this.document.createElement('div')
-    chatElement.setAttribute('class', className)
+    chatElement.className = className
 
-    const messageListElement = this.document.createElement('div')
-    messageListElement.setAttribute('class', 'MessageList')
+    const html = `
+      <div class="MessageList">
+      </div>
+      <div class="Input">
+        <div class="Message">
+        </div>
+        <div class="Send">
+          <button class="SendButton">send</button>
+        </div>
+      </div>
+    `
+    chatElement.innerHTML = html
 
-    const messageInputElement = this.document.createElement('div')
-    messageInputElement.setAttribute('class', 'MessageInput')
-    const inputElement = this.document.createElement('input')
-    inputElement.setAttribute('class', 'InputText')
+    const sendButton = chatElement.querySelector('.SendButton')
+    const messageElement = chatElement.querySelector('.Message')
 
-    const sendElement = this.document.createElement('div')
-    sendElement.setAttribute('class', 'SendButton')
+    var options = {
+      debug: 'info',
+      placeholder: 'Compose an epic...',
+      theme: 'snow',
+      bounds: messageElement,
+    };
 
-    const sendButton = this.document.createElement('button')
-    sendButton.addEventListener('click', callback(inputElement))
-    sendElement.appendChild(sendButton)
-    sendButton.innerHTML = 'send'
+    console.log(chatElement)
 
-    messageInputElement.appendChild(inputElement)
-    messageInputElement.appendChild(sendElement)
-
-    chatElement.appendChild(messageListElement)
-    chatElement.appendChild(messageInputElement)
+    const quill = new Quill(messageElement, options)
+    sendButton.addEventListener('click', callback(messageElement))
 
     return chatElement
   }
@@ -410,14 +420,6 @@ export class View {
     projectElement.setAttribute('class', 'Project')
     projectElement.setAttribute('id', project.id)
 
-    const chatElementClass = 'ProjectChat'
-    const chatCallback = (inputElement) => {
-      return () => {
-        this.sendProjectChatCallback(project.id, inputElement.value, '')
-        inputElement.value = ''
-      } 
-    }
-    const chatElement = this.createChatElement(chatElementClass, chatCallback)
     
     const projectHeadElement = this.document.createElement('div')
     projectHeadElement.setAttribute('class', 'ProjectHead')
@@ -461,6 +463,16 @@ export class View {
       animation: 150,
       onEnd: this.afterSortingCallback
     })
+
+    // Project Chat
+    const chatElementClass = 'ProjectChat'
+    const chatCallback = (inputElement) => {
+      return () => {
+        const message = inputElement.querySelector('.ql-editor').innerHTML
+        this.sendProjectChatCallback(project.id, message, '')
+      } 
+    }
+    const chatElement = this.createChatElement(chatElementClass, chatCallback)
 
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)
@@ -968,65 +980,46 @@ export class View {
     }
   }
 
-  /*
-    <div class="Project" id="ProjectId">
-        <div class="ProjectChat">
-          <MessageList>
-            <div class="ChatMessage" id="MessageId">
-              <div class=PosterId></div>
-              <div class=Message></div>
-              <div class=ReplyToId></div>
-              <div class=PostTime></div>
-            </div>
-          </MessageList>
-          <div class="MessageInput">
-            <input></input>
-            <button></button>
-          </div>
-        </div>
-    </div>
-  */
   private appendChatMessage(userId: UserId, messageList, message: ChatMessage, model: Model) {
     const messageElement = this.document.createElement('div')
     messageElement.setAttribute('id', message.id)
+    const className = (userId === message.posterId) ? 'MyChatMessage' : 'ChatMessage'
+    messageElement.className = className
 
-    const posterId = this.document.createElement('div')
-    posterId.setAttribute('class', 'posterId')
-
+    let image = ""
     const member = model.getMember(message.posterId)
-    console.log(member)
     if (member) {
       const asset = model.getAsset(member.avatar)
-      console.log(asset)
       if (asset) {
-        const posterImage = this.document.createElement('img')
-        posterImage.setAttribute('class', 'ChatPosterImage')
-        posterImage.src = asset.content
-        posterId.appendChild(posterImage)
+        image = asset.content
       }
     }
 
-    // posterId.innerHTML = message.posterId
-    const content = this.document.createElement('div')
-    content.setAttribute('class', 'content')
-    content.innerHTML = message.message
-    // const replyTo = this.document.createElement('div')
-    // replyTo.setAttribute('class', 'replyTo')
-    // const postTime = this.document.createElement('div')
-    // postTime.setAttribute('class', 'postTime')
-
-    if (userId === message.posterId) {
-      messageElement.appendChild(content)
-      messageElement.appendChild(posterId)
-      messageElement.setAttribute('class', 'MyChatMessage')
-    }
-    else {
-      messageElement.appendChild(posterId)
-      messageElement.appendChild(content)
-      messageElement.setAttribute('class', 'ChatMessage')
-    }
+    const postTime = new Date(message.postTime)
+    var options = { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+    const formatedTime = postTime.toLocaleDateString(undefined, options)
+    const html = `
+              <div class="Poster">
+                <img class="PosterImage" src=${image}></img>
+              </div>
+              <div class="Container">
+                <div class="Header">
+                  <div class="PosterName">
+                    ${message.posterId}
+                  </div>
+                  <div class="PostTime">
+                    ${formatedTime}
+                  </div>
+                </div>
+                <div class="Body">
+                  <div class="Message">${message.message}</div>
+                </div>
+              </div>
+    `
+    messageElement.innerHTML = html
 
     messageList.appendChild(messageElement)
+    messageList.scrollTop = messageList.scrollHeight
   }
 
   appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage, model: Model) {
