@@ -1,7 +1,7 @@
 import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
-
+import Popper from 'popper.js'
 import Quill from 'quill'
 
 // TODO: disable delete remove task group when non-empty task list
@@ -197,34 +197,84 @@ export class View {
     taskElement.setAttribute('class', 'Task')
     taskElement.setAttribute('id', task.id)
 
-    const titleElement = this.document.createElement('div')
-    titleElement.setAttribute('class', 'Title')
-    const titleInput = this.document.createElement('input')
-    titleInput.setAttribute('class', 'TaskTitleInput')
-    titleInput.value = task.title
-    titleInput.onblur = () => {
+    var options = { month: 'short', day: 'numeric'};
+    const dueDate = new Date(task.dueDate)
+    const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
+    const html = `
+        <div class="Header">
+          <div class="ShowDetails">
+            <input type="image" class="Button" src="../../../images/expand.svg"></input>
+          </div>
+          <div class="Title"Message>
+            <input class="Input" value=${task.title}>
+            </input>
+          </div>
+          <div class="OwnerList">
+          </div>
+          <div class="Overview">
+            <div class="DueDate">
+            ${formattedDueDate}
+            </div>
+            <div class="Progress">
+            1/5
+            </div>
+            <div class="Remove">
+              <input type="image" class="RemoveButton" src="../../../images/remove.svg"></input>
+            </div>
+          </div>
+        </div>
+        <div class="Body">
+          <div class="Description">
+          </div>
+          <div class="Todo">
+            <div class="CheckList">
+              <div class="CheckListHeader">
+              </div>
+              <div class="ItemList">
+              </div>
+            </div>
+            <div class="Append">
+              <Button>Add</Button>
+            </div>
+          </div>
+        </div>
+    `
+
+    taskElement.innerHTML = html
+
+    const showDetails = taskElement.querySelector('.ShowDetails .Button')
+    showDetails.addEventListener('click', () => {
+      const body = taskElement.querySelector('.Body')
+      if (body.style.display !== 'flex') {
+        body.style.display = "flex"
+      }
+    })
+
+    const descElement = taskElement.querySelector('.Description')
+    const descOptions = {
+      debug: 'info',
+      placeholder: 'Compose an epic...',
+      theme: 'snow',
+      bounds: descElement,
+    };
+
+    const quill = new Quill(descElement, descOptions)
+
+    const title = taskElement.querySelector('.Title .Input')
+    title.onblur = () => {
       console.log(`update task title ${task.id}`)
-      this.updateTaskTitleCallback(task.id, titleInput.value)
+      this.updateTaskTitleCallback(task.id, title.value)
     }
-    titleElement.appendChild(titleInput)
 
-    const descElement = this.document.createElement('div')
-    descElement.setAttribute('class', 'Description')
-    // descElement.innerHTML = task.description
+    const ownerList = taskElement.querySelector('.OwnerList')
 
-    const dueDateElement = this.document.createElement('div')
-    dueDateElement.setAttribute('class', 'DueDate')
-    // dueDateElement.innerHTML = task.dueDate
-
-    const ownerListElement = this.document.createElement('div')
-    ownerListElement.setAttribute('class', 'TaskOwnerList')
-    ownerListElement.ondrop = (event) => {
+    ownerList.ondrop = (event) => {
       event.preventDefault()
       if (event.dataTransfer) {
         const memberId = event.dataTransfer.getData('memberId')
         console.log(`add owner ${memberId}`)
         if (memberId) {
-          const members = ownerListElement.children
+          const members = ownerList.children
           for (let i = 0; i < members.length; i++) {
             const existingMemberId = members[i].getAttribute('id')
             console.log(`existing member ${memberId}`)
@@ -245,7 +295,7 @@ export class View {
       console.log('dropped')
     }
 
-    ownerListElement.ondragover = (event) => {
+    ownerList.ondragover = (event) => {
       event.preventDefault()
       event.dataTransfer.dropEffect = 'copy'
 
@@ -268,34 +318,17 @@ export class View {
       // }
     }
 
-    const checkListElement = this.document.createElement('div')
-    checkListElement.setAttribute('class', 'CheckList')
-
-    const checkListHeadElement = this.document.createElement('div')
-    checkListHeadElement.setAttribute('class', 'CheckListHead')
-    const appendItemButton = this.document.createElement('button')
-    appendItemButton.innerHTML = '(+)'
-    appendItemButton.addEventListener('click', () => {
+    const appendCheckList = taskElement.querySelector('.Todo .Append')
+    appendCheckList.addEventListener('click', () => {
       const status = ItemStatus.Open
       const description = 'new item'
       this.addCheckListItemCallback(task.id, description, status)
     })
-    checkListHeadElement.appendChild(appendItemButton)
 
-    const itemListElement = this.document.createElement('div')
-    itemListElement.setAttribute('class', 'ItemList')
-
-    checkListElement.appendChild(checkListHeadElement)
-    checkListElement.appendChild(itemListElement)
-
-    const removeTaskElement = this.document.createElement('div')
-    removeTaskElement.setAttribute('class', 'RemoveTask')
-    const removeTaskButton = this.document.createElement('button')
-    removeTaskButton.innerHTML = '(-)'
+    const removeTaskButton = taskElement.querySelector('.RemoveButton')
     removeTaskButton.addEventListener('click', () => {
       this.removeTaskCallback(task.id)
     })
-    removeTaskElement.appendChild(removeTaskButton)
 
     const chatClassName = 'TaskChat'
     const callback = (inputElement) => {
@@ -307,14 +340,8 @@ export class View {
     }
     const chatElement = this.createChatElement(chatClassName, callback)
 
-    taskElement.appendChild(titleElement)
-    taskElement.appendChild(descElement)
-    taskElement.appendChild(dueDateElement)
-    taskElement.appendChild(ownerListElement)
-    taskElement.appendChild(checkListElement)
-    taskElement.appendChild(removeTaskElement)
-    taskElement.appendChild(chatElement)
-    
+    taskElement.querySelector('.Body').appendChild(chatElement)
+
     return taskElement
   }
 
@@ -383,7 +410,7 @@ export class View {
   private createChatElement(className: string, callback) {
     const chatElement = this.document.createElement('div')
     chatElement.className = className
-    chatElement.classList.add('animated', 'fadeInRight')
+    chatElement.classList.add('animated', 'fadeIn')
 
     const html = `
       <div class="MessageList">
@@ -404,7 +431,7 @@ export class View {
     var options = {
       debug: 'info',
       placeholder: 'Compose an epic...',
-      theme: 'snow',
+      theme: 'bubble',
       bounds: messageElement,
     };
 
@@ -809,26 +836,23 @@ export class View {
   appendTaskOwner(taskId: TaskId, member: Member, image: string) {
     const taskElement = this.document.getElementById(taskId)
     if (taskElement) {
-      // FIXME: remove hard coded index
       const ownerElement = this.document.createElement('div')
       ownerElement.setAttribute('id', member.id)
-      ownerElement.setAttribute('class', 'TaskOwner')
+      ownerElement.setAttribute('class', 'Owner')
 
-      const ownerImageElement = this.document.createElement('img')
-      ownerImageElement.setAttribute('class', 'TaskOwnerImage')
-      ownerImageElement.setAttribute('src', image)
+      const html = `
+          <img class="Image" src=${image}></img>
+      `
 
-      const removeOwnerButton = this.document.createElement('button')
-      removeOwnerButton.innerHTML = '(-)'
-      removeOwnerButton.addEventListener('click', () => {
-        console.log(`remove owner ${member.id} from ${taskId}`)
+      ownerElement.innerHTML = html
+
+      const owner = ownerElement.querySelector('.Image')
+
+      owner.addEventListener('click', () => {
         this.removeTaskOwnerCallback(taskId, member.id)
       })
 
-      ownerElement.appendChild(ownerImageElement)
-      ownerElement.appendChild(removeOwnerButton)
-
-      taskElement.children[3].appendChild(ownerElement)
+      taskElement.querySelector('.OwnerList').appendChild(ownerElement)
     }
     else {
       throw new Error(`task ${taskId} not found`)
@@ -837,8 +861,8 @@ export class View {
 
   removeTaskOwner(taskId: TaskId, memberId: UserId) {
     const taskElement = this.document.getElementById(taskId)
-    // FIXME: remove hard-coded index
-    const ownerList = taskElement.children[3].children
+
+    const ownerList = taskElement.querySelector('.OwnerList').children
     for (let i = 0; i < ownerList.length; i++) {
       if (ownerList[i].getAttribute('id') === memberId) {
         ownerList[i].parentElement.removeChild(ownerList[i])
@@ -883,7 +907,7 @@ export class View {
     if (project) {
       const task = this.document.getElementById(taskId)
       if (task) {
-        const checkList = task.children[4]
+        const checkList = task.querySelector('.CheckList')
 
         const itemElement = this.document.createElement('div')
         itemElement.setAttribute('class', 'Item')
@@ -1011,7 +1035,7 @@ export class View {
                     ${formatedTime}
                   </div>
                 </div>
-                <div class="Body animated ${direction}">
+                <div class="MessageBody animated ${direction}">
                   <div class="Message">${message.message}</div>
                 </div>
               </div>

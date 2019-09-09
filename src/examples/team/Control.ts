@@ -58,84 +58,89 @@ export class Control implements ClientCallback {
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
     this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
     
-    if (tableId === TaskTableId) {
-      const row = this.createTaskRow(values)
-      const [_, taskGroup, task] = this.model.appendTask(row)
-      this.view.appendTask(taskGroup, task)
-    }
-    else if (tableId === TaskGroupTableId) {
-      const row = this.createTaskGroupRow(values) 
-      const [project, taskGroup] = this.model.appendTaskGroup(row)
-      this.view.appendTaskGroup(project, taskGroup)
-    }
-    else if (tableId === ProjectTableId) {
-      const row = this.createProjectRow(values)
-      const project = this.model.appendProject(row)
-      this.view.appendProject(project)
-    }
-    else if (tableId === MemberTableId) {
-      const row = this.createMemberRow(values)
-      this.model.appendMember(row)
+    try {
+      if (tableId === TaskTableId) {
+        const row = this.createTaskRow(values)
+        const [_, taskGroup, task] = this.model.appendTask(row)
+        this.view.appendTask(taskGroup, task)
+      }
+      else if (tableId === TaskGroupTableId) {
+        const row = this.createTaskGroupRow(values) 
+        const [project, taskGroup] = this.model.appendTaskGroup(row)
+        this.view.appendTaskGroup(project, taskGroup)
+      }
+      else if (tableId === ProjectTableId) {
+        const row = this.createProjectRow(values)
+        const project = this.model.appendProject(row)
+        this.view.appendProject(project)
+      }
+      else if (tableId === MemberTableId) {
+        const row = this.createMemberRow(values)
+        this.model.appendMember(row)
 
-      const member = this.model.getMember(this.client.userId)
-      console.log(`user: ${this.client.userId}`)
+        const member = this.model.getMember(this.client.userId)
+        console.log(`user: ${this.client.userId}`)
 
-      if (member) {
-        console.log(`member: ${member.id}`)
-        const asset = this.model.getAsset(member.avatar)
-        if (asset) {
-          this.view.setUserImage(asset.content)
+        if (member) {
+          console.log(`member: ${member.id}`)
+          const asset = this.model.getAsset(member.avatar)
+          if (asset) {
+            this.view.setUserImage(asset.content)
+          }
         }
       }
-    }
-    else if (tableId === AssetTableId) {
-      const row = this.createAssetRow(values)
-      this.model.appendAsset(row)
-    }
-    else if (tableId === ProjectMemberTableId) {
-      const row = this.createProjectMemberRow(values)
-      const member = this.model.getMember(row.memberId)
-      if (member) {
-        console.log(member.avatar)
-        const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
-        console.log(asset)
-        const image = asset ? asset.content : undefined
+      else if (tableId === AssetTableId) {
+        const row = this.createAssetRow(values)
+        this.model.appendAsset(row)
+      }
+      else if (tableId === ProjectMemberTableId) {
+        const row = this.createProjectMemberRow(values)
+        const member = this.model.getMember(row.memberId)
+        if (member) {
+          console.log(member.avatar)
+          const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
+          console.log(asset)
+          const image = asset ? asset.content : undefined
 
-        this.model.appendProjectMember(row.projectId, member)
-        this.view.appendProjectMember(row.projectId, member, image)
+          this.model.appendProjectMember(row.projectId, member)
+          this.view.appendProjectMember(row.projectId, member, image)
+        }
+        else {
+          throw new Error(`member ${row.memberId} not found`)
+        }
       }
-      else {
-        throw new Error(`member ${row.memberId} not found`)
-      }
-    }
-    else if (tableId === TaskOwnerTableId) {
-      const row = this.createTaskOwnerRow(values)
-      const member = this.model.getMember(row.ownerId)
-      if (member) {
-        const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
-        const image = asset ? asset.content : undefined
+      else if (tableId === TaskOwnerTableId) {
+        const row = this.createTaskOwnerRow(values)
+        const member = this.model.getMember(row.ownerId)
+        if (member) {
+          const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
+          const image = asset ? asset.content : undefined
 
-        this.model.appendTaskOwner(row.taskId, member)
-        this.view.appendTaskOwner(row.taskId, member, image)
+          this.model.appendTaskOwner(row.taskId, member)
+          this.view.appendTaskOwner(row.taskId, member, image)
+        }
+        else {
+          throw new Error(`member ${row.ownerId} not found`)
+        }
       }
-      else {
-        throw new Error(`member ${row.ownerId} not found`)
+      else if (tableId === CheckListTableId) {
+        const row = this.createCheckListRow(values)
+        const item = this.model.appendCheckListItem(row)
+        this.view.appendCheckListItem(row.projectId, row.taskId, item)
+      }
+      else if (tableId === ProjectChatTableId) {
+        const row = this.createProjectChatRow(values)
+        const message = this.model.appendProjectChatMessage(row)
+        this.view.appendProjectChatMessage(client.userId, row.projectId, message, this.model)
+      }
+      else if (tableId === TaskChatTableId) {
+        const row = this.createTaskChatRow(values)
+        const message = this.model.appendTaskChatMessage(row)
+        this.view.appendTaskChatMessage(client.userId, row.projectId, row.taskId, message, this.model)
       }
     }
-    else if (tableId === CheckListTableId) {
-      const row = this.createCheckListRow(values)
-      const item = this.model.appendCheckListItem(row)
-      this.view.appendCheckListItem(row.projectId, row.taskId, item)
-    }
-    else if (tableId === ProjectChatTableId) {
-      const row = this.createProjectChatRow(values)
-      const message = this.model.appendProjectChatMessage(row)
-      this.view.appendProjectChatMessage(client.userId, row.projectId, message, this.model)
-    }
-    else if (tableId === TaskChatTableId) {
-      const row = this.createTaskChatRow(values)
-      const message = this.model.appendTaskChatMessage(row)
-      this.view.appendTaskChatMessage(client.userId, row.projectId, row.taskId, message, this.model)
+    catch (exception) {
+      console.error(exception)
     }
   }
 
