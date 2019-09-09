@@ -383,6 +383,7 @@ export class View {
   private createChatElement(className: string, callback) {
     const chatElement = this.document.createElement('div')
     chatElement.className = className
+    chatElement.classList.add('animated', 'fadeInRight')
 
     const html = `
       <div class="MessageList">
@@ -419,7 +420,6 @@ export class View {
     const projectElement = this.document.createElement('div')
     projectElement.setAttribute('class', 'Project')
     projectElement.setAttribute('id', project.id)
-
     
     const projectHeadElement = this.document.createElement('div')
     projectHeadElement.setAttribute('class', 'ProjectHead')
@@ -983,8 +983,8 @@ export class View {
   private appendChatMessage(userId: UserId, messageList, message: ChatMessage, model: Model) {
     const messageElement = this.document.createElement('div')
     messageElement.setAttribute('id', message.id)
-    const className = (userId === message.posterId) ? 'MyChatMessage' : 'ChatMessage'
-    messageElement.className = className
+    const [className, direction] = (userId === message.posterId) ? ['MyChatMessage', 'fadeInRight'] : ['ChatMessage', 'fadeInLeft']
+    messageElement.classList.add(className)
 
     let image = ""
     const member = model.getMember(message.posterId)
@@ -1011,7 +1011,7 @@ export class View {
                     ${formatedTime}
                   </div>
                 </div>
-                <div class="Body">
+                <div class="Body animated ${direction}">
                   <div class="Message">${message.message}</div>
                 </div>
               </div>

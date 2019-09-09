@@ -219,6 +219,7 @@ cursor: pointer;
   width: 40%;
   border-radius: 10px;
   resize: both;
+  animation-duration: 0.1s;
 }
 
 .ProjectChat .MessageList {

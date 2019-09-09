@@ -2,7 +2,8 @@
 <html>
 <script src='../../../dist/kanban_index.js'></script>
 <link rel="stylesheet" href='css/kanban.css'></link>
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="../../../node_modules/animate.css/animate.min.css">
+<link rel="stylesheet" href="../../../node_modules/quill/dist/quill.snow.css">
 <body>
 
   <div class="Login">
@@ -41,35 +42,5 @@
     function login() {
       client.login(document.getElementById('user').value, document.getElementById('password').value)
     }
-
-    // // Get the modal
-
-    // // Get the button that opens the modal
-    // var openChat = document.getElementById("OpenProjectChat");
-
-    // // Get the <span> element that closes the modal
-    // // var closeChat = document.getElementsByClassName("CloseProjectChat")[0];
-
-    // // When the user clicks on the button, open the modal 
-    // openChat.onclick = function() {
-    //   console.log('open clicked')
-    //   var chat = document.getElementsByClassName("ProjectChat")[0];
-    //   chat.style.display = "flex";
-    // }
-
-    // // When the user clicks on <span> (x), close the modal
-    // // closeChat.onclick = function() {
-    // //   modal.style.display = "none";
-    // // }
-
-    // // When the user clicks anywhere outside of the modal, close it
-    // window.onclick = function(event) {
-    //   console.log(`window click`)
-    //   var chat = document.getElementsByClassName("ProjectChat")[0];
-    //   console.log(`${event.target}`)
-    //   if (event.target == chat) {
-    //     chat.style.display = "none";
-    //   }
-    // }
   </script>
 </html>
