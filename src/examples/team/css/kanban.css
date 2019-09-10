@@ -152,8 +152,38 @@ width: 100%;
   animation-duration: 0.1s;
 }
 
+.Task .Body .Close {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-end;
+}
+
+.Task .Body .Close .CloseButton {
+  outline: none;
+}
+
 .Task .Body .Description {
-  height: 20%;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.Task .Body .Description .DescEditor {
+  display: flex;
+  flex-flow: column;
+  flex-basis: 100%;
+}
+
+.Task .Body .Description .ql-toolbar {
+  display: none;
+}
+
+.Task .Body .Todo {
+  display: none;
+}
+
+.Task .Body .TaskChat {
+  display: none;
 }
 
 .AddTask {

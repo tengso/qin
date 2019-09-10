@@ -1,7 +1,6 @@
 import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
-import Popper from 'popper.js'
 import Quill from 'quill'
 
 // TODO: disable delete remove task group when non-empty task list
@@ -224,7 +223,17 @@ export class View {
           </div>
         </div>
         <div class="Body">
+          <div class="Close">
+            <input type="image" class="CloseButton" src="../../../images/close.svg"></input>
+          </div>
+          <div class="Tab">
+            <button class="OpenDescription" >Description</button>
+            <button class="OpenTodo">Todo</button>
+            <button class="OpenTaskChat">Notes</button>
+          </div>
           <div class="Description">
+            <div class="DescEditor">
+            </div>
           </div>
           <div class="Todo">
             <div class="CheckList">
@@ -242,23 +251,72 @@ export class View {
 
     taskElement.innerHTML = html
 
+    const chatClassName = 'TaskChat'
+    const callback = (inputElement) => {
+      return () => {
+        const message = inputElement.querySelector('.ql-editor').innerHTML
+        this.sendTaskChatCallback(task.id, message, '')
+        inputElement.value = ''
+      }
+    }
+    const chatElement = this.createChatElement(chatClassName, callback)
+
+    taskElement.querySelector('.Body').appendChild(chatElement)
+
+    const body = taskElement.querySelector('.Body')
+
     const showDetails = taskElement.querySelector('.ShowDetails .Button')
     showDetails.addEventListener('click', () => {
-      const body = taskElement.querySelector('.Body')
       if (body.style.display !== 'flex') {
         body.style.display = "flex"
       }
     })
 
-    const descElement = taskElement.querySelector('.Description')
+    const hideDetails = taskElement.querySelector('.CloseButton')
+    hideDetails.addEventListener('click', () => {
+      if (body.style.display !== 'none') {
+        body.style.display = "none"
+      }
+    })
+
+    const description = taskElement.querySelector('.Description')
+    const todo = taskElement.querySelector('.Todo')
+    const chat = taskElement.querySelector('.TaskChat')
+
+    const descElement = taskElement.querySelector('.DescEditor')
     const descOptions = {
       debug: 'info',
       placeholder: 'Compose an epic...',
       theme: 'snow',
-      bounds: descElement,
+      bounds: description,
     };
 
     const quill = new Quill(descElement, descOptions)
+
+    taskElement.querySelector('.DescEditor .ql-editor').onblur = () => {
+      console.log(`editor lost focus`)
+    }
+
+    const openDescription = taskElement.querySelector('.OpenDescription')
+    openDescription.addEventListener('click', () => {
+      todo.style.display = 'none'
+      chat.style.display = 'none'
+      description.style.display = 'flex'
+    })
+
+    const openTodo = taskElement.querySelector('.OpenTodo')
+    openTodo.addEventListener('click', () => {
+      todo.style.disable = 'flex'
+      chat.style.display = 'none'
+      description.style.display = 'none'
+    })
+
+    const openChat = taskElement.querySelector('.OpenTaskChat')
+    openChat.addEventListener('click', () => {
+      todo.style.display = 'none'
+      chat.style.display = 'flex'
+      description.style.display = 'none'
+    })
 
     const title = taskElement.querySelector('.Title .Input')
     title.onblur = () => {
@@ -330,17 +388,6 @@ export class View {
       this.removeTaskCallback(task.id)
     })
 
-    const chatClassName = 'TaskChat'
-    const callback = (inputElement) => {
-      return () => {
-        const message = inputElement.querySelector('.ql-editor').innerHTML
-        this.sendTaskChatCallback(task.id, message, '')
-        inputElement.value = ''
-      }
-    }
-    const chatElement = this.createChatElement(chatClassName, callback)
-
-    taskElement.querySelector('.Body').appendChild(chatElement)
 
     return taskElement
   }
