@@ -199,6 +199,10 @@ width: 100%;
   padding-top: 15px;
 }
 
+.Task .Body .Todo .AppendItemButton:hover {
+  opacity: 0.5;
+}
+
 .Task .Body .Todo .CheckList {
   padding-top: 15px;
   display: flex;
@@ -328,37 +332,6 @@ width: 40px;
 height: 40px;
 }
 
-/*
-.ProjectChat {
-display: none; 
-position: fixed; 
-z-index: 1; 
-left: 0;
-top: 0;
-width: 100%; 
-height: 100%; 
-overflow: auto; 
-background-color: rgb(0,0,0); 
-background-color: rgba(0,0,0,0.4); 
-flex-flow: column;
-width: 50%;
-}
-
-.CloseProjectChat {
-color: #aaa;
-float: right;
-font-size: 28px;
-font-weight: bold;
-}
-
-.CloseProjectChat:hover,
-.CloseProjectChat:focus {
-color: black;
-text-decoration: none;
-cursor: pointer;
-}
-*/
-
 .ProjectChat {
   z-index: 1; 
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -380,7 +353,7 @@ cursor: pointer;
   width: 100%;
   flex-flow: column;
   height: 78%;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .ProjectChat .Input {
@@ -388,8 +361,11 @@ cursor: pointer;
   display: flex;
   flex-flow: column;
   margin: 15px;
-  padding-top: 30px;
-  height: 10%;
+  height: 20%;
+}
+
+.ProjectChat .Input .Message {
+  border: solid 1px;
 }
 
 .ProjectChat .Input .Send {
@@ -402,34 +378,30 @@ cursor: pointer;
 .TaskChat {
   display: flex;
   flex-flow: column;
-  width: 100%;
+  height: 100%;
 }
 
 .TaskChat .MessageList {
   display: flex;
-  width: 100%;
   flex-flow: column;
-  height: 78%;
-  overflow: scroll;
+  height: 70%;
+  overflow: auto;
 }
 
 .TaskChat .Input {
   justify-content: center;
   display: flex;
   flex-flow: column;
-  margin: 15px;
-  padding-top: 30px;
-  height: 10%;
+  height: 25%;
+  padding: 5px;
 }
 
-.MessageInput .InputText {
-  width: 60%;
-  justify-content: flex-start;
+.TaskChat .Input .Message {
+  border: solid 1px;
 }
 
-.MessageInput .SendButton {
+.TaskChat .Input .Send {
   display: flex;
-  width: 20%;
   justify-content: flex-end;
 }
 
@@ -447,13 +419,6 @@ cursor: pointer;
   justify-content: flex-start;
 }
 
-.ChatMessage {
-  margin: 10px;
-  display: flex;
-  flex-flow: row; 
-  justify-content: flex-start;
-}
-
 .PosterImage {
   width: 30px;
   height: 30px;
@@ -462,6 +427,7 @@ cursor: pointer;
 .MyChatMessage .Container {
   display: flex;
   flex-flow: column;
+  flex-grow: 0;
   margin-right: 10px;
 }
 
@@ -474,11 +440,13 @@ cursor: pointer;
 .MyChatMessage .Container .Header {
   display: flex;
   flex-flow: row-reverse; 
+  border: 1px solid;
 }
 
 .ChatMessage .Container .Header {
   display: flex;
   flex-flow: row; 
+  border: 1px solid;
 }
 
 .MyChatMessage .Container .Header .PosterName {
@@ -513,10 +481,14 @@ cursor: pointer;
   border-radius: 5px;
   background-color: lightgreen;
   padding-left: 10px;
+  border: 1px solid;
+  flex-basis: content;
 }
 
 .Container .MessageBody .Message {
   word-wrap: break-word;
+  border: 1px solid;
+  flex-basis: content;
 }
 
 /*

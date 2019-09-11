@@ -280,10 +280,12 @@ export class View {
     const description = taskElement.querySelector('.Description')
     const descElement = taskElement.querySelector('.DescEditor')
     const descOptions = {
-      debug: 'info',
-      placeholder: 'Compose an epic...',
+      toolbar: [
+        [{ header: [1, 2, false] }],
+        ['bold', 'italic', 'underline'],
+        ['image', 'code-block']
+      ],
       theme: 'snow',
-      bounds: description,
     };
 
     const quill = new Quill(descElement, descOptions)
@@ -335,6 +337,8 @@ export class View {
       todo.style.display = 'none'
       chat.style.display = 'flex'
       description.style.display = 'none'
+      const messageList = body.querySelector('.MessageList')
+      messageList.scrollTop = messageList.scrollHeight
     })
 
     const title = taskElement.querySelector('.Title .Input')
@@ -1075,7 +1079,7 @@ export class View {
   private appendChatMessage(userId: UserId, messageList, message: ChatMessage, model: Model) {
     const messageElement = this.document.createElement('div')
     messageElement.setAttribute('id', message.id)
-    const [className, direction] = (userId === message.posterId) ? ['MyChatMessage', 'fadeInRight'] : ['ChatMessage', 'fadeInLeft']
+    const [className, direction] = (userId === message.posterId) ? ['MyChatMessage', 'fadeIn'] : ['ChatMessage', 'fadeIn']
     messageElement.classList.add(className)
 
     let image = ""
