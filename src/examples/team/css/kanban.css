@@ -429,24 +429,25 @@ height: 40px;
   flex-flow: column;
   flex-grow: 0;
   margin-right: 10px;
+  align-items: flex-end;
+  margin-left: 10px;
 }
 
 .ChatMessage .Container {
   display: flex;
   flex-flow: column;
   margin-left: 10px;
+  align-items: flex-start;
 }
 
 .MyChatMessage .Container .Header {
   display: flex;
   flex-flow: row-reverse; 
-  border: 1px solid;
 }
 
 .ChatMessage .Container .Header {
   display: flex;
   flex-flow: row; 
-  border: 1px solid;
 }
 
 .MyChatMessage .Container .Header .PosterName {
@@ -469,9 +470,11 @@ height: 40px;
   flex-flow: column; 
   margin-top: 10px;
   padding-left: 10px;
+  padding-right: 10px;
   border-radius: 5px;
   background-color: lightskyblue;
   word-wrap: break-word;
+  align-items: flex-start;
 }
 
 .MyChatMessage .Container .MessageBody {
@@ -481,14 +484,12 @@ height: 40px;
   border-radius: 5px;
   background-color: lightgreen;
   padding-left: 10px;
-  border: 1px solid;
-  flex-basis: content;
+  padding-right: 10px;
+  align-items: flex-start;
 }
 
 .Container .MessageBody .Message {
   word-wrap: break-word;
-  border: 1px solid;
-  flex-basis: content;
 }
 
 /*
