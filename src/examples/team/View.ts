@@ -113,6 +113,7 @@ export class View {
 
   private updateTaskGroupTitleCallback
   private updateTaskTitleCallback
+  private updateTaskDescriptionCallback
 
   private addTaskOwnerCallback
   private removeTaskOwnerCallback
@@ -157,6 +158,10 @@ export class View {
 
   setUpdateTaskTitleCallback(callback) {
     this.updateTaskTitleCallback = callback
+  }
+
+  setUpdateTaskDescriptionCallback(callback) {
+    this.updateTaskDescriptionCallback = callback
   }
 
   setAddTaskOwnerCallback(callback) {
@@ -227,9 +232,9 @@ export class View {
             <input type="image" class="CloseButton" src="../../../images/close.svg"></input>
           </div>
           <div class="Tab">
-            <button class="OpenDescription" >Description</button>
-            <button class="OpenTodo">Todo</button>
-            <button class="OpenTaskChat">Notes</button>
+            <input type="image" src="../../../images/description.svg" class="OpenDescription"></input>
+            <input type="image" src="../../../images/todo.svg" class="OpenTodo"></input>
+            <input type="image" src="../../../images/messages.svg" class="OpenTaskChat"></input>
           </div>
           <div class="Description">
             <div class="DescEditor">
@@ -242,8 +247,8 @@ export class View {
               <div class="ItemList">
               </div>
             </div>
-            <div class="Append">
-              <Button>Add</Button>
+            <div class="AppendItem">
+              <input type="image" src="../../../images/add.svg" class="AppendItemButton"></input>
             </div>
           </div>
         </div>
@@ -272,17 +277,7 @@ export class View {
       }
     })
 
-    const hideDetails = taskElement.querySelector('.CloseButton')
-    hideDetails.addEventListener('click', () => {
-      if (body.style.display !== 'none') {
-        body.style.display = "none"
-      }
-    })
-
     const description = taskElement.querySelector('.Description')
-    const todo = taskElement.querySelector('.Todo')
-    const chat = taskElement.querySelector('.TaskChat')
-
     const descElement = taskElement.querySelector('.DescEditor')
     const descOptions = {
       debug: 'info',
@@ -293,9 +288,33 @@ export class View {
 
     const quill = new Quill(descElement, descOptions)
 
-    taskElement.querySelector('.DescEditor .ql-editor').onblur = () => {
-      console.log(`editor lost focus`)
-    }
+    const toolbar = taskElement.querySelector('.ql-toolbar')
+    const editor = taskElement.querySelector('.DescEditor .ql-editor')
+    editor.innerHTML = task.description
+
+    const todo = taskElement.querySelector('.Todo')
+    const chat = taskElement.querySelector('.TaskChat')
+
+    const hideDetails = taskElement.querySelector('.CloseButton')
+    hideDetails.addEventListener('click', () => {
+      if (body.style.display !== 'none') {
+        body.style.display = "none"
+        this.updateTaskDescriptionCallback(task.id, editor.innerHTML)
+      }
+    })
+
+    // editor.onblur = () => {
+    //   console.log(`editor lost focus`)
+    //   if (this.document.activeElement !== toolbar) {
+    //     toolbar.style.display = 'none'
+    //     this.updateTaskDescriptionCallback(task.id, editor.innerHTML)
+    //   }
+    // }
+
+    // editor.onfocus = () => {
+    //   console.log(`editor get focus`)
+    //   toolbar.style.display = 'block'
+    // }
 
     const openDescription = taskElement.querySelector('.OpenDescription')
     openDescription.addEventListener('click', () => {
@@ -306,7 +325,7 @@ export class View {
 
     const openTodo = taskElement.querySelector('.OpenTodo')
     openTodo.addEventListener('click', () => {
-      todo.style.disable = 'flex'
+      todo.style.display = 'flex'
       chat.style.display = 'none'
       description.style.display = 'none'
     })
@@ -376,7 +395,7 @@ export class View {
       // }
     }
 
-    const appendCheckList = taskElement.querySelector('.Todo .Append')
+    const appendCheckList = taskElement.querySelector('.Todo .AppendItem')
     appendCheckList.addEventListener('click', () => {
       const status = ItemStatus.Open
       const description = 'new item'
@@ -658,7 +677,35 @@ export class View {
     if (projectElement) {
       const taskElement = this.document.getElementById(taskId)
       if (taskElement) {
-        taskElement.children[0].children[0].value = title
+        const titleElement = taskElement.querySelector('.Title .Input')
+        if (titleElement) {
+          titleElement.value = title
+        }
+        else {
+          throw new Error(`task element ${taskId} title not found`)
+        }
+      }
+      else {
+        throw new Error(`task element ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
+
+  updateTaskDescription(projectId: ProjectId, taskId: TaskId, description: Description) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const taskElement = this.document.getElementById(taskId)
+      if (taskElement) {
+        const editor = taskElement.querySelector('.Description .DescEditor .ql-editor')
+        if (editor) {
+          editor.innerHTML = description
+        }
+        else {
+          throw new Error(`editor for task ${taskId} not found`)
+        }
       }
       else {
         throw new Error(`task element ${taskId} not found`)
@@ -928,77 +975,51 @@ export class View {
       throw new Error(`Login Image not found`)
     }
   }
-  /** 
-                      <div class="CheckList">
-                        <div class="CheckListHead">
-                        </div>
-                        <div class="ItemList">
-                          <div class="Item" id="ItemId">
-                            <div class="ItemHead">
-                            </div>
-                            <div class="ItemStatus">
-                              <input type="checkbox"></input>
-                            </div>
-                            <div class="ItemDescription">
-                              <input></input>
-                            </div>
-                            <div>
-                              <button>(-)</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-  */
+
   appendCheckListItem(projectId: ProjectId, taskId: TaskId, item: CheckListItem) {
     const project = this.document.getElementById(projectId)
     if (project) {
       const task = this.document.getElementById(taskId)
       if (task) {
         const checkList = task.querySelector('.CheckList')
-
+        
         const itemElement = this.document.createElement('div')
         itemElement.setAttribute('class', 'Item')
         itemElement.setAttribute('id', item.id)
 
-        const head = this.document.createElement('div')
-        head.setAttribute('class', 'ItemHead')
-        
-        const status = this.document.createElement('div')
-        status.setAttribute('class', 'ItemStatus')
-        const statusCheck = this.document.createElement('input')
-        statusCheck.setAttribute('type', 'checkbox')
-        statusCheck.checked = item.status === ItemStatus.Closed ? true : false
-        statusCheck.addEventListener('change', () => {
-          const status = (statusCheck.checked) ? ItemStatus.Closed : ItemStatus.Open
-          this.updateCheckListItemStatusCallback(item.id, status)
-        })
-        status.appendChild(statusCheck)
+        const html = `
+          <div class="ItemHeader">
+          </div>
+          <div class="ItemStatus">
+            <input class="StatusCheck" type="checkbox"></input>
+          </div>
+          <div class="ItemDescription">
+            <input class="DescriptionInput" value="${item.description}"</input>
+          </div>
+          <div class="RemoveItem">
+            <input type="image" src="../../../images/close.svg" class="RemoveItemButton"></input>
+          </div>
+        `
+        itemElement.innerHTML = html
 
-        const desc = this.document.createElement('div')
-        desc.setAttribute('class', 'ItemDescription')
-        const descInput = this.document.createElement('input')
-        descInput.value = item.description
+        const status = itemElement.querySelector('.StatusCheck')
+        status.checked = item.status === ItemStatus.Closed ? true : false
+        status.addEventListener('change', () => {
+          const newStatus = (status.checked) ? ItemStatus.Closed : ItemStatus.Open
+          this.updateCheckListItemStatusCallback(item.id, newStatus)
+        })
+
+        const descInput = itemElement.querySelector('.DescriptionInput')
         descInput.onblur = () => {
           this.updateCheckListItemDescriptionCallback(item.id, descInput.value)
         }
-        desc.appendChild(descInput)
 
-        const remove = this.document.createElement('div')
-        remove.setAttribute('class', 'RemoveItem')
-        const removeButton = this.document.createElement('button')
-        removeButton.innerHTML = '(-)'
-        removeButton.setAttribute('class', 'RemoveItemButton')
+        const removeButton = itemElement.querySelector('.RemoveItemButton')
         removeButton.addEventListener('click', () => {
           this.removeCheckListItemCallback(item.id)
         })
-        remove.appendChild(removeButton)
 
-        itemElement.appendChild(head)
-        itemElement.appendChild(status)
-        itemElement.appendChild(desc)
-        itemElement.appendChild(remove)
-
-        checkList.children[1].appendChild(itemElement)
+        checkList.querySelector('.ItemList').appendChild(itemElement)
       }
       else {
         throw new Error(`task ${taskId} not found`)

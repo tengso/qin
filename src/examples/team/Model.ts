@@ -781,6 +781,28 @@ export class Model {
     }
   }
 
+  updateTaskDescription(projectId: ProjectId, taskId: TaskId, description: Description) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroupOfTask(taskId)
+      if (taskGroup) {
+        const task = taskGroup.getTask(taskId)
+        if (task) {
+          task.description = description
+        }
+        else {
+          throw new Error(`task ${taskId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task group of task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
   updateTaskGroupDescription(projectId: ProjectId, taskGroupId: TaskGroupId, description: Description) {
     const project = this.projectMap.get(projectId)
     if (project) {

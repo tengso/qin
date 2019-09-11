@@ -158,6 +158,14 @@ width: 100%;
   justify-content: flex-end;
 }
 
+.Task .Body .Tab {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-evenly;
+  padding-bottom: 20px;
+  border-bottom: solid 1px;
+}
+
 .Task .Body .Close .CloseButton {
   outline: none;
 }
@@ -174,12 +182,71 @@ width: 100%;
   flex-basis: 100%;
 }
 
-.Task .Body .Description .ql-toolbar {
+/* .Task .Body .Description .ql-toolbar {
   display: none;
-}
+} */
 
 .Task .Body .Todo {
   display: none;
+  flex-flow: column;
+  height: 80%;
+}
+
+.Task .Body .Todo .AppendItem {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding-top: 15px;
+}
+
+.Task .Body .Todo .CheckList {
+  padding-top: 15px;
+  display: flex;
+  flex-flow: column;
+  height: 90%;
+  overflow: auto;
+}
+
+.Task .Body .Todo .CheckList .ItemList {
+  display: flex;
+  flex-flow: column;
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item {
+  display: flex;
+  flex-flow: row;
+  margin: 5px;
+  justify-content: space-between;
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .ItemHeader {
+  width: 0%
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .ItemStatus {
+  justify-content: flex-end;
+  width: 3%
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .ItemDescription {
+  width: 70%;
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .DescriptionInput {
+  border: none;
+  width: 100%;
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .RemoveItem {
+  display: flex;
+  justify-content: flex-start;
+  width: 7%
+}
+
+.Task .Body .Todo .CheckList .ItemList .Item .RemoveItemButton {
+  padding-top: 5px;
+  width: 15px;
+  height: 15px;
 }
 
 .Task .Body .TaskChat {
@@ -261,41 +328,6 @@ width: 40px;
 height: 40px;
 }
 
-.CheckList {
-display: flex;
-flex-flow: column;
-margin: 10px;
-border: 1px solid;
-}
-
-.ItemList {
-display: flex;
-flex-flow: column;
-margin: 5px;
-}
-
-.Item {
-display: flex;
-flex-flow: row;
-margin: 5px;
-justify-content: flex-start
-}
-
-.ItemHead {
-flex-basis: 0%
-}
-
-.ItemStatus {
-flex-basis: 10%
-}
-
-.ItemDescription {
-flex-basis: 30%
-}
-
-.RemoveItem {
-flex-basis: 10%;
-}
 /*
 .ProjectChat {
 display: none; 

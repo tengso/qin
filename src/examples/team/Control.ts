@@ -28,6 +28,7 @@ export class Control implements ClientCallback {
     this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
     this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
     this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
+    this.view.setUpdateTaskDescriptionCallback(updateTaskDescriptionCallback)
     this.view.setAddTaskOwnerCallback(addTaskOwnerCallback)
     this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
     this.view.setAddCheckListItemCallback(addCheckListItemCallback)
@@ -231,6 +232,11 @@ export class Control implements ClientCallback {
           const title = value as string
           this.model.updateTaskTitle(projectId, taskId, title)
           this.view.updateTaskTitle(projectId, taskId, title)
+        }
+        else if (column === TaskTableColumnName.Description) {
+          const description = value as string
+          this.model.updateTaskDescription(projectId, taskId, description)
+          this.view.updateTaskDescription(projectId, taskId, description)
         }
         else {
           throw new Error(`unknown column ${value}`)
@@ -687,6 +693,10 @@ function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
 
 function updateTaskTitleCallback(taskId: TaskId, title: Title) {
   client.updateCell(TaskTableId, taskId, 'title', title)
+}
+
+function updateTaskDescriptionCallback(taskId: TaskId, description: Description) {
+  client.updateCell(TaskTableId, taskId, 'description', description)
 }
 
 function getTaskOwnerRowId(taskId: TaskId, ownerId: UserId) {
