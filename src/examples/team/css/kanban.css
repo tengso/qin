@@ -71,7 +71,8 @@ width: 100%;
 .Task .Header .ShowDetails {
   display: flex;
   flex-flow: row-reverse;
-  padding-right: 15px;
+  padding-top: 15px;
+  padding-right: 16px;
 }
 
 .Task .Header .Title {
@@ -352,27 +353,30 @@ height: 40px;
   display: flex;
   width: 100%;
   flex-flow: column;
-  height: 78%;
+  height: 70%;
   overflow: auto;
 }
 
 .ProjectChat .Input {
-  justify-content: center;
+  padding-top: 20px;
   display: flex;
+  justify-content: center;
   flex-flow: column;
-  margin: 15px;
-  height: 20%;
+  height: 25%;
 }
 
 .ProjectChat .Input .Message {
+  margin: 5px;
   border: solid 1px;
+  height: 75%;
 }
 
 .ProjectChat .Input .Send {
   display: flex;
   flex-flow: row;
-  margin: 5px;
-  justify-content: flex-end;
+  justify-content: center;
+  height: 25%;
+  padding-bottom: 2px;
 }
 
 .TaskChat {
@@ -392,8 +396,8 @@ height: 40px;
   justify-content: center;
   display: flex;
   flex-flow: column;
-  height: 25%;
-  padding: 5px;
+  height: 13%;
+  padding-top: 55px;
 }
 
 .TaskChat .Input .Message {
@@ -402,7 +406,9 @@ height: 40px;
 
 .TaskChat .Input .Send {
   display: flex;
-  justify-content: flex-end;
+  flex-flow: row;
+  margin-bottom: 40px;
+  justify-content: center;
 }
 
 .ChatMessage {
@@ -492,19 +498,75 @@ height: 40px;
   word-wrap: break-word;
 }
 
-/*
-.ItemDescription {
-display: flex;
-flex-flow: row;
-width: 200px;
-height: 40px;
+.Icon {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: black;
+  -webkit-mask-size: cover;
+  background-color: lightgray;
 }
-*/
-/*
-.ItemStatus {
-display: flex;
-flex-flow: row;
-width: 40px;
-height: 40px;
+
+.Icon:hover,
+.Icon:focus {
+  background: limegreen;
+  cursor: pointer;
 }
-*/
+
+.IconDescription {
+  -webkit-mask: url(../../../../images/description.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconTodo {
+  -webkit-mask: url(../../../../images/todo.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconMessages {
+  -webkit-mask: url(../../../../images/messages.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconClose {
+  -webkit-mask: url(../../../../images/close.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconInfo {
+  -webkit-mask: url(../../../../images/info.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+}
+
+.IconExpand {
+  -webkit-mask: url(../../../../images/expand.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+}
+
+.IconDelete {
+  -webkit-mask: url(../../../../images/delete.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconSend {
+  -webkit-mask: url(../../../../images/send.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconClose:hover,
+.IconClose:focus,
+.IconDelete:hover,
+.IconDelete:focus 
+{
+  background: red;
+}
+
+

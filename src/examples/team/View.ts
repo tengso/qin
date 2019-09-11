@@ -207,9 +207,9 @@ export class View {
     const html = `
         <div class="Header">
           <div class="ShowDetails">
-            <input type="image" class="Button" src="../../../images/expand.svg"></input>
+            <div class="Icon IconExpand Button"></div>
           </div>
-          <div class="Title"Message>
+          <div class="Title">
             <input class="Input" value=${task.title}>
             </input>
           </div>
@@ -223,18 +223,18 @@ export class View {
             1/5
             </div>
             <div class="Remove">
-              <input type="image" class="RemoveButton" src="../../../images/remove.svg"></input>
+              <div class="Icon IconDelete RemoveButton"></div>
             </div>
           </div>
         </div>
         <div class="Body">
           <div class="Close">
-            <input type="image" class="CloseButton" src="../../../images/close.svg"></input>
+            <div class="Icon IconClose CloseButton"></div>
           </div>
           <div class="Tab">
-            <input type="image" src="../../../images/description.svg" class="OpenDescription"></input>
-            <input type="image" src="../../../images/todo.svg" class="OpenTodo"></input>
-            <input type="image" src="../../../images/messages.svg" class="OpenTaskChat"></input>
+            <div class="Icon IconDescription OpenDescription"></div>
+            <div class="Icon IconTodo OpenTodo"></div>
+            <div class="Icon IconMessages OpenTaskChat"></div>
           </div>
           <div class="Description">
             <div class="DescEditor">
@@ -279,18 +279,15 @@ export class View {
 
     const description = taskElement.querySelector('.Description')
     const descElement = taskElement.querySelector('.DescEditor')
+    let toolbar = taskElement.querySelector('#toolbar')
     const descOptions = {
-      toolbar: [
-        [{ header: [1, 2, false] }],
-        ['bold', 'italic', 'underline'],
-        ['image', 'code-block']
-      ],
       theme: 'snow',
+      placeholder: 'Type a description',
     };
 
     const quill = new Quill(descElement, descOptions)
 
-    const toolbar = taskElement.querySelector('.ql-toolbar')
+    // const toolbar = taskElement.querySelector('.ql-toolbar')
     const editor = taskElement.querySelector('.DescEditor .ql-editor')
     editor.innerHTML = task.description
 
@@ -411,7 +408,6 @@ export class View {
       this.removeTaskCallback(task.id)
     })
 
-
     return taskElement
   }
 
@@ -468,7 +464,8 @@ export class View {
     new Sortable(taskGroupListElement, {
       group: project.id,
       animation: 150,
-      onEnd: this.afterSortingCallback
+      onEnd: this.afterSortingCallback,
+      handle: '.Header'
     })
 
     taskGroupElement.appendChild(taskGroupHeadElement)
@@ -489,7 +486,7 @@ export class View {
         <div class="Message">
         </div>
         <div class="Send">
-          <button class="SendButton">send</button>
+          <div class="Icon IconSend SendButton"></div>
         </div>
       </div>
     `
@@ -499,9 +496,8 @@ export class View {
     const messageElement = chatElement.querySelector('.Message')
 
     var options = {
-      debug: 'info',
-      placeholder: 'Compose an epic...',
-      theme: 'bubble',
+      placeholder: 'Type a message...',
+      theme: 'snow',
       bounds: messageElement,
     };
 
@@ -558,7 +554,8 @@ export class View {
     new Sortable(taskGroupListElement, {
       group: `${project.id}-TaskGroup`,
       animation: 150,
-      onEnd: this.afterSortingCallback
+      onEnd: this.afterSortingCallback,
+      handle: '.TaskGroupHead',
     })
 
     // Project Chat
