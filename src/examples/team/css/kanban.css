@@ -163,8 +163,9 @@ width: 100%;
   display: flex;
   flex-flow: row;
   justify-content: space-evenly;
-  padding-bottom: 20px;
-  border-bottom: solid 1px;
+  border-bottom: solid 1px lightgrey;
+  align-items: center;
+  padding-bottom: 5px;
 }
 
 .Task .Body .Close .CloseButton {
@@ -353,33 +354,33 @@ height: 40px;
   display: flex;
   width: 100%;
   flex-flow: column;
-  height: 70%;
+  flex-basis: 75%;
   overflow: auto;
 }
 
 .ProjectChat .Input {
-  padding-top: 20px;
   display: flex;
   justify-content: center;
   flex-flow: column;
-  height: 25%;
+  flex-basis: 25%;
 }
 
 .ProjectChat .Input .Message {
   margin: 5px;
-  border: solid 1px;
-  height: 75%;
+  border: solid 1px lightgrey;
+  flex-basis: 90%;
 }
 
 .ProjectChat .Input .Send {
   display: flex;
   flex-flow: row;
   justify-content: center;
-  height: 25%;
+  flex-basis: 10%;
   padding-bottom: 2px;
 }
 
 .TaskChat {
+  padding-top: 10px;
   display: flex;
   flex-flow: column;
   height: 100%;
@@ -388,7 +389,7 @@ height: 40px;
 .TaskChat .MessageList {
   display: flex;
   flex-flow: column;
-  height: 70%;
+  flex-basis: 80%;
   overflow: auto;
 }
 
@@ -396,18 +397,16 @@ height: 40px;
   justify-content: center;
   display: flex;
   flex-flow: column;
-  height: 13%;
-  padding-top: 55px;
+  flex-basis: 20%;
 }
 
 .TaskChat .Input .Message {
-  border: solid 1px;
+  border: solid 1px lightgrey;
 }
 
 .TaskChat .Input .Send {
   display: flex;
   flex-flow: row;
-  margin-bottom: 40px;
   justify-content: center;
 }
 
@@ -531,6 +530,8 @@ height: 40px;
 .IconClose {
   -webkit-mask: url(../../../../images/close.svg);
   -webkit-mask-size: cover;
+  width: 20px;
+  height: 20px;
 }
 
 .IconInfo {

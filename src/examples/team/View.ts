@@ -270,12 +270,6 @@ export class View {
 
     const body = taskElement.querySelector('.Body')
 
-    const showDetails = taskElement.querySelector('.ShowDetails .Button')
-    showDetails.addEventListener('click', () => {
-      if (body.style.display !== 'flex') {
-        body.style.display = "flex"
-      }
-    })
 
     const description = taskElement.querySelector('.Description')
     const descElement = taskElement.querySelector('.DescEditor')
@@ -316,26 +310,46 @@ export class View {
     // }
 
     const openDescription = taskElement.querySelector('.OpenDescription')
-    openDescription.addEventListener('click', () => {
+    const openTodo = taskElement.querySelector('.OpenTodo')
+    const openChat = taskElement.querySelector('.OpenTaskChat')
+
+    const initTabCallback = () => {
       todo.style.display = 'none'
       chat.style.display = 'none'
       description.style.display = 'flex'
-    })
+      openDescription.style.background = 'lightgreen' 
+      openTodo.style.background = 'lightgrey' 
+      openChat.style.background = 'lightgrey' 
+    }
 
-    const openTodo = taskElement.querySelector('.OpenTodo')
+    openDescription.addEventListener('click', initTabCallback) 
+
     openTodo.addEventListener('click', () => {
       todo.style.display = 'flex'
       chat.style.display = 'none'
       description.style.display = 'none'
+      openDescription.style.background = 'lightgrey' 
+      openTodo.style.background = 'lightgreen' 
+      openChat.style.background = 'lightgrey' 
     })
 
-    const openChat = taskElement.querySelector('.OpenTaskChat')
     openChat.addEventListener('click', () => {
       todo.style.display = 'none'
       chat.style.display = 'flex'
       description.style.display = 'none'
       const messageList = body.querySelector('.MessageList')
       messageList.scrollTop = messageList.scrollHeight
+      openDescription.style.background = 'lightgrey' 
+      openTodo.style.background = 'lightgrey' 
+      openChat.style.background = 'lightgreen' 
+    })
+
+    const showDetails = taskElement.querySelector('.ShowDetails .Button')
+    showDetails.addEventListener('click', () => {
+      if (body.style.display !== 'flex') {
+        body.style.display = "flex"
+      }
+      initTabCallback()
     })
 
     const title = taskElement.querySelector('.Title .Input')
