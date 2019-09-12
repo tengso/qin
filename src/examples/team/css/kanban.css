@@ -92,6 +92,18 @@ width: 100%;
   font-size: medium;
 }
 
+.Task .Header .OwnerSection {
+  display: flex;
+  flex-flow: row;
+  width: 100%;
+  height: 30px;
+  padding-left: 20px;
+}
+
+.Task .Header .OwnerPlaceholder {
+  padding-top: 7px;
+}
+
 .Task .Header .OwnerList {
   display: flex;
   flex-flow: row;
@@ -572,6 +584,13 @@ height: 40px;
 
 .IconSend {
   -webkit-mask: url(../../../../images/send.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconGroup {
+  -webkit-mask: url(../../../../images/group.svg);
   width: 25px;
   height: 25px;
   -webkit-mask-size: cover;

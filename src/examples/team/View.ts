@@ -213,7 +213,12 @@ export class View {
             <input class="Input" value=${task.title}>
             </input>
           </div>
-          <div class="OwnerList">
+          <div class="OwnerSection">
+            <div class="OwnerPlaceholder">
+              <div class='Icon IconGroup'></div>
+            </div>
+            <div class="OwnerList">
+            </div>
           </div>
           <div class="Overview">
             <div class="DueDate">
