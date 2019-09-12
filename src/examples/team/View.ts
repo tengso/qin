@@ -200,6 +200,7 @@ export class View {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
     taskElement.setAttribute('id', task.id)
+    // taskElement.classList.add('animated', 'fadeInDown')
 
     var options = { month: 'short', day: 'numeric'};
     const dueDate = new Date(task.dueDate)
