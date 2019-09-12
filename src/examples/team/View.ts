@@ -248,7 +248,7 @@ export class View {
               </div>
             </div>
             <div class="AppendItem">
-              <input type="image" src="../../../images/add.svg" class="AppendItemButton"></input>
+              <div class="Icon IconAdd AppendItemButton"></input>
             </div>
           </div>
         </div>
@@ -305,23 +305,10 @@ export class View {
     const hideDetails = taskElement.querySelector('.CloseButton')
     hideDetails.addEventListener('click', () => {
       if (body.style.display !== 'none') {
-        body.style.display = "none"
+        body.style.display = 'none'
         this.updateTaskDescriptionCallback(task.id, editor.innerHTML)
       }
     })
-
-    // editor.onblur = () => {
-    //   console.log(`editor lost focus`)
-    //   if (this.document.activeElement !== toolbar) {
-    //     toolbar.style.display = 'none'
-    //     this.updateTaskDescriptionCallback(task.id, editor.innerHTML)
-    //   }
-    // }
-
-    // editor.onfocus = () => {
-    //   console.log(`editor get focus`)
-    //   toolbar.style.display = 'block'
-    // }
 
     const openDescription = taskElement.querySelector('.OpenDescription')
     const openTodo = taskElement.querySelector('.OpenTodo')

@@ -557,6 +557,13 @@ height: 40px;
   -webkit-mask-size: cover;
 }
 
+.IconAdd {
+  -webkit-mask: url(../../../../images/add.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
 .IconSend {
   -webkit-mask: url(../../../../images/send.svg);
   width: 25px;
