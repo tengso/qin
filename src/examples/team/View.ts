@@ -259,9 +259,10 @@ export class View {
     const chatClassName = 'TaskChat'
     const callback = (inputElement) => {
       return () => {
-        const message = inputElement.querySelector('.ql-editor').innerHTML
+        const editor = inputElement.querySelector('.ql-editor')
+        const message = editor.innerHTML 
         this.sendTaskChatCallback(task.id, message, '')
-        inputElement.value = ''
+        editor.innerHTML = ''
       }
     }
     const chatElement = this.createChatElement(chatClassName, callback)
@@ -276,7 +277,20 @@ export class View {
     let toolbar = taskElement.querySelector('#toolbar')
     const descOptions = {
       theme: 'snow',
-      placeholder: 'Type a description',
+      placeholder: 'Type task a description',
+      modules: {
+        toolbar: [
+            [{ 'font': [] }, { 'size': [] }],
+            [ 'bold', 'italic', 'underline', 'strike' ],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'script': 'super' }, { 'script': 'sub' }],
+            [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
+            [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
+            [ 'direction', { 'align': [] }],
+            [ 'link', 'image', 'video', 'formula' ],
+            [ 'clean' ]
+        ]
+      }
     };
 
     const quill = new Quill(descElement, descOptions)
@@ -511,13 +525,36 @@ export class View {
 
     var options = {
       placeholder: 'Type a message...',
-      theme: 'snow',
+      theme: 'bubble',
       bounds: messageElement,
+      modules: {
+        toolbar: [
+            [{ 'font': [] }, { 'size': [] }],
+            [ 'bold', 'italic', 'underline', 'strike' ],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'script': 'super' }, { 'script': 'sub' }],
+            [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
+            [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
+            [ 'direction', { 'align': [] }],
+            [ 'link', 'image', 'video', 'formula' ],
+            [ 'clean' ]
+        ]
+      }
     };
 
     console.log(chatElement)
 
     const quill = new Quill(messageElement, options)
+
+    messageElement.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+    // @ts-ignore
+      quill.theme.tooltip.edit()
+    // @ts-ignore
+      quill.theme.tooltip.show()
+      return false
+    })
+
     sendButton.addEventListener('click', callback(messageElement))
 
     return chatElement
@@ -576,8 +613,10 @@ export class View {
     const chatElementClass = 'ProjectChat'
     const chatCallback = (inputElement) => {
       return () => {
-        const message = inputElement.querySelector('.ql-editor').innerHTML
+        const editor = inputElement.querySelector('.ql-editor')
+        const message = editor.innerHTML
         this.sendProjectChatCallback(project.id, message, '')
+        editor.innerHTML = ''
       } 
     }
     const chatElement = this.createChatElement(chatElementClass, chatCallback)

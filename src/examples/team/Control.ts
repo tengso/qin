@@ -645,7 +645,7 @@ function getClient(host: string, port: number): Client {
 
 let client: Client = getClient('localhost', 8080)
 
-function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'new', description: Description = 'desc', dueDate: Date = new Date()) {
+function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'Task title', description: Description = 'Task description', dueDate: Date = new Date()) {
   // @ts-ignore
   const projectId = control.model.getProjectIdByTaskGroupId(taskGroupId)
   if (projectId) {
