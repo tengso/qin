@@ -28,19 +28,6 @@
   <input id="ProjectChatButton" type="image" src="../../../images/chat.png"></input>
 </body>
   <script>
-    let openChat = document.getElementById("ProjectChatButton")
-    openChat.onclick = function() {
-      console.log('open clicked')
-      var chat = document.getElementsByClassName("ProjectChat")[0];
-      if (chat.style.display === "flex") {
-        chat.style.display = 'none'
-      }
-      else {
-        chat.style.display = 'flex'
-        let messageList = chat.querySelector('.MessageList')
-        messageList.scrollTop = messageList.scrollHeight
-      }
-    }
 
     function login() {
       client.login(document.getElementById('user').value, document.getElementById('password').value)

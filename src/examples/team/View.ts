@@ -227,7 +227,7 @@ export class View {
             </div>
           </div>
         </div>
-        <div class="Body">
+        <div class="Body animated zoomIn">
           <div class="Close">
             <div class="Icon IconClose CloseButton"></div>
           </div>
@@ -271,27 +271,28 @@ export class View {
 
     const body = taskElement.querySelector('.Body')
 
-
     const description = taskElement.querySelector('.Description')
     const descElement = taskElement.querySelector('.DescEditor')
-    let toolbar = taskElement.querySelector('#toolbar')
     const descOptions = {
       theme: 'snow',
       placeholder: 'Type task a description',
       modules: {
         toolbar: [
-            [{ 'font': [] }, { 'size': [] }],
-            [ 'bold', 'italic', 'underline', 'strike' ],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'super' }, { 'script': 'sub' }],
-            [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
-            [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
-            [ 'direction', { 'align': [] }],
-            [ 'link', 'image', 'video', 'formula' ],
-            [ 'clean' ]
+            [
+              { 'font': [] }, 
+              { 'size': [] },
+              'bold', 'italic', 'underline', 'strike',
+              { 'color': [] }, 
+              { 'background': [] },
+              {'list': 'ordered' }, 
+              { 'list': 'bullet'},
+              { 'indent': '-1' }, 
+              { 'indent': '+1' },
+              'link', 'image', 'video' ,
+           ]
         ]
       }
-    };
+    }
 
     const quill = new Quill(descElement, descOptions)
 
@@ -492,7 +493,6 @@ export class View {
   private createChatElement(className: string, callback) {
     const chatElement = this.document.createElement('div')
     chatElement.className = className
-    chatElement.classList.add('animated', 'fadeIn')
 
     const html = `
       <div class="MessageList">
@@ -516,15 +516,18 @@ export class View {
       bounds: messageElement,
       modules: {
         toolbar: [
-            [{ 'font': [] }, { 'size': [] }],
-            [ 'bold', 'italic', 'underline', 'strike' ],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'super' }, { 'script': 'sub' }],
-            [{ 'header': '1' }, { 'header': '2' }, 'blockquote', 'code-block' ],
-            [{ 'list': 'ordered' }, { 'list': 'bullet'}, { 'indent': '-1' }, { 'indent': '+1' }],
-            [ 'direction', { 'align': [] }],
-            [ 'link', 'image', 'video', 'formula' ],
-            [ 'clean' ]
+            [
+              { 'font': [] }, 
+              { 'size': [] },
+              'bold', 'italic', 'underline', 'strike',
+              { 'color': [] }, 
+              { 'background': [] },
+              {'list': 'ordered' }, 
+              { 'list': 'bullet'},
+              { 'indent': '-1' }, 
+              { 'indent': '+1' },
+              'link', 'image', 'video' ,
+           ]
         ]
       }
     };
@@ -611,6 +614,27 @@ export class View {
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)
     projectElement.appendChild(chatElement)
+
+    let openChat = this.document.getElementById("ProjectChatButton")
+    chatElement.addEventListener('animationend', () => {
+      if (chatElement.classList.contains('slideOutRight')) {
+        chatElement.style.display = 'none'
+      }
+    })
+    openChat.onclick = function() {
+      console.log('open clicked')
+      if (chatElement.style.display === "flex") {
+        chatElement.classList.remove('slideInRight')
+        chatElement.classList.add('slideOutRight')
+      }
+      else {
+        chatElement.classList.remove('slideOutRight')
+        chatElement.classList.add('slideInRight')
+        chatElement.style.display = 'flex'
+        let messageList = chatElement.querySelector('.MessageList')
+        messageList.scrollTop = messageList.scrollHeight
+      }
+    }
 
     return projectElement
   }

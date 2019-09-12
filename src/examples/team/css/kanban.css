@@ -150,6 +150,7 @@ width: 100%;
   flex-flow: column;
   height: 60%;
   width: 40%;
+  animation-duration: 0.2s;
 }
 
 .Task .Body .Close {
@@ -347,8 +348,13 @@ height: 40px;
   height: 90%;
   width: 30%;
   resize: both;
-  animation-duration: 0.1s;
+  animation-duration: 0.3s;
 }
+
+/* .slideInRight {
+  -webkit-animation-duration: 50ms;
+  animation-duration: 50ms;
+} */
 
 .ProjectChat .MessageList {
   display: flex;
