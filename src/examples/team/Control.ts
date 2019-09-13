@@ -27,8 +27,11 @@ export class Control implements ClientCallback {
     this.view.setRemoveTaskCallback(removeTaskCallback)
     this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
     this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
+
     this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
     this.view.setUpdateTaskDescriptionCallback(updateTaskDescriptionCallback)
+    this.view.setUpdateTaskDueDateCallback(updateTaskDueDateCallback)
+
     this.view.setAddTaskOwnerCallback(addTaskOwnerCallback)
     this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
     this.view.setAddCheckListItemCallback(addCheckListItemCallback)
@@ -232,6 +235,11 @@ export class Control implements ClientCallback {
           const title = value as string
           this.model.updateTaskTitle(projectId, taskId, title)
           this.view.updateTaskTitle(projectId, taskId, title)
+        }
+        else if (column === TaskTableColumnName.DueDate) {
+          const dueDate = new Date(value as string)
+          this.model.updateTaskDueDate(projectId, taskId, dueDate)
+          this.view.updateTaskDueDate(projectId, taskId, dueDate)
         }
         else if (column === TaskTableColumnName.Description) {
           const description = value as string
@@ -697,6 +705,10 @@ function updateTaskTitleCallback(taskId: TaskId, title: Title) {
 
 function updateTaskDescriptionCallback(taskId: TaskId, description: Description) {
   client.updateCell(TaskTableId, taskId, 'description', description)
+}
+
+function updateTaskDueDateCallback(taskId: TaskId, dueDate: Date) {
+  client.updateCell(TaskTableId, taskId, 'dueDate', dueDate)
 }
 
 function getTaskOwnerRowId(taskId: TaskId, ownerId: UserId) {

@@ -781,6 +781,28 @@ export class Model {
     }
   }
 
+  updateTaskDueDate(projectId: ProjectId, taskId: TaskId, dueDate: Date) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      const taskGroup = project.getTaskGroupOfTask(taskId)
+      if (taskGroup) {
+        const task = taskGroup.getTask(taskId)
+        if (task) {
+          task.dueDate = dueDate
+        }
+        else {
+          throw new Error(`task ${taskId} not found`)
+        }
+      }
+      else {
+        throw new Error(`task group of task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
   updateTaskDescription(projectId: ProjectId, taskId: TaskId, description: Description) {
     const project = this.projectMap.get(projectId)
     if (project) {

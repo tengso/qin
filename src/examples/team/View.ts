@@ -114,6 +114,7 @@ export class View {
   private updateTaskGroupTitleCallback
   private updateTaskTitleCallback
   private updateTaskDescriptionCallback
+  private updateTaskDueDateCallback
 
   private addTaskOwnerCallback
   private removeTaskOwnerCallback
@@ -162,6 +163,10 @@ export class View {
 
   setUpdateTaskDescriptionCallback(callback) {
     this.updateTaskDescriptionCallback = callback
+  }
+
+  setUpdateTaskDueDateCallback(callback) {
+    this.updateTaskDueDateCallback = callback
   }
 
   setAddTaskOwnerCallback(callback) {
@@ -222,9 +227,7 @@ export class View {
             </div>
           </div>
           <div class="Overview">
-            <div class="DueDate">
-            ${formattedDueDate}
-            </div>
+            <input class="DueDate" value="${formattedDueDate}"</input>
             <div class="Progress">
             1/5
             </div>
@@ -284,18 +287,18 @@ export class View {
       placeholder: 'Type task a description',
       modules: {
         toolbar: [
-            [
-              { 'font': [] }, 
-              { 'size': [] },
-              'bold', 'italic', 'underline', 'strike',
-              { 'color': [] }, 
-              { 'background': [] },
-              {'list': 'ordered' }, 
-              { 'list': 'bullet'},
-              { 'indent': '-1' }, 
-              { 'indent': '+1' },
-              'link', 'image', 'video' ,
-           ]
+          [
+            { 'font': [] }, 
+            { 'size': [] },
+            'bold', 'italic', 'underline', 'strike',
+            { 'color': [] }, 
+            { 'background': [] },
+            {'list': 'ordered' }, 
+            { 'list': 'bullet'},
+            { 'indent': '-1' }, 
+            { 'indent': '+1' },
+            'link', 'image', 'video' ,
+          ]
         ]
       }
     }
@@ -364,6 +367,12 @@ export class View {
     title.onblur = () => {
       console.log(`update task title ${task.id}`)
       this.updateTaskTitleCallback(task.id, title.value)
+    }
+
+    const dueDateElement = taskElement.querySelector('.DueDate')
+    dueDateElement.onblur = () => {
+      console.log(`update task due date ${task.id}`)
+      this.updateTaskDueDateCallback(task.id, dueDateElement.value)
     }
 
     const ownerList = taskElement.querySelector('.OwnerList')
@@ -522,18 +531,18 @@ export class View {
       bounds: messageElement,
       modules: {
         toolbar: [
-            [
-              { 'font': [] }, 
-              { 'size': [] },
-              'bold', 'italic', 'underline', 'strike',
-              { 'color': [] }, 
-              { 'background': [] },
-              {'list': 'ordered' }, 
-              { 'list': 'bullet'},
-              { 'indent': '-1' }, 
-              { 'indent': '+1' },
-              'link', 'image', 'video' ,
-           ]
+          [
+            { 'font': [] }, 
+            { 'size': [] },
+            'bold', 'italic', 'underline', 'strike',
+            { 'color': [] }, 
+            { 'background': [] },
+            {'list': 'ordered' }, 
+            { 'list': 'bullet'},
+            { 'indent': '-1' }, 
+            { 'indent': '+1' },
+            'link', 'image', 'video' ,
+          ]
         ]
       }
     };
@@ -751,6 +760,30 @@ export class View {
         const titleElement = taskElement.querySelector('.Title .Input')
         if (titleElement) {
           titleElement.value = title
+        }
+        else {
+          throw new Error(`task element ${taskId} title not found`)
+        }
+      }
+      else {
+        throw new Error(`task element ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element ${projectId} not found`)
+    }
+  }
+
+  updateTaskDueDate(projectId: ProjectId, taskId: TaskId, dueDate: Date) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const taskElement = this.document.getElementById(taskId)
+      if (taskElement) {
+        const titleElement = taskElement.querySelector('.DueDate')
+        if (titleElement) {
+          var options = { month: 'short', day: 'numeric' }
+          const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
+          titleElement.value = formattedDueDate
         }
         else {
           throw new Error(`task element ${taskId} title not found`)
@@ -1159,7 +1192,7 @@ export class View {
     }
 
     const postTime = new Date(message.postTime)
-    var options = { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'};
+    var options = { month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric'}
     const formatedTime = postTime.toLocaleDateString(undefined, options)
     const html = `
               <div class="Poster">
