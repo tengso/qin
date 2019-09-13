@@ -202,6 +202,72 @@ export class View {
     this.sendTaskChatCallback = callback
   }
 
+  private getTaskTotalItemsCount(taskId: TaskId): number {
+    const task = this.document.getElementById(taskId)
+    if (task) {
+      const total = task.querySelector('.Overview .Progress .Total')
+      if (total) {
+        return Number(total.textContent)
+      }
+      else {
+        throw new Error(`task ${taskId} Total element not found`)
+      }
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
+
+  private updateTaskTotalItemsCount(taskId: TaskId, delta: number): void {
+    const task = this.document.getElementById(taskId)
+    if (task) {
+      const total = task.querySelector('.Overview .Progress .Total')
+      if (total) {
+        const newTotal = Number(total.textContent) + delta
+        total.textContent = `${newTotal}`
+      }
+      else {
+        throw new Error(`task ${taskId} Total element not found`)
+      }
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
+
+  private getTaskCompletedItemsCount(taskId: TaskId): number {
+    const task = this.document.getElementById(taskId)
+    if (task) {
+      const total = task.querySelector('.Overview .Progress .Completed')
+      if (total) {
+        return Number(total.textContent)
+      }
+      else {
+        throw new Error(`task ${taskId} Total element not found`)
+      }
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
+
+  private updateTaskCompletedItemsCount(taskId: TaskId, delta: number): void {
+    const task = this.document.getElementById(taskId)
+    if (task) {
+      const completed = task.querySelector('.Overview .Progress .Completed')
+      if (completed) {
+        const newCompleted = Number(completed.textContent) + delta 
+        completed.textContent = `${newCompleted}`
+      }
+      else {
+        throw new Error(`task ${taskId} Total element not found`)
+      }
+    }
+    else {
+      throw new Error(`task ${taskId} not found`)
+    }
+  }
+
   private createTaskElement(task: Task) {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
@@ -211,6 +277,9 @@ export class View {
     var options = { month: 'short', day: 'numeric'};
     const dueDate = new Date(task.dueDate)
     const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
+
+    const completedItems = 0
+    const totalItems = 0
 
     const html = `
         <div class="Header">
@@ -231,10 +300,15 @@ export class View {
           <div class="Overview">
             <div class="DueDateContainer">
               <div class="Icon IconCalendar DueDateSelector"></div>
-              <input class="DueDate" value="${task.dueDate}"</input>
+              <input type="text" class="DueDate" size="7" maxlength=7 value="${task.dueDate}"</input>
             </div>
             <div class="Progress">
-            1/5
+              <div class="Icon IconList ProgressPlaceholder"></div>
+              <div class="ProgressSection">
+                <label class="Completed">${completedItems}</label>
+                <div class="Separator">/</div>
+                <label class="Total">${totalItems}</label>
+              </div>
             </div>
             <div class="Remove">
               <div class="Icon IconDelete RemoveButton"></div>
@@ -384,6 +458,10 @@ export class View {
         this.updateTaskDueDateCallback(task.id, selectedDates[0])
       }
     })
+
+    const dueDateInput = taskElement.querySelector('.DueDateContainer .form-control')
+    dueDateInput.maxlength = '5'
+    dueDateInput.size = '5'
 
     const ownerList = taskElement.querySelector('.OwnerList')
 
@@ -1134,6 +1212,11 @@ export class View {
         })
 
         checkList.querySelector('.ItemList').appendChild(itemElement)
+
+        this.updateTaskTotalItemsCount(taskId, 1)
+        if (item.status == ItemStatus.Closed) {
+          this.updateTaskCompletedItemsCount(taskId, 1)
+        }
       }
       else {
         throw new Error(`task ${taskId} not found`)
@@ -1144,7 +1227,7 @@ export class View {
     }
   }
 
-  removeCheckListItem(projectId: ProjectId, taskId: TaskId, itemId: ItemId) {
+  removeCheckListItem(projectId: ProjectId, taskId: TaskId, itemId: ItemId, status: ItemStatus) {
     const project = this.document.getElementById(projectId)
     if (project) {
       const task = this.document.getElementById(taskId)
@@ -1152,6 +1235,11 @@ export class View {
         const item = this.document.getElementById(itemId)
         if (item) {
           item.parentNode.removeChild(item)
+
+          this.updateTaskTotalItemsCount(taskId, -1)
+          if (status == ItemStatus.Closed) {
+            this.updateTaskCompletedItemsCount(taskId, -1)
+          }
         }
         else {
           throw new Error(`item ${itemId} not found`)
@@ -1166,10 +1254,17 @@ export class View {
     }
   }
 
-  updateCheckListItemStatus(itemId: ItemId, status: ItemStatus) {
+  updateCheckListItemStatus(taskId: TaskId, itemId: ItemId, status: ItemStatus) {
     const item = this.document.getElementById(itemId)
     if (item) {
       item.children[1].children[0].checked = status === ItemStatus.Open ? false : true
+
+      if (status == ItemStatus.Closed) {
+        this.updateTaskCompletedItemsCount(taskId, 1)
+      }
+      else {
+        this.updateTaskCompletedItemsCount(taskId, -1)
+      }
     }
     else {
       throw new Error(`item ${itemId} not found`)

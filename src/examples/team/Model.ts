@@ -1005,23 +1005,24 @@ export class Model {
   }
 
   // FIXME: use map to make this more efficient
-  findCheckListItem(itemId: ItemId): CheckListItem | undefined {
+  findCheckListItem(itemId: ItemId): [CheckListItem, Task] | undefined {
     for (const project of this.projectList) {
       for (const task of project.getAllTasks()) {
         const item = task.getItem(itemId)
         if (item) {
-          return item
+          return [item, task]
         }
       }
     }
     return undefined
   }
 
-  updateCheckListItemStatus(itemId: ItemId, status: ItemStatus) {
-    const item = this.findCheckListItem(itemId)
+  updateCheckListItemStatus(itemId: ItemId, status: ItemStatus): Task {
+    const [item, task] = this.findCheckListItem(itemId)
     console.log('update item ${item}')
     if (item) {
       item.status = status
+      return task
     }
     else {
       throw new Error(`item ${itemId} not found`)
@@ -1029,7 +1030,7 @@ export class Model {
   }
 
   updateCheckListItemDescription(itemId: ItemId, description: Description) {
-    const item = this.findCheckListItem(itemId)
+    const [item, _] = this.findCheckListItem(itemId)
     console.log('update item ${item}')
     if (item) {
       item.description = description

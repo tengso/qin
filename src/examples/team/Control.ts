@@ -199,8 +199,8 @@ export class Control implements ClientCallback {
     }
     else if (tableId === CheckListTableId) {
       const row = this.createCheckListRow(values)
-      this.model.removeCheckListItem(row)
-      this.view.removeCheckListItem(row.projectId, row.taskId, row.id)
+      const item = this.model.removeCheckListItem(row)
+      this.view.removeCheckListItem(row.projectId, row.taskId, row.id, item.status)
     }
   }
 
@@ -258,8 +258,8 @@ export class Control implements ClientCallback {
       const itemId = rowId
       const column = CheckListTableColumns[columnIndex]
       if (column === CheckListTableColumnName.Status) {
-        this.model.updateCheckListItemStatus(itemId, value as ItemStatus)
-        this.view.updateCheckListItemStatus(itemId, value as ItemStatus)
+        const task = this.model.updateCheckListItemStatus(itemId, value as ItemStatus)
+        this.view.updateCheckListItemStatus(task.id, itemId, value as ItemStatus)
       }
       else if (column === CheckListTableColumnName.Description) {
         this.model.updateCheckListItemDescription(itemId, value as Description)
@@ -516,7 +516,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    client.login('wukong', 'wk')
+    // client.login('wukong', 'wk')
   }
 
   connectFailure(): void {

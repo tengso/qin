@@ -138,21 +138,11 @@ width: 100%;
   margin-bottom: 10px;
   display: flex;
   flex-flow: row;
-}
-
-.Task .Header .Overview .DueDateContainer .DueDateSelector {
-}
-
-.Task .Header .Overview .DueDateContainer .DueDate {
-  display: flex;
-  border: none;
-  margin-left: 15px;
-  margin-top: 2px;
-  outline: none;
-  cursor: pointer;
+  flex-basis: 30%;
 }
 
 .Task .Header .Overview .Progress {
+  margin-top: 2px;
   display: flex;
   flex-basis: 40%;
   justify-content: center;
@@ -163,6 +153,40 @@ width: 100%;
   justify-content: flex-end;
   flex-basis: 30%
 }
+
+.Task .Header .Overview .DueDateContainer .DueDateSelector {
+}
+
+.Task .Header .Overview .DueDateContainer .DueDate {
+  display: flex;
+  margin-top: 2px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.Task .Header .Overview .Progress .ProgressSection {
+  display: flex;
+  flex-flow: row;
+  margin-top: 4px;
+}
+
+.Task .Header .Overview .Progress .Completed {
+  display: flex;
+  flex-basis: 40%;
+  justify-content: center;
+  border: none;
+  outline: none;
+}
+
+.Task .Header .Overview .Progress .Total {
+  display: flex;
+  flex-basis: 40%;
+  justify-content: center;
+  border: none;
+  outline: none;
+}
+
 
 .Task .Body {
   display: none;
@@ -612,6 +636,13 @@ height: 40px;
 
 .IconCalendar {
   -webkit-mask: url(../../../../images/calendar.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconList {
+  -webkit-mask: url(../../../../images/list.svg);
   width: 25px;
   height: 25px;
   -webkit-mask-size: cover;
