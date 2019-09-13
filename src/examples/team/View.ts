@@ -714,26 +714,34 @@ export class View {
     }
     const chatElement = this.createChatElement(chatElementClass, chatCallback)
 
+    const openChatElement = this.document.createElement('div')
+    openChatElement.classList.add('ProjectChatButton', 'Icon', 'IconMessageBig')
+
     projectElement.appendChild(projectHeadElement)
     projectElement.appendChild(taskGroupListElement)
     projectElement.appendChild(chatElement)
+    projectElement.appendChild(openChatElement)
 
-    let openChat = this.document.getElementById("ProjectChatButton")
     chatElement.addEventListener('animationend', () => {
       if (chatElement.classList.contains('slideOutRight')) {
         chatElement.style.display = 'none'
       }
     })
-    openChat.onclick = function() {
+
+    openChatElement.onclick = function() {
       console.log('open clicked')
       if (chatElement.style.display === "flex") {
         chatElement.classList.remove('slideInRight')
         chatElement.classList.add('slideOutRight')
+        openChatElement.classList.add('IconMessageBig')
+        openChatElement.classList.remove('IconCancel')
       }
       else {
         chatElement.classList.remove('slideOutRight')
         chatElement.classList.add('slideInRight')
         chatElement.style.display = 'flex'
+        openChatElement.classList.remove('IconMessageBig')
+        openChatElement.classList.add('IconCancel')
         let messageList = chatElement.querySelector('.MessageList')
         messageList.scrollTop = messageList.scrollHeight
       }
