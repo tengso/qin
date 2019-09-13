@@ -130,17 +130,31 @@ width: 100%;
   display: flex;
   flex-flow: row;
   margin: 15px;
+  flex-basis: 100%;
 }
 
-.Task .Header .Overview .DueDate {
+.Task .Header .Overview .DueDateContainer {
+  margin-left: 5px;
+  margin-bottom: 10px;
   display: flex;
-  flex-basis: 20%;
-  justify-content: flex-start;
+  flex-flow: row;
+}
+
+.Task .Header .Overview .DueDateContainer .DueDateSelector {
+}
+
+.Task .Header .Overview .DueDateContainer .DueDate {
+  display: flex;
+  border: none;
+  margin-left: 15px;
+  margin-top: 2px;
+  outline: none;
+  cursor: pointer;
 }
 
 .Task .Header .Overview .Progress {
   display: flex;
-  flex-basis: 60%;
+  flex-basis: 40%;
   justify-content: center;
 }
 
@@ -591,6 +605,13 @@ height: 40px;
 
 .IconGroup {
   -webkit-mask: url(../../../../images/group.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconCalendar {
+  -webkit-mask: url(../../../../images/calendar.svg);
   width: 25px;
   height: 25px;
   -webkit-mask-size: cover;

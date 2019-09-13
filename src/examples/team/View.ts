@@ -2,6 +2,7 @@ import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
 import Quill from 'quill'
+import flatpickr from 'flatpickr'
 
 // TODO: disable delete remove task group when non-empty task list
 
@@ -210,6 +211,7 @@ export class View {
     var options = { month: 'short', day: 'numeric'};
     const dueDate = new Date(task.dueDate)
     const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
+
     const html = `
         <div class="Header">
           <div class="ShowDetails">
@@ -227,7 +229,10 @@ export class View {
             </div>
           </div>
           <div class="Overview">
-            <input class="DueDate" value="${formattedDueDate}"</input>
+            <div class="DueDateContainer">
+              <div class="Icon IconCalendar DueDateSelector"></div>
+              <input class="DueDate" value="${task.dueDate}"</input>
+            </div>
             <div class="Progress">
             1/5
             </div>
@@ -370,10 +375,15 @@ export class View {
     }
 
     const dueDateElement = taskElement.querySelector('.DueDate')
-    dueDateElement.onblur = () => {
-      console.log(`update task due date ${task.id}`)
-      this.updateTaskDueDateCallback(task.id, dueDateElement.value)
-    }
+    flatpickr(dueDateElement, {
+      altInput: true,
+      altFormat: "M-d",
+      onChange: (selectedDates, DateString, instance) => {
+        console.log(selectedDates)
+        // console.log(`update task due date ${task.id}`)
+        this.updateTaskDueDateCallback(task.id, selectedDates[0])
+      }
+    })
 
     const ownerList = taskElement.querySelector('.OwnerList')
 
