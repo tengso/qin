@@ -300,7 +300,7 @@ export class View {
           <div class="Overview">
             <div class="DueDateContainer">
               <div class="Icon IconCalendar DueDateSelector"></div>
-              <input type="text" class="DueDate" size="7" maxlength=7 value="${task.dueDate}"</input>
+              <input type="text" class="DueDate"  value="${task.dueDate}"</input>
             </div>
             <div class="Progress">
               <div class="Icon IconList ProgressPlaceholder"></div>
@@ -460,8 +460,8 @@ export class View {
     })
 
     const dueDateInput = taskElement.querySelector('.DueDateContainer .form-control')
-    dueDateInput.maxlength = '5'
-    dueDateInput.size = '5'
+    dueDateInput.maxlength = '7'
+    dueDateInput.size = '7'
 
     const ownerList = taskElement.querySelector('.OwnerList')
 
