@@ -272,7 +272,11 @@ export class View {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
     taskElement.setAttribute('id', task.id)
-    // taskElement.classList.add('animated', 'fadeInDown')
+    taskElement.classList.add('animated', 'bounceIn')
+    taskElement.addEventListener('animationend', () => {
+      taskElement.classList.remove('animated')
+      taskElement.classList.remove('bounceIn')
+    })
 
     var options = { month: 'short', day: 'numeric'};
     const dueDate = new Date(task.dueDate)
@@ -531,64 +535,47 @@ export class View {
   }
 
   private createTaskGroupElement(project: Project, taskGroup: TaskGroup) {
+    const html = `
+        <div class="Container">
+          <input class="Input" value=${taskGroup.title}></input>
+          <div class="Remove">
+            <div class="Icon IconDelete RemoveTaskGroup"></div>
+          </div>
+        </div>
+        <div class="Icon IconAdd AddTask"></div>
+        <div class="TaskList" id="${taskGroup.id}-task-list"></div>
+    `
+
     const taskGroupElement = this.document.createElement('div')
-    taskGroupElement.setAttribute('id', taskGroup.id)
-    taskGroupElement.setAttribute('class', 'TaskGroup')
+    taskGroupElement.classList.add('TaskGroup')
+    taskGroupElement.id = taskGroup.id
 
-    const taskGroupHeadElement = this.document.createElement('div')
-    taskGroupHeadElement.setAttribute('class', 'TaskGroupHead')
+    taskGroupElement.innerHTML = html
 
-    const removeTaskGroupElement = this.document.createElement('div')
-    removeTaskGroupElement.setAttribute('class', 'RemoveTaskGroup')
-    const removeTaskGroupButton = this.document.createElement('button')
-    removeTaskGroupButton.innerHTML = '(-)'
-    removeTaskGroupButton.addEventListener('click', () => {
+    const remove = taskGroupElement.querySelector('.RemoveTaskGroup')
+    remove.addEventListener('click', () => {
       this.removeTaskGroupCallback(taskGroup.id)
     })
-    removeTaskGroupElement.appendChild(removeTaskGroupButton)
 
-    const titleElement = this.document.createElement('div')
-    titleElement.setAttribute('class', 'Title')
-    const titleInput = this.document.createElement('input')
-    titleInput.setAttribute('class', 'TaskGroupTitleInput')
-    titleInput.value = taskGroup.title
-    titleElement.appendChild(titleInput)
-    titleInput.onblur = () => {
+    const title = taskGroupElement.querySelector('.Input')
+    title.onblur = () => {
       console.log(`update task group title ${taskGroup.id}`)
-      this.updateTaskGroupTitleCallback(taskGroup.id, titleInput.value)
+      this.updateTaskGroupTitleCallback(taskGroup.id, title.value)
     }
 
-    const descElement = this.document.createElement('div')
-    descElement.setAttribute('class', 'Description')
-    descElement.innerHTML = taskGroup.description
-
-    const addTaskElement = this.document.createElement('div')
-    addTaskElement.setAttribute('class', 'AddTask')
-    const addTaskButton = this.document.createElement('button')
-    addTaskButton.innerHTML = '(+)'
-    addTaskButton.addEventListener('click', () => {
+    const addTask = taskGroupElement.querySelector('.AddTask')
+    addTask.addEventListener('click', () => {
       this.addTaskCallback(taskGroup.id)
     })
-    addTaskElement.appendChild(addTaskButton)
 
-    taskGroupHeadElement.appendChild(removeTaskGroupElement)
-    taskGroupHeadElement.appendChild(titleElement)
-    taskGroupHeadElement.appendChild(descElement)
-    taskGroupHeadElement.appendChild(addTaskElement)
+    const taskList = taskGroupElement.querySelector(`.TaskList`)
 
-    const taskGroupListElement = this.document.createElement('div')
-    taskGroupListElement.setAttribute('class', 'TaskList')
-    taskGroupListElement.setAttribute('id', `${taskGroup.id}-task-list`)
-
-    new Sortable(taskGroupListElement, {
+    new Sortable(taskList, {
       group: project.id,
-      animation: 150,
+      // animation: 150,
       onEnd: this.afterSortingCallback,
-      handle: '.Header'
+      // handle: '.Container'
     })
-
-    taskGroupElement.appendChild(taskGroupHeadElement)
-    taskGroupElement.appendChild(taskGroupListElement)
 
     return taskGroupElement
   }
@@ -697,9 +684,9 @@ export class View {
 
     new Sortable(taskGroupListElement, {
       group: `${project.id}-TaskGroup`,
-      animation: 150,
+      // animation: 150,
       onEnd: this.afterSortingCallback,
-      handle: '.TaskGroupHead',
+      // handle: '.TaskGroupHead',
     })
 
     // Project Chat
@@ -798,7 +785,8 @@ export class View {
     const taskElement = this.createTaskElement(task)
     const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
-      taskGroupElement.children[1].appendChild(taskElement)
+      const taskList = taskGroupElement.querySelector('.TaskList')
+      taskList.appendChild(taskElement)
     }
     else {
       throw new Error(`${taskGroup.id} not found`)
@@ -808,7 +796,10 @@ export class View {
   removeTask(taskId: TaskId) {
     const taskElement = this.document.getElementById(taskId)
     if (taskElement) {
-      taskElement.parentNode.removeChild(taskElement)
+      taskElement.classList.add('animated', 'bounceOut')
+      taskElement.addEventListener('animationend', () => {
+        taskElement.parentNode.removeChild(taskElement)
+      })
     }
     else {
       throw new Error(`${taskId} not found`)
@@ -818,10 +809,11 @@ export class View {
   insertTask(taskGroup: TaskGroup, task: Task, index: number) {
     const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
-      if (index < taskGroupElement.children[1].children.length - 1) {
+      const taskList = taskGroupElement.querySelector('.TaskList')
+      if (index < taskList.children.length - 1) {
           const taskElement = this.createTaskElement(task)
-          const refElement = taskGroupElement.children[1].children[index] 
-          taskGroupElement.children[1].insertBefore(taskElement, refElement)
+          const refElement = taskList.children[index] 
+          taskList.insertBefore(taskElement, refElement)
        }
       else {
         this.appendTask(taskGroup, task)
