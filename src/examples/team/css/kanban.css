@@ -34,17 +34,22 @@
   flex-flow: column;
 }
 
-.TaskGroup .Container {
+.TaskGroup .TaskGroupContainer {
   display: flex;
-  flex-flow: column;
+  flex-flow: row;
   border: 1px solid lightgrey;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
   border-radius: 8px;
   margin-bottom: 15px;
+  justify-content: space-evenly;
+  padding: 10px;
 }
 
-.TaskGroup .Container .Input {
-  padding: 10px;
+.TaskGroup .TaskGroupContainer .DragTaskGroup {
+  cursor: -webkit-grabbing;
+}
+
+.TaskGroup .TaskGroupContainer .Input {
   align-self: center;
   border: none;
   outline: none;
@@ -52,13 +57,13 @@
   font-weight: bold;
 }
 
-.TaskGroup .Container .Remove {
+.TaskGroup .TaskGroupContainer .Remove {
   align-self: flex-end;
   border: none;
-  margin-right: 20px;
+  align-self: center;
 }
 
-.TaskGroup .Container .RemoveTaskGroup {
+.TaskGroup .TaskGroupContainer .RemoveTaskGroup {
   align-self: flex-end;
 }
 
@@ -88,10 +93,20 @@
   border: none;
 }
 
-.Task .Header .ShowDetails {
+.Task .Header .TopContainer {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+}
+
+.Task .Header .TopContainer .DragTask{
+  cursor: -webkit-grabbing;
+}
+
+.Task .Header .TopContainer .ShowDetails {
+  align-self: flex-start;
   display: flex;
   flex-flow: row-reverse;
-  padding-top: 15px;
   padding-right: 16px;
 }
 
@@ -544,7 +559,7 @@ height: 40px;
   font-weight: bold;
 }
 
-.Container .Header .PostTime {
+.MyChatMessage .Container .Header .PostTime {
   padding-top: 2px;
   font-size: small;
 }
@@ -572,7 +587,11 @@ height: 40px;
   align-items: flex-start;
 }
 
-.Container .MessageBody .Message {
+.MyChatMessage .Container .MessageBody .Message {
+  word-wrap: break-word;
+}
+
+.ChatMessage .Container .MessageBody .Message {
   word-wrap: break-word;
 }
 
@@ -676,10 +695,17 @@ height: 40px;
   -webkit-mask-size: cover;
 }
 
-.IconCancel{
+.IconCancel {
   -webkit-mask: url(../../../../images/cancel.svg);
   width: 40px;
   height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconDrag {
+  -webkit-mask: url(../../../../images/drag.svg);
+  width: 25px;
+  height: 25px;
   -webkit-mask-size: cover;
 }
 

@@ -287,8 +287,11 @@ export class View {
 
     const html = `
         <div class="Header">
-          <div class="ShowDetails">
-            <div class="Icon IconExpand Button"></div>
+          <div class="TopContainer">
+            <div class="Icon IconDrag DragTask"></div>
+            <div class="ShowDetails">
+              <div class="Icon IconExpand Button"></div>
+            </div>
           </div>
           <div class="Title">
             <input class="Input" value=${task.title}>
@@ -536,7 +539,8 @@ export class View {
 
   private createTaskGroupElement(project: Project, taskGroup: TaskGroup) {
     const html = `
-        <div class="Container">
+        <div class="TaskGroupContainer">
+          <div class="Icon IconDrag DragTaskGroup"></div>
           <input class="Input" value=${taskGroup.title}></input>
           <div class="Remove">
             <div class="Icon IconDelete RemoveTaskGroup"></div>
@@ -574,7 +578,7 @@ export class View {
       group: project.id,
       // animation: 150,
       onEnd: this.afterSortingCallback,
-      // handle: '.Container'
+      handle: '.DragTask'
     })
 
     return taskGroupElement
@@ -686,7 +690,7 @@ export class View {
       group: `${project.id}-TaskGroup`,
       // animation: 150,
       onEnd: this.afterSortingCallback,
-      // handle: '.TaskGroupHead',
+      handle: '.DragTaskGroup',
     })
 
     // Project Chat
@@ -807,10 +811,11 @@ export class View {
   }
 
   insertTask(taskGroup: TaskGroup, task: Task, index: number) {
+    console.log(`insert task: ${index}`)
     const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
       const taskList = taskGroupElement.querySelector('.TaskList')
-      if (index < taskList.children.length - 1) {
+      if (index <= taskList.children.length - 1) {
           const taskElement = this.createTaskElement(task)
           const refElement = taskList.children[index] 
           taskList.insertBefore(taskElement, refElement)
@@ -993,7 +998,8 @@ export class View {
         const taskElement = this.document.getElementById(taskId)
         if (taskElement) {
           const fromParentElement = taskElement.parentElement
-          const toParentElement = toTaskGroupId ? toTaskGroupElement.children[1] : fromParentElement
+          const toParentElement = toTaskGroupId ? toTaskGroupElement.querySelector('.TaskList') : fromParentElement
+
           if (afterTaskId) {
             const afterTaskElement = this.document.getElementById(afterTaskId)
             if (afterTaskElement) {

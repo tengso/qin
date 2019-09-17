@@ -3,3 +3,4 @@ package-lock.json
 dist
 built
 images/._expand.svg
+images/._drag.svg
