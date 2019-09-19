@@ -1,7 +1,6 @@
 import { Client, DefaultClientCallback } from '../TableFlowClient'
 import { UserId, TableId, RowId, ColumnValue, ErrorCode, SessionId } from '../TableFlowMessages'
 import { AssetTableColumnName, AssetId, AssetName, AssetRow, AssetType, AssetTableColumns } from './team/Core'
-import { runInThisContext } from 'vm';
 
 const uuid = require('uuid/v4')
 

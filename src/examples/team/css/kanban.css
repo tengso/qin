@@ -21,13 +21,27 @@
 
 .ProjectHeader {
   display: flex;
-  flex-flow: column;
+  flex-flow: row;
   flex-basis: 50%;
 }
 
 .ProjectContainer {
   display: flex;
   flex-flow: row;
+}
+
+.ProjectContainer .Title {
+  flex-basis: 60%;
+}
+
+.ProjectContainer .Description {
+  flex-basis: 20%;
+}
+
+.ProjectContainer .DueDateContainer {
+  display: flex;
+  flex-flow: row;
+  flex-basis: 20%;
 }
 
 .ProjectContainer .Title .TitleInput {
@@ -38,10 +52,6 @@
   margin-left: 40px;
 }
 
-.ProjectContainer .DueDateContainer {
-  display: flex;
-  flex-flow: row;
-}
 
 .ProjectContainer .DueDateContainer .DueDate {
   font-size: large;
@@ -56,7 +66,6 @@
   display: flex;
   flex-flow: row;
   justify-content: center;
-  border: 1px solid lightgrey;
 }
 
 .AddTaskGroup {
@@ -661,6 +670,13 @@ height: 40px;
 .IconDescription {
   -webkit-mask: url(../../../../images/description.svg);
   -webkit-mask-size: cover;
+}
+
+.IconDescriptionBig {
+  -webkit-mask: url(../../../../images/description.svg);
+  -webkit-mask-size: cover;
+  width: 40px;
+  height: 40px;
 }
 
 .IconTodo {

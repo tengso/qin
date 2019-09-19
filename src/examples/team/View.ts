@@ -315,7 +315,6 @@ export class View {
 
     const quill = new Quill(descElement, descOptions)
 
-    // const toolbar = taskElement.querySelector('.ql-toolbar')
     const editor = taskElement.querySelector('.DescEditor .ql-editor')
     editor.innerHTML = task.description
 
@@ -581,15 +580,21 @@ export class View {
                 <div class="Icon IconCalendarBig DueDateSelector"></div>
                 <input type="text" class="DueDate"  value="${project.dueDate}"</input>
               </div>
-            </div>
-            <div class="Description">
-              ${project.description}
+              <!-- <div class="Description">
+                <div class="Icon IconDescription OpenDescription">
+                <div class="DescEditor">
+                </div>
+              </div>
+              -->
             </div>
           </div>
 
-          <div class="MemberList">
+          <div class="MemberListContainer">
+            <div class="MemberList">
+            </div>
+            <div class="Icon IconAdd AddProjectMember">
+            </div>
           </div>
-
         </div>
 
         <div class="AddTaskGroup">
@@ -610,6 +615,31 @@ export class View {
     title.onblur = () => {
       this.updateProjectTitleCallback(project.id, title.value)
     }
+
+    // const description = projectElement.querySelector('.Description')
+    // const descElement = projectElement.querySelector('.DescEditor')
+    // const descOptions = {
+    //   theme: 'snow',
+    //   placeholder: 'Type task a description',
+    //   modules: {
+    //     toolbar: [
+    //       [
+    //         { 'font': [] }, 
+    //         { 'size': [] },
+    //         'bold', 'italic', 'underline', 'strike',
+    //         { 'color': [] }, 
+    //         { 'background': [] },
+    //         {'list': 'ordered' }, 
+    //         { 'list': 'bullet'},
+    //         { 'indent': '-1' }, 
+    //         { 'indent': '+1' },
+    //         'link', 'image', 'video' ,
+    //       ]
+    //     ]
+    //   }
+    // }
+
+    // const quill = new Quill(descElement, descOptions)
     
     // const description = projectElement.querySelector('.Description')
     // description.onblur = () => {
@@ -1015,21 +1045,6 @@ export class View {
     }
   }
 
-  /** 
-    <div class="Project" id="ProjectId">
-        <div class="ProjectHead">
-            <div class="Title"></div>
-            <div class="Description"></div>
-            <div class="DueDate"></div>
-            <div class="MemberList">
-              <div class="Member" id="MemberId">
-                <img Class="ProjectMemberImage" src=/>
-              </div>
-              <div class="Member" id="MemberId">
-                <img Class="ProjectMemberImage" src=/>
-              </div>
-            </div>
-  */
   appendProjectMember(projectId: ProjectId, member: Member, image: string): void {
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
