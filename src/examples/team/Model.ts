@@ -1078,4 +1078,34 @@ export class Model {
       throw new Error(`project ${row.projectId} not found`)
     }
   }
+
+  updateProjectTitle(projectId: ProjectId, title: Title) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      project.title = title
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  updateProjectDueDate(projectId: ProjectId, dueDate: Date) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      project.dueDate = dueDate
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  updateProjectDescription(projectId: ProjectId, description: Description) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      project.description = description
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
 }

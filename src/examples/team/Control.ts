@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, U
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns } from './Core'
 import uuid = require('uuid');
 import { string } from 'yargs';
 
@@ -31,6 +31,10 @@ export class Control implements ClientCallback {
     this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
     this.view.setUpdateTaskDescriptionCallback(updateTaskDescriptionCallback)
     this.view.setUpdateTaskDueDateCallback(updateTaskDueDateCallback)
+
+    this.view.setUpdateProjectTitleCallback(updateProjectTitleCallback)
+    this.view.setUpdateProjectDescriptionCallback(updateProjectDescriptionCallback)
+    this.view.setUpdateProjectDueDateCallback(updateProjectDueDateCallback)
 
     this.view.setAddTaskOwnerCallback(addTaskOwnerCallback)
     this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
@@ -223,6 +227,28 @@ export class Control implements ClientCallback {
       }
       else {
         throw new Error(`project for task group ${taskGroupId} not found`)
+      }
+    }
+    else if (tableId === ProjectTableId) {
+      const projectId = rowId
+      const column = ProjectTableColumns[columnIndex]
+      if (column === ProjectTableColumnName.Title) {
+        const title = value as string
+        this.model.updateProjectTitle(projectId, title)
+        this.view.updateProjectTitle(projectId, title)
+      }
+      else if (column === ProjectTableColumnName.Description) {
+        const description = value as string
+        this.model.updateProjectDescription(projectId, description)
+        this.view.updateProjectDescription(projectId, description)
+      }
+      else if (column === ProjectTableColumnName.DueDate) {
+        const dueDate = value as Date
+        this.model.updateProjectDueDate(projectId, dueDate)
+        this.view.updateProjectDueDate(projectId, dueDate)
+      }
+      else {
+        throw new Error(`unknown column ${value}`)
       }
     }
     else if (tableId === TaskTableId) {
@@ -709,6 +735,18 @@ function updateTaskDescriptionCallback(taskId: TaskId, description: Description)
 
 function updateTaskDueDateCallback(taskId: TaskId, dueDate: Date) {
   client.updateCell(TaskTableId, taskId, 'dueDate', dueDate)
+}
+
+function updateProjectTitleCallback(projectId: ProjectId, title: Title) {
+  client.updateCell(ProjectTableId, projectId, 'title', title)
+}
+
+function updateProjectDescriptionCallback(projectId: ProjectId, description: Description) {
+  client.updateCell(ProjectTableId, projectId, 'description', description)
+}
+
+function updateProjectDueDateCallback(projectId: ProjectId, dueDate: Date) {
+  client.updateCell(ProjectTableId, projectId, 'dueDate', dueDate)
 }
 
 function getTaskOwnerRowId(taskId: TaskId, ownerId: UserId) {

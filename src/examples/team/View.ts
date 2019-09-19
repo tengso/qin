@@ -7,101 +7,8 @@ import flatpickr from 'flatpickr'
 // TODO: disable delete remove task group when non-empty task list
 
 import Sortable from 'sortablejs'
-import { eventNames } from 'cluster';
 
-/*
-<div id='app'>
-    <div class="Project" id="ProjectId">
-        <div class="ProjectChat">
-          <MessageList>
-            <div class="ChatMessage" id="MessageId">
-              <div class=PosterId></div>
-              <div class=Message></div>
-              <div class=ReplyToId></div>
-              <div class=PostTime></div>
-            </div>
-          </MessageList>
-          <div class="MessageInput">
-            <input></input>
-            <button></button>
-          </div>
-        </div>
-        <div class="ProjectHead">
-            <div class="Title"></div>
-            <div class="Description"></div>
-            <div class="DueDate"></div>
-            <div class="MemberList">
-              <div class="Member" id="MemberId">
-                <img Class="ProjectMemberImage" src=/>
-              </div>
-              <div class="Member" id="MemberId">
-                <img Class="ProjectMemberImage" src=/>
-              </div>
-            </div>
-            <div class="AddTaskGroup">
-              <button></button>
-            </div>
-            </div>
-        </div>
-        <div class="TaskGroupList">
-            <div class="TaskGroup" id="TaskGroupId">
-                <div class="TaskGroupHead">
-                    <div class="RemoveTaskGroup">
-                        <button></button>
-                    </div>
-                    <div class="Title">
-                      <input class="TaskGroupTitleInput"><input>
-                    </div>
-                    <div class="Description"></div>
-                    <div class="AddTask">
-                        <button></button>
-                    </div>
-                </div>
-                <div class="TaskList>
-                    <div class="Task" id="TaskId">
-                      <div class="Title">
-                        <input class="TaskTitleInput"></input>
-                      </div>
-                      <div class="Description"></div>
-                      <div class="DueDate"></div>
-                      <div class="TaskOwnerList">
-                        <div id="MemberId" class="TaskOwner">
-                          <img class="TaskOwnerImage" src=''></img>
-                          <button''>(-)</button>
-                        </div>
-                      </div>
-                      <div class="CheckList">
-                        <div class="CheckListHead">
-                        </div>
-                        <div class="ItemList">
-                          <div class="Item">
-                            <div class="ItemHead">
-                            </div>
-                            <div class="ItemStatus">
-                            </div>
-                            <div class="ItemDescription">
-                            </div>
-                            <div>
-                              <button>(-)</button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="RemoveTask">
-                        <button></button>
-                      </div>
-                      </div>
-                        ...
-                    </div>
-                    <div class="Task" id="TaskId">
-                        ...
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-*/
+
 export class View {
 
   private afterSortingCallback: (event) => void
@@ -113,6 +20,7 @@ export class View {
   private removeTaskGroupCallback
 
   private updateTaskGroupTitleCallback
+
   private updateTaskTitleCallback
   private updateTaskDescriptionCallback
   private updateTaskDueDateCallback
@@ -127,6 +35,10 @@ export class View {
 
   private sendProjectChatCallback
   private sendTaskChatCallback
+
+  private updateProjectTitleCallback
+  private updateProjectDescriptionCallback
+  private updateProjectDueDateCallback
 
   private document
 
@@ -200,6 +112,18 @@ export class View {
 
   setSendTaskChatCallback(callback) {
     this.sendTaskChatCallback = callback
+  }
+
+  setUpdateProjectTitleCallback(callback) {
+    this.updateProjectTitleCallback = callback
+  }
+
+  setUpdateProjectDescriptionCallback(callback) {
+    this.updateProjectDescriptionCallback = callback
+  }
+
+  setUpdateProjectDueDateCallback(callback) {
+    this.updateProjectDueDateCallback = callback
   }
 
   private getTaskTotalItemsCount(taskId: TaskId): number {
@@ -322,7 +246,7 @@ export class View {
             </div>
           </div>
         </div>
-        <div class="Body animated zoomIn">
+        <div class="Body">
           <div class="Close">
             <div class="Icon IconClose CloseButton"></div>
           </div>
@@ -645,46 +569,74 @@ export class View {
   }
 
   private createProjectElement(project: Project) {
+    const html = `
+        <div class="ProjectOverview">
+
+          <div class="ProjectHeader">
+            <div class="ProjectContainer">
+              <div class="Title">
+                <input class="TitleInput" value="${project.title}"></input>
+              </div>
+              <div class="DueDateContainer">
+                <div class="Icon IconCalendarBig DueDateSelector"></div>
+                <input type="text" class="DueDate"  value="${project.dueDate}"</input>
+              </div>
+            </div>
+            <div class="Description">
+              ${project.description}
+            </div>
+          </div>
+
+          <div class="MemberList">
+          </div>
+
+        </div>
+
+        <div class="AddTaskGroup">
+            <div class="Icon IconAddBig AddTaskGroupButton">
+            </div>
+        </div>
+
+        <div class="TaskGroupList" id="${project.id}-task-group-list">
+        </div>
+    `
+
     const projectElement = this.document.createElement('div')
-    projectElement.setAttribute('class', 'Project')
-    projectElement.setAttribute('id', project.id)
+    projectElement.classList.add('Project')
+    projectElement.id = project.id
+    projectElement.innerHTML = html
+
+    const title = projectElement.querySelector('.TitleInput')
+    title.onblur = () => {
+      this.updateProjectTitleCallback(project.id, title.value)
+    }
     
-    const projectHeadElement = this.document.createElement('div')
-    projectHeadElement.setAttribute('class', 'ProjectHead')
+    // const description = projectElement.querySelector('.Description')
+    // description.onblur = () => {
+    //   this.updateProjectDescriptionCallback(project.id, description.innerText)
+    // }
 
-    const titleElement = this.document.createElement('div')
-    titleElement.setAttribute('class', 'Title')
-    titleElement.innerHTML = project.title
+    const dueDateElement = projectElement.querySelector('.DueDate')
+    flatpickr(dueDateElement, {
+      altInput: true,
+      altFormat: "M-d",
+      onChange: (selectedDates, DateString, instance) => {
+        console.log(selectedDates)
+        // console.log(`update task due date ${task.id}`)
+        this.updateProjectDueDateCallback(project.id, selectedDates[0])
+      }
+    })
 
-    const descElement = this.document.createElement('div')
-    descElement.setAttribute('class', 'Description')
-    descElement.innerHTML = project.description
+    const dueDateInput = projectElement.querySelector('.DueDateContainer .form-control')
+    dueDateInput.maxlength = '7'
+    dueDateInput.size = '7'
 
-    const dueDateElement = this.document.createElement('div')
-    dueDateElement.setAttribute('class', 'DueDate')
-    dueDateElement.innerHTML = project.dueDate
-
-    const memberListElement = this.document.createElement('div')
-    memberListElement.setAttribute('class', 'MemberList')
-
-    const addTaskGroupElement = this.document.createElement('div')
-    addTaskGroupElement.setAttribute('class', 'AddTaskGroup')
-    const addTaskGroupButton = this.document.createElement('button')
-    addTaskGroupButton.innerHTML = '(+)'
+    const addTaskGroupButton = projectElement.querySelector('.AddTaskGroupButton')
     addTaskGroupButton.addEventListener('click', () => {
       this.addTaskGroupCallback(project.id)
     })
-    addTaskGroupElement.appendChild(addTaskGroupButton)
 
-    projectHeadElement.appendChild(titleElement)
-    projectHeadElement.appendChild(descElement)
-    projectHeadElement.appendChild(dueDateElement)
-    projectHeadElement.appendChild(memberListElement)
-    projectHeadElement.appendChild(addTaskGroupElement)
-
-    const taskGroupListElement = this.document.createElement('div')
-    taskGroupListElement.setAttribute('class', 'TaskGroupList')
-    taskGroupListElement.setAttribute('id', `${project.id}-task-group-list`)
+    const taskGroupListElement = projectElement.querySelector('.TaskGroupList')
 
     new Sortable(taskGroupListElement, {
       group: `${project.id}-TaskGroup`,
@@ -708,8 +660,6 @@ export class View {
     const openChatElement = this.document.createElement('div')
     openChatElement.classList.add('ProjectChatButton', 'Icon', 'IconMessageBig')
 
-    projectElement.appendChild(projectHeadElement)
-    projectElement.appendChild(taskGroupListElement)
     projectElement.appendChild(chatElement)
     projectElement.appendChild(openChatElement)
 
@@ -751,7 +701,7 @@ export class View {
     const projectElement = this.document.getElementById(project.id)
     if (projectElement) {
       const taskGroupElement = this.createTaskGroupElement(project, taskGroup)
-      projectElement.children[1].appendChild(taskGroupElement)
+      projectElement.querySelector('.TaskGroupList').appendChild(taskGroupElement)
     }
     else {
       throw new Error(`${project.id} not found`)
@@ -872,11 +822,11 @@ export class View {
     if (projectElement) {
       const taskElement = this.document.getElementById(taskId)
       if (taskElement) {
-        const titleElement = taskElement.querySelector('.DueDate')
-        if (titleElement) {
+        const dueDateElement = taskElement.querySelector('.DueDate')
+        if (dueDateElement) {
           var options = { month: 'short', day: 'numeric' }
           const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
-          titleElement.value = formattedDueDate
+          dueDateElement.value = formattedDueDate
         }
         else {
           throw new Error(`task element ${taskId} title not found`)
@@ -1083,8 +1033,7 @@ export class View {
   appendProjectMember(projectId: ProjectId, member: Member, image: string): void {
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
-      // TODO: remove hard-coded index
-      const memberList = projectElement.children[0].children[3]
+      const memberList = projectElement.querySelector('.MemberList')
 
       const memberElement = this.document.createElement('div')
       memberElement.setAttribute('id', member.id)
@@ -1373,6 +1322,56 @@ export class View {
     }
     else {
       throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  updateProjectTitle(projectId: ProjectId, title: Title) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const titleElement = projectElement.querySelector('.ProjectContainer .Title .TitleInput')
+      if (titleElement) {
+        titleElement.value = title
+      }
+      else {
+        throw new Error(`title element for ${projectId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element for ${projectId} not found`)
+    }
+  }
+
+  updateProjectDueDate(projectId: ProjectId, dueDate: Date) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const dueDateElement = projectElement.querySelector('.ProjectContainer .DueDateContainer .DueDate')
+      if (dueDateElement) {
+        var options = { month: 'short', day: 'numeric' }
+        const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
+        dueDateElement.value = formattedDueDate 
+      }
+      else {
+        throw new Error(`due date element for ${projectId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element for ${projectId} not found`)
+    }
+  }
+
+  updateProjectDescription(projectId: ProjectId, description: Description) {
+    const projectElement = this.document.getElementById(projectId)
+    if (projectElement) {
+      const descriptionElement = projectElement.querySelector('.ProjectHeader .Description')
+      if (descriptionElement) {
+        descriptionElement.innerText = description 
+      }
+      else {
+        throw new Error(`description element for ${projectId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project element for ${projectId} not found`)
     }
   }
 }

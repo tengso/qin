@@ -13,11 +13,56 @@
   flex-flow: column;
 }
 
-.ProjectHead {
+.ProjectOverview {
+  display: flex;
+  flex-flow: row;
+  flex-basis: 100%;
+}
+
+.ProjectHeader {
   display: flex;
   flex-flow: column;
+  flex-basis: 50%;
+}
+
+.ProjectContainer {
+  display: flex;
+  flex-flow: row;
+}
+
+.ProjectContainer .Title .TitleInput {
+  font-size: x-large;
+  font-weight: bold;
+  outline: none;
+  border: none;
+  margin-left: 40px;
+}
+
+.ProjectContainer .DueDateContainer {
+  display: flex;
+  flex-flow: row;
+}
+
+.ProjectContainer .DueDateContainer .DueDate {
+  font-size: large;
+  align-self: center;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.MemberList {
+  flex-basis: 50%;
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  border: 1px solid lightgrey;
+}
+
+.AddTaskGroup {
+  display: flex;
+  justify-content: center;
   margin: 10px;
-  border: 1px solid;
 }
 
 .TaskGroupList {
@@ -75,6 +120,7 @@
   display: flex;
   flex-flow: column;
   align-self: center;
+  min-height: 200px; 
 }
 
 .Task {
@@ -435,6 +481,8 @@ height: 40px;
   width: 30%;
   resize: both;
   animation-duration: 0.3s;
+  padding-top: 100px;
+  border: 1px solid lightgrey;
 }
 
 /* .slideInRight {
@@ -660,6 +708,13 @@ height: 40px;
   -webkit-mask-size: cover;
 }
 
+.IconAddBig {
+  -webkit-mask: url(../../../../images/add.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconSend {
   -webkit-mask: url(../../../../images/send.svg);
   width: 25px;
@@ -678,6 +733,13 @@ height: 40px;
   -webkit-mask: url(../../../../images/calendar.svg);
   width: 25px;
   height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconCalendarBig {
+  -webkit-mask: url(../../../../images/calendar.svg);
+  width: 35px;
+  height: 35px;
   -webkit-mask-size: cover;
 }
 
