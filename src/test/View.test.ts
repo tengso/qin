@@ -95,7 +95,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
-    view.appendProject(project1)
+    view.appendProject(project1, undefined)
     view.appendTaskGroup(project1, taskGroup1)
     view.appendTaskGroup(project1, taskGroup2)
     view.appendTaskGroup(project1, taskGroup3)
@@ -196,7 +196,7 @@ describe('Test Model', function() {
       dueDate: new Date(),
     }
 
-    view.appendProject(project1)
+    view.appendProject(project1, undefined)
     view.appendTaskGroup(project1, taskGroup1)
     view.appendTaskGroup(project1, taskGroup2)
     view.appendTaskGroup(project1, taskGroup3)

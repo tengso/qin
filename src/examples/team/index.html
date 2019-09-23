@@ -25,11 +25,60 @@
     </div>
   </div>
 
+  <div class="MenuBar">
+    <div class="Icon IconApp" id="Menu"></div>
+  </div>
+
+  <div class="AddProjectMember">
+    <div class="UserId">
+      Id <input class="UserIdInput"></input>
+    </div>
+    <div class="UserName">
+      Name <input class="UserNameInput"></input>
+    </div>
+    <div class="UserTitle">
+      Title <input class="UserTitleInput"></input>
+    </div>
+    <div class="UserDescription">
+      Note <input class="UserDescriptionInput"></input>
+    </div>
+    <div class="Avatar">
+      Avatar <input class="UserAvatarFile" type="file"/> <br>
+    </div>
+    <div class="Icon IconAdd Add"></div>
+    <div class="Icon IconClose Cancel"></div>
+  </div>
+
   <div id="app"></div>
 </body>
   <script>
     function login() {
       client.login(document.getElementById('user').value, document.getElementById('password').value)
     }
+
+    const addProjectMember = document.querySelector('.AddProjectMember')
+
+    const addMemberButton = document.getElementById('Menu')
+    addMemberButton.addEventListener('click', () => {
+      addProjectMember.style.display = 'flex'
+    })
+
+    const addProjectMemberButton = addProjectMember.querySelector('.Add')
+    addProjectMemberButton.addEventListener('click', () => {
+      const userId = addProjectMember.querySelector('.UserIdInput').value
+      const userName = addProjectMember.querySelector('.UserNameInput').value
+      const userTitle = addProjectMember.querySelector('.UserTitleInput').value
+      const userDescription = addProjectMember.querySelector('.UserDescriptionInput').value
+      const avatarFiles = addProjectMember.querySelector('.UserAvatarFile')
+      if (avatarFiles.files.length > 0) {
+        const avatarFile = avatarFiles.files[0]
+        addMember(userId, userName, userTitle, userDescription, avatarFile)
+      }
+    })
+    const cancelAddMember = addProjectMember.querySelector('.Cancel')
+    cancelAddMember.addEventListener('click', () => {
+      addProjectMember.style.display = 'none'
+    })
+
   </script>
 </html>

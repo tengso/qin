@@ -44,6 +44,9 @@ export class Control implements ClientCallback {
     this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
     this.view.setSendProjectChatCallback(sendProjectChatCallback)
     this.view.setSendTaskChatCallback(sendTaskChatCallback)
+
+    this.view.setAddProjectMemberCallback(addProjectMember)
+    this.view.setRemoveProjectMemberCallback(removeProjectMember)
   }
 
   tableSnap(table: Table) {
@@ -80,7 +83,7 @@ export class Control implements ClientCallback {
       else if (tableId === ProjectTableId) {
         const row = this.createProjectRow(values)
         const project = this.model.appendProject(row)
-        this.view.appendProject(project)
+        this.view.appendProject(project, this.model)
       }
       else if (tableId === MemberTableId) {
         const row = this.createMemberRow(values)
@@ -823,6 +826,58 @@ function sendTaskChatCallback(taskId: TaskId, message: Message, replyToId: Messa
   client.appendRow(TaskChatTableId, id, row)
 }
 
+function addMember(userId: UserId, userName: string, title: Title, description: Description, avatarFile) {
+  const reader = new FileReader()
+  reader.readAsDataURL(avatarFile)
+  reader.onloadend = (evt) => {
+    const assetId = uuid()
+    const ts = new Date()
+    const assetName = `${userId}-avatar`
+    const assetType = 'image'
+    const assetDescription = assetName
+    // @ts-ignore
+    const content = evt.target.result
+
+    const values = [
+      assetId as AssetId,
+      assetName as AssetName,
+      assetType as AssetType,
+      assetDescription,
+      client.userId,
+      ts,
+      client.userId,
+      ts,
+      content, 
+    ]
+
+    const addAvatarAsset = client.appendRow(AssetTableId, assetId, values, false)
+
+    const memberRowId = uuid()
+    const row = [
+      userId,
+      userName,
+      title,
+      description,
+      assetId,
+    ]
+    const addMember = client.appendRow(MemberTableId, memberRowId, row, false)  
+
+    console.log(addAvatarAsset)
+    console.log(addMember)
+    client.executeTransaction([addAvatarAsset, addMember])
+  }
+}
+
+function addProjectMember(userId: UserId, projectId: ProjectId) {
+  client.appendRow(ProjectMemberTableId, `${userId}#${projectId}`, [userId, projectId])
+}
+
+function removeProjectMember(userId: UserId, projectId: ProjectId) {
+  client.removeRow(ProjectMemberTableId, `${userId}#${projectId}`)
+}
+
 
 // @ts-ignore
 window.client = client
+// @ts-ignore
+window.addMember = addMember

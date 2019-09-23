@@ -1,3 +1,10 @@
+.MenuBar {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-end;
+  flex-basis: 100%;
+}
+
 .ProjectChatButton {
   position: fixed;
   bottom: 20px;
@@ -59,6 +66,42 @@
   border: none;
   outline: none;
   cursor: pointer;
+}
+
+.MemberListContainer {
+  display: flex;
+  flex-flow: row;
+  flex-basis: 100%;
+  justify-content: flex-end;
+}
+
+.MemberListContainer .MemberList {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.MemberListContainer .Dropdown {
+  padding-right: 150px;
+  align-self: center;
+}
+
+.AddProjectMemberButton {
+  align-self: center;
+}
+
+.AddProjectMember {
+  display: none;
+  z-index: 1;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 8px;
+  background-color: rgb(255,255,255); 
+  position: fixed;
+  left: 30%;
+  top: 30%;
+  flex-flow: column;
+  height: 60%;
+  width: 40%;
+  animation-duration: 0.2s;
 }
 
 .MemberList {
@@ -427,21 +470,18 @@ width: 100%;
 margin: 10px;
 }
 
-.MemberList {
-display: flex;
-flex-flow: row;
-width: 200px;
-height: 40px;
-}
-
 .Member {
 width: 40px;
 height: 40px;
 }
 
 .ProjectMemberImage {
-width: 40px;
-height: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+.ProjectMemberImage:hover {
+  opacity: 0.5;
 }
 
 .Task {
@@ -787,6 +827,13 @@ height: 40px;
   -webkit-mask-size: cover;
 }
 
+.IconApp {
+  -webkit-mask: url(../../../../images/apps.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
@@ -797,4 +844,46 @@ height: 40px;
   background: red;
 }
 
+.Dropdown {
+  position: relative;
+  display: inline-block;
+}
 
+.DropdownContent {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+  z-index: 1;
+}
+
+/* .Dropdown:hover .DropdownContent {
+  display: block;
+} */
+
+.User {
+  margin-bottom: 15px;
+  display: flex;
+  flex-flow: row;
+}
+
+/* .User:hover {
+  background-color: lightgray;
+} */
+
+.AddUserImage {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.AddUserName {
+  align-self: center;
+  margin-left: 10px;
+}
+
+.AddUserName:hover {
+  background-color: lightgreen;
+}

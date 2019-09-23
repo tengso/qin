@@ -176,26 +176,53 @@ export class Client {
     this.connection.send(subscribeTables(this.sessionId, this.userId))
   }
 
-  appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
+  appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[], send: boolean = true) {
     const msg = appendRow(this.sessionId, tableId, rowId, values, this.userId)
-    this.connection.send(msg)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
   }
 
-  removeRow(tableId: TableId, rowId: RowId) {
-    this.connection.send(removeRow(this.sessionId, tableId, rowId, this.userId))
+  removeRow(tableId: TableId, rowId: RowId, send: boolean = true) {
+    const msg = removeRow(this.sessionId, tableId, rowId, this.userId)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
   }
 
-  insertRow(tableId: TableId, rowId: RowId, afterRowId: RowId, values: ColumnValue[]) {
+  insertRow(tableId: TableId, rowId: RowId, afterRowId: RowId, values: ColumnValue[], send: boolean = true) {
     const msg = insertRow(this.sessionId, tableId, rowId, afterRowId, values, this.userId)
-    this.connection.send(msg)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
   }
 
-  updateCell(tableId: TableId, rowId: RowId, columnName: ColumnName, newValue: ColumnValue) {
-    this.connection.send(updateCell(this.sessionId, tableId, rowId, columnName, newValue, this.userId))
+  updateCell(tableId: TableId, rowId: RowId, columnName: ColumnName, newValue: ColumnValue, send: boolean = true) {
+    const msg = updateCell(this.sessionId, tableId, rowId, columnName, newValue, this.userId)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
   }
 
-  moveRowAndUpdateCell(tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, newValue: ColumnValue) {
-    this.connection.send(moveRowAndUpdateCell(this.sessionId, tableId, rowId, afterRowId, columnName, newValue, this.userId))
+  moveRowAndUpdateCell(tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, newValue: ColumnValue, send: boolean = true) {
+    const msg = moveRowAndUpdateCell(this.sessionId, tableId, rowId, afterRowId, columnName, newValue, this.userId)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
+  }
+
+  executeTransaction(msgs: string[]) {
+    const msg = {
+      msgType: MsgType.Transaction,
+      payLoad: msgs
+    }
+
+    this.connection.send(JSON.stringify(msg))
   }
 
   listen() {

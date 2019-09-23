@@ -41,6 +41,8 @@ export interface Table {
 
 export enum MsgType {
 
+  Transaction = 'transaction',
+
   CreateUser = 'createUser',
   CreateUserSuccess = 'createUserSuccess',
   CreateUserFailure = 'createUserFailure',

@@ -896,6 +896,16 @@ export class Model {
     return this.assetMap.get(assetId)
   }
 
+  getAllProjectMember(projectId: ProjectId) {
+    const project = this.projectMap.get(projectId)
+    if (project) {
+      return project.getMembers()
+    }
+    else {
+      throw new Error(`project ${projectId}  not found`)
+    }
+  }
+
   appendProjectMember(projectId: ProjectId, member: Member) {
     const project = this.projectMap.get(projectId)
     if (project) {
@@ -1107,5 +1117,9 @@ export class Model {
     else {
       throw new Error(`project ${projectId} not found`)
     }
+  }
+
+  getAllMember(): Array<Member> {
+    return this.memberList
   }
 }

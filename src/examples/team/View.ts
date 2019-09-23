@@ -40,6 +40,9 @@ export class View {
   private updateProjectDescriptionCallback
   private updateProjectDueDateCallback
 
+  private addProjectMemberCallback
+  private removeProjectMemberCallback
+
   private document
 
   constructor(document) {
@@ -124,6 +127,14 @@ export class View {
 
   setUpdateProjectDueDateCallback(callback) {
     this.updateProjectDueDateCallback = callback
+  }
+
+  setAddProjectMemberCallback(callback) {
+    this.addProjectMemberCallback = callback
+  }
+
+  setRemoveProjectMemberCallback(callback) {
+    this.removeProjectMemberCallback = callback
   }
 
   private getTaskTotalItemsCount(taskId: TaskId): number {
@@ -567,7 +578,7 @@ export class View {
     return chatElement
   }
 
-  private createProjectElement(project: Project) {
+  private createProjectElement(project: Project, model: Model) {
     const html = `
         <div class="ProjectOverview">
 
@@ -592,7 +603,12 @@ export class View {
           <div class="MemberListContainer">
             <div class="MemberList">
             </div>
-            <div class="Icon IconAdd AddProjectMember">
+            <div class="Dropdown">
+              <div class="Icon IconAddBig AddProjectMemberButton"></div>
+              <div class="DropdownContent UserListContainer">
+                <div class="UserList">
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -610,6 +626,61 @@ export class View {
     projectElement.classList.add('Project')
     projectElement.id = project.id
     projectElement.innerHTML = html
+
+    const userList = projectElement.querySelector('.UserList')
+    const addMember = projectElement.querySelector('.AddProjectMemberButton')
+
+    addMember.addEventListener('click', () => {
+      if (userList.parentNode.style.display === 'block') {
+        addMember.classList.add('IconAddBig')
+        addMember.classList.remove('IconCancel')
+        userList.parentNode.style.display = 'none'
+        while (userList.firstChild) {
+          userList.removeChild(userList.firstChild);
+        }
+      }
+      else {
+        const memberList = model.getAllMember()
+        const existingMemberList = model.getAllProjectMember(project.id)
+
+        memberList.forEach((member, _) => {
+          const userElement = this.document.createElement("div")
+          const index = existingMemberList.findIndex(existingMember => {
+            return (member.id === existingMember.id)
+          })
+          if (index == -1) {
+            userElement.classList.add('User')
+            const avatar = model.getAsset(member.avatar)
+            if (avatar) {
+              const image = this.document.createElement('img')
+              image.classList.add('AddUserImage')
+              image.src = avatar.content
+              userElement.appendChild(image)
+            }
+            const name = this.document.createElement('div')
+            name.classList.add('AddUserName')
+            name.innerText = member.name
+            userElement.appendChild(name)
+
+            userList.appendChild(userElement)
+            name.addEventListener('click', () => {
+              const userId = member.id
+              // check if the member has been added
+              const existingMemberList = model.getAllProjectMember(project.id)
+              const index = existingMemberList.findIndex(existingMember => {
+                return (userId === existingMember.id)
+              })
+              if (index == -1) {
+                this.addProjectMemberCallback(userId, project.id)
+              }
+            })
+          }
+        })
+        addMember.classList.remove('IconAddBig')
+        addMember.classList.add('IconCancel')
+        userList.parentNode.style.display = 'block'
+      }
+    })
 
     const title = projectElement.querySelector('.TitleInput')
     title.onblur = () => {
@@ -721,9 +792,9 @@ export class View {
     return projectElement
   }
 
-  appendProject(project: Project) {
+  appendProject(project: Project, model: Model) {
     const appElement = this.document.getElementById('app')
-    const projectElement = this.createProjectElement(project)
+    const projectElement = this.createProjectElement(project, model)
     appElement.appendChild(projectElement)
   }
 
@@ -1063,6 +1134,9 @@ export class View {
         event.dataTransfer.setData("memberId", member.id)
         event.dataTransfer.dropEffect = 'copy'
       }
+      memberImageElement.addEventListener('click', () => {
+        this.removeProjectMemberCallback(member.id, projectId)
+      })
 
       memberElement.appendChild(memberImageElement)
 

@@ -568,9 +568,18 @@ export class TableFlowServer {
     wss.on('connection',  ws => {
       console.log('connected')
       ws.on('message', msg => {
-        console.log(`recv: ${msg}`)
         const message = JSON.parse(msg as string)
-        this.handleMessage(ws, message)
+        console.log(`recv: ${message.msgType}`)
+        if (message.msgType === MsgType.Transaction) {
+          console.log('transaction')
+          for (const msg of message.payLoad) {
+            const message = JSON.parse(msg as string)
+            this.handleMessage(ws, message)
+          }
+        }
+        else {
+          this.handleMessage(ws, message)
+        }
       })
     })
   }
