@@ -1,9 +1,3 @@
-.MenuBar {
-  display: flex;
-  flex-flow: row;
-  justify-content: flex-end;
-  flex-basis: 100%;
-}
 
 .ProjectChatButton {
   position: fixed;
@@ -15,6 +9,9 @@
   outline: none;
 }
 
+/*
+ * Project Start
+ */
 .Project {
   display: flex;
   flex-flow: column;
@@ -24,6 +21,7 @@
   display: flex;
   flex-flow: row;
   flex-basis: 100%;
+  margin-top: 10px;
 }
 
 .ProjectHeader {
@@ -59,13 +57,16 @@
   margin-left: 40px;
 }
 
-
 .ProjectContainer .DueDateContainer .DueDate {
   font-size: large;
   align-self: center;
   border: none;
   outline: none;
   cursor: pointer;
+}
+
+.ProjectContainer .DueDateContainer .DueDateSelector {
+  align-self: center;
 }
 
 .MemberListContainer {
@@ -89,7 +90,6 @@
   align-self: center;
 }
 
-
 .MemberList {
   flex-basis: 50%;
   display: flex;
@@ -109,6 +109,9 @@
   flex-basis: 40%;
   flex-flow: row;
 }
+/*
+ * Project End
+ */
 
 .TaskGroup {
   display: flex;
@@ -820,6 +823,20 @@ height: 40px;
   -webkit-mask-size: cover;
 }
 
+.IconUser {
+  -webkit-mask: url(../../../../images/user.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconAddUser {
+  -webkit-mask: url(../../../../images/add_user.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
@@ -830,6 +847,9 @@ height: 40px;
   background: red;
 }
 
+/**
+ * Dropdown Start
+ */
 .Dropdown {
   position: relative;
   display: inline-block;
@@ -845,10 +865,20 @@ height: 40px;
   z-index: 1;
 }
 
+/* #Menu:hover .DropdownContent {
+  display: block;
+} */
 /* .Dropdown:hover .DropdownContent {
   display: block;
 } */
 
+/**
+ * Dropdown End
+ */
+
+/*
+ * Add Project Member Start
+ */
 .User {
   margin-bottom: 15px;
   display: flex;
@@ -857,7 +887,7 @@ height: 40px;
 
 /* .User:hover {
   background-color: lightgray;
-} */
+}  */
 
 .AddUserImage {
   width: 30px;
@@ -873,8 +903,45 @@ height: 40px;
 .AddUserName:hover {
   background-color: lightgreen;
 }
+/*
+ * Add Project Member End
+ */
 
-.AddProjectMember {
+
+
+/*
+ App Menu Start
+ */
+#AppMenu {
+  display: flex;
+  flex-flow: row;
+  justify-content: flex-end;
+  flex-basis: 100%;
+  z-index: 1;
+  position: fixed;
+  top: 10px;
+  right: 20px;
+}
+
+.AddUserButton {
+  margin-top: 10px;
+}
+
+.MenuItemList {
+  flex-flow: column;
+  right: 0px;
+  min-width: 40px;
+  background-color: white;
+}
+/*
+ App Menu End
+ */
+
+/*
+ Add User Start
+ */
+ 
+.AddUser {
   display: none;
   z-index: 1;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
@@ -890,40 +957,54 @@ height: 40px;
   align-items: center;
 }
 
-.AddProjectMember .UserId {
+.AddUser .UserId {
   margin-left: 15px;
 }
 
-.AddProjectMember .UserName {
+.AddUser .UserName {
   margin-left: 15px;
 }
 
-.AddProjectMember .UserTitle {
+.AddUser .UserTitle {
   margin-left: 15px;
 }
 
-.AddProjectMember .UserDescription {
+.AddUser .UserDescription {
   margin-left: 15px;
 }
 
-.AddProjectMember .Avatar {
-  margin-right: 25px;
-  margin-top: 25px;
+.AddUser .Avatar {
+  display: flex;
+  flex-flow: row;
+  margin-left: 18px;
+  margin-top: 10px;
   color: #c6c6c6;
+  align-items: center;
 }
 
-.AddProjectMember .CancelContainer {
+.AddUser .Avatar .UserAvatarImage {
+  height: 40px;
+  width: 40px;
+}
+
+.AddUser .Avatar .UserAvatarFile {
+}
+
+.AddUser .CancelContainer {
   display: flex;
   flex-flow: row;
   width: 100%;
   justify-content: flex-end;
 }
 
-.AddProjectMember .CancelContainer .Cancel {
+.AddUser .CancelContainer .Cancel {
   margin-right: 10px;
   margin-top: 10px;
 }
 
-.AddProjectMember .Add {
+.AddUser .Add {
   margin-top: 10px;
 }
+/*
+ Add User End
+ */

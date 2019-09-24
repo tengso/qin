@@ -1,0 +1,58 @@
+.MInputGroup {
+  position: relative;
+  margin: 20px 0;
+}
+
+.MInput {
+  background: none;
+  color: #c6c6c6;
+  font-size: medium;
+  padding: 10px 10px 10px 5px;
+  display: block;
+  width: 320px;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #c6c6c6;
+}
+
+.MInput:focus {
+  outline: none;
+}
+
+.MInput:focus ~ .MInputLabel, .MInput:valid ~ .MInputLabel {
+  top: -14px;
+  font-size: medium;
+  color: #2196F3;
+}
+
+MInput:focus ~ .MInputBar:before {
+  width: 320px;
+}
+
+.MInputLabel {
+  color: #c6c6c6;
+  font-size: 16px;
+  font-weight: normal;
+  position: absolute;
+  pointer-events: none;
+  left: 5px;
+  top: 10px;
+  transition: 300ms ease all;
+}
+
+.MInputBar {
+  position: relative;
+  display: block;
+  width: 320px;
+}
+
+.MInputBar:before {
+  content: '';
+  height: 2px;
+  width: 0;
+  bottom: 0px;
+  position: absolute;
+  background: #2196F3;
+  transition: 300ms ease all;
+  left: 0%;
+}

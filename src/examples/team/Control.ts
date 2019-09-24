@@ -47,6 +47,8 @@ export class Control implements ClientCallback {
 
     this.view.setAddProjectMemberCallback(addProjectMember)
     this.view.setRemoveProjectMemberCallback(removeProjectMember)
+
+    this.view.setAddUserCallback(addUser)
   }
 
   tableSnap(table: Table) {
@@ -826,7 +828,7 @@ function sendTaskChatCallback(taskId: TaskId, message: Message, replyToId: Messa
   client.appendRow(TaskChatTableId, id, row)
 }
 
-function addMember(userId: UserId, userName: string, title: Title, description: Description, avatarFile) {
+function addUser(userId: UserId, userName: string, title: Title, description: Description, avatarFile) {
   const reader = new FileReader()
   reader.readAsDataURL(avatarFile)
   reader.onloadend = (evt) => {
@@ -879,5 +881,3 @@ function removeProjectMember(userId: UserId, projectId: ProjectId) {
 
 // @ts-ignore
 window.client = client
-// @ts-ignore
-window.addMember = addMember

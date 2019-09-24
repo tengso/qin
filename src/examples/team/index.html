@@ -1,81 +1,13 @@
 <!DOCTYPE html>
 <html>
-<script src='../../../dist/kanban_index.js'></script>
-<link rel="stylesheet" href='css/kanban.css'></link>
 <link rel="stylesheet" href='../../../node_modules/animate.css/animate.min.css'>
 <link rel="stylesheet" href='../../../node_modules/quill/dist/quill.snow.css'>
 <link rel="stylesheet" href='../../../node_modules/quill/dist/quill.bubble.css'>
 <link rel="stylesheet" href='../../../node_modules/flatpickr/dist/flatpickr.min.css'>
-<style>
-  .InputGroup {
-    position: relative;
-    margin: 20px 0;
-  }
-
-  .Input {
-    background: none;
-    color: #c6c6c6;
-    font-size: medium;
-    padding: 10px 10px 10px 5px;
-    display: block;
-    width: 320px;
-    border: none;
-    border-radius: 0;
-    border-bottom: 1px solid #c6c6c6;
-  }
-
-  .Input:focus {
-    outline: none;
-  }
-
-  .Input:focus ~ .InputLabel, .Input:valid ~ .InputLabel {
-    top: -14px;
-    font-size: 12px;
-    color: #2196F3;
-  }
-
-  Input:focus ~ .InputBar:before {
-    width: 320px;
-  }
-
-  .InputLabel {
-    color: #c6c6c6;
-    font-size: 16px;
-    font-weight: normal;
-    position: absolute;
-    pointer-events: none;
-    left: 5px;
-    top: 10px;
-    transition: 300ms ease all;
-  }
-
-  .InputBar {
-    position: relative;
-    display: block;
-    width: 320px;
-  }
-
-  .InputBar:before {
-    content: '';
-    height: 2px;
-    width: 0;
-    bottom: 0px;
-    position: absolute;
-    background: #2196F3;
-    transition: 300ms ease all;
-    left: 0%;
-  }
-
-</style>
+<link rel="stylesheet" href='css/minput.css'></link>
+<link rel="stylesheet" href='css/kanban.css'></link>
 <body>
-    <div class="group">
-      <input type="text" required="required"/>
-      <span class="highlight"></span>
-      <span class="bar"></span>
-      <label>Email</label>
-    </div>
-
-  <div class="Login">
+  <!-- <div class="Login">
     <div class="User">
     user <input id='user'></input>
     </div>
@@ -88,77 +20,19 @@
     <div>
       <img id="UserImage"></imag>
     </div>
-  </div>
-
-  <div class="MenuBar">
-    <div class="Icon IconApp" id="Menu"></div>
-  </div>
-
-  <div class="AddProjectMember">
-    <div class="CancelContainer">
-      <div class="Icon IconClose Cancel"></div>
-    </div>
-    <div class="UserId InputGroup">
-      <input type="text" required="required" class="Input UserIdInput"></input>
-      <span class="highlight"></span>
-      <span class="InputBar"></span>
-      <label class="InputLabel">Id</label>
-    </div>
-    <div class="UserName InputGroup">
-      <input type="text" required="required" class="Input UserNameInput"></input>
-      <span class="highlight"></span>
-      <span class="InputBar"></span>
-      <label class="InputLabel">Name</label>
-    </div>
-    <div class="UserTitle InputGroup">
-      <input type="text" required="required" class="Input UserTitleInput"></input>
-      <span class="highlight"></span>
-      <span class="InputBar"></span>
-      <label class="InputLabel">Title</label>
-    </div>
-    <div class="UserDescription InputGroup">
-      <input type="text" required="required" class="Input UserDescriptionInput"></input>
-      <span class="highlight"></span>
-      <span class="InputBar"></span>
-      <label class="InputLabel">About</label>
-    </div>
-    <div class="Avatar">
-      <label>Avatar</label>
-      <input class="UserAvatarFile" type="file"/> <br>
-    </div>
-    <div class="Icon IconAdd Add"></div>
-  </div>
+  </div> -->
 
   <div id="app"></div>
+
+
 </body>
+  <script src='../../../dist/kanban_index.js'></script>
   <script>
     function login() {
       client.login(document.getElementById('user').value, document.getElementById('password').value)
     }
 
-    const addProjectMember = document.querySelector('.AddProjectMember')
 
-    const addMemberButton = document.getElementById('Menu')
-    addMemberButton.addEventListener('click', () => {
-      addProjectMember.style.display = 'flex'
-    })
-
-    const addProjectMemberButton = addProjectMember.querySelector('.Add')
-    addProjectMemberButton.addEventListener('click', () => {
-      const userId = addProjectMember.querySelector('.UserIdInput').value
-      const userName = addProjectMember.querySelector('.UserNameInput').value
-      const userTitle = addProjectMember.querySelector('.UserTitleInput').value
-      const userDescription = addProjectMember.querySelector('.UserDescriptionInput').value
-      const avatarFiles = addProjectMember.querySelector('.UserAvatarFile')
-      if (avatarFiles.files.length > 0) {
-        const avatarFile = avatarFiles.files[0]
-        addMember(userId, userName, userTitle, userDescription, avatarFile)
-      }
-    })
-    const cancelAddMember = addProjectMember.querySelector('.Cancel')
-    cancelAddMember.addEventListener('click', () => {
-      addProjectMember.style.display = 'none'
-    })
 
   </script>
 </html>

@@ -43,11 +43,17 @@ export class View {
   private addProjectMemberCallback
   private removeProjectMemberCallback
 
+  private addUserCallback
+
   private document
 
   constructor(document) {
     this.document = document
+
+    this.createAppMenu()
+    this.createAddUserElement()
   }
+
 
   setSortingCallback(callback) {
     this.afterSortingCallback = callback
@@ -135,6 +141,148 @@ export class View {
 
   setRemoveProjectMemberCallback(callback) {
     this.removeProjectMemberCallback = callback
+  }
+
+  setAddUserCallback(callback) {
+    this.addUserCallback = callback
+  }
+
+  private createAppMenu() {
+    const html = `
+        <div class="Dropdown">
+          <div class="Icon IconApp AppMenuButton"></div>
+          <div class="DropdownContent MenuItemList">
+            <img id="UserImage"></img>
+            <div class="Icon IconAddUser AddUserButton"></div>
+          </div>
+        </div>
+    `
+    const appMenu = this.document.createElement('div')
+    appMenu.id = 'AppMenu'
+    appMenu.innerHTML = html
+
+    const menuButton = appMenu.querySelector('.AppMenuButton')
+    const menu = appMenu.querySelector('.DropdownContent')
+    menuButton.addEventListener('click', () => {
+      if (menu.style.display === 'flex') {
+        menu.style.display = 'none'
+        menuButton.classList.add('IconApp')
+        menuButton.classList.remove('IconCancel')
+      }
+      else {
+        menu.style.display = 'flex'
+        menuButton.classList.remove('IconApp')
+        menuButton.classList.add('IconCancel')
+      }
+    })
+
+    const addUserButton = appMenu.querySelector('.AddUserButton')
+    addUserButton.addEventListener('click', () => {
+      const addUser = this.document.querySelector('.AddUser')
+      if (addUser) {
+        menu.style.display = 'none'
+        menuButton.classList.add('IconApp')
+        menuButton.classList.remove('IconCancel')
+        addUser.style.display = 'flex'
+        addUser.classList.add('zoomIn')
+      }
+      else {
+        throw new Error('AddUser element not found')
+      }
+    })
+
+    const app = this.document.getElementById('app')
+    app.appendChild(appMenu)
+  }
+
+  createAddUserElement() {
+    const html = `
+    <div class="CancelContainer">
+      <div class="Icon IconClose Cancel"></div>
+    </div>
+    <div class="UserId MInputGroup">
+      <input type="text" required="required" class="MInput UserIdInput"></input>
+      <span class="highlight"></span>
+      <span class="InputBar"></span>
+      <label class="MInputLabel">Id</label>
+    </div>
+    <div class="UserName MInputGroup">
+      <input type="text" required="required" class="MInput UserNameInput"></input>
+      <span class="highlight"></span>
+      <span class="InputBar"></span>
+      <label class="MInputLabel">Name</label>
+    </div>
+    <div class="UserTitle MInputGroup">
+      <input type="text" required="required" class="MInput UserTitleInput"></input>
+      <span class="highlight"></span>
+      <span class="MInputBar"></span>
+      <label class="MInputLabel">Title</label>
+    </div>
+    <div class="UserDescription MInputGroup">
+      <input type="text" required="required" class="MInput UserDescriptionInput"></input>
+      <span class="highlight"></span>
+      <span class="MInputBar"></span>
+      <label class="MInputLabel">About</label>
+    </div>
+    <div class="Avatar">
+      <label>Avatar</label>
+      <input class="UserAvatarFile" type="file"/> 
+      <img class="UserAvatarImage" src=""/> 
+    </div>
+    <div class="Icon IconAdd Add"></div>
+    `
+    const addUser = this.document.createElement('div')
+    addUser.classList.add('animated')
+    addUser.classList.add('AddUser')
+    addUser.innerHTML = html
+
+    const avatarFile = addUser.querySelector('.UserAvatarFile')
+    avatarFile.addEventListener('input', () => {
+      if (avatarFile.files.length > 0) {
+        const file = avatarFile.files[0]
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onloadend = (evt) => {
+          // @ts-ignore
+          const content = evt.target.result
+          const image = addUser.querySelector('.UserAvatarImage')
+          image.src = content
+        }
+      }
+    })
+
+    function resetFields() {
+      addUser.querySelector('.UserIdInput').value = ''
+      addUser.querySelector('.UserNameInput').value = ''
+      addUser.querySelector('.UserTitleInput').value = ''
+      addUser.querySelector('.UserDescriptionInput').value = ''
+      addUser.querySelector('.UserAvatarFile').value = ''
+      addUser.querySelector('.UserAvatarImage').src = ''
+    }
+
+    const addButton = addUser.querySelector('.Add')
+    addButton.addEventListener('click', () => {
+      const userId = addUser.querySelector('.UserIdInput').value
+      const userName = addUser.querySelector('.UserNameInput').value
+      const userTitle = addUser.querySelector('.UserTitleInput').value
+      const userDescription = addUser.querySelector('.UserDescriptionInput').value
+      const avatarFiles = addUser.querySelector('.UserAvatarFile')
+      if (avatarFiles.files.length > 0) {
+        const avatarFile = avatarFiles.files[0]
+        this.addUserCallback(userId, userName, userTitle, userDescription, avatarFile)
+      }
+
+      resetFields()
+      addUser.style.display = 'none'
+    })
+    const cancelButton = addUser.querySelector('.Cancel')
+    cancelButton.addEventListener('click', () => {
+      addUser.style.display = 'none'
+      resetFields()
+    })
+
+    const app = this.document.getElementById('app')
+    app.appendChild(addUser)
   }
 
   private getTaskTotalItemsCount(taskId: TaskId): number {
