@@ -89,20 +89,6 @@
   align-self: center;
 }
 
-.AddProjectMember {
-  display: none;
-  z-index: 1;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
-  border-radius: 8px;
-  background-color: rgb(255,255,255); 
-  position: fixed;
-  left: 30%;
-  top: 30%;
-  flex-flow: column;
-  height: 60%;
-  width: 40%;
-  animation-duration: 0.2s;
-}
 
 .MemberList {
   flex-basis: 50%;
@@ -886,4 +872,58 @@ height: 40px;
 
 .AddUserName:hover {
   background-color: lightgreen;
+}
+
+.AddProjectMember {
+  display: none;
+  z-index: 1;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 8px;
+  background-color: rgb(255,255,255); 
+  position: fixed;
+  left: 60%;
+  top: 10%;
+  flex-flow: column;
+  height: 67%;
+  width: 32%;
+  animation-duration: 0.2s;
+  align-items: center;
+}
+
+.AddProjectMember .UserId {
+  margin-left: 15px;
+}
+
+.AddProjectMember .UserName {
+  margin-left: 15px;
+}
+
+.AddProjectMember .UserTitle {
+  margin-left: 15px;
+}
+
+.AddProjectMember .UserDescription {
+  margin-left: 15px;
+}
+
+.AddProjectMember .Avatar {
+  margin-right: 25px;
+  margin-top: 25px;
+  color: #c6c6c6;
+}
+
+.AddProjectMember .CancelContainer {
+  display: flex;
+  flex-flow: row;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.AddProjectMember .CancelContainer .Cancel {
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.AddProjectMember .Add {
+  margin-top: 10px;
 }
