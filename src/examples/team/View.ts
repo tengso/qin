@@ -445,9 +445,10 @@ export class View {
     }
     const chatElement = this.createChatElement(chatClassName, callback)
 
-    taskElement.querySelector('.Body').appendChild(chatElement)
-
     const body = taskElement.querySelector('.Body')
+    body.classList.add('animated', 'zoomIn')
+
+    body.appendChild(chatElement)
 
     const description = taskElement.querySelector('.Description')
     const descElement = taskElement.querySelector('.DescEditor')
