@@ -21,6 +21,9 @@ export class Control implements ClientCallback {
     this.model = model
     this.view = new View(document)
     const callback = this.createSortingCallBack(model, client, this.view)
+
+    this.view.setLoginCallback(login)
+
     this.view.setSortingCallback(callback)
     this.view.setAddTaskCallback(addTaskCallback)
     this.view.setAddTaskGroupCallback(addTaskGroupCallback)
@@ -41,7 +44,7 @@ export class Control implements ClientCallback {
     this.view.setAddCheckListItemCallback(addCheckListItemCallback)
     this.view.setRemoveCheckListItemCallback(removeCheckListItemCallback)
     this.view.setUpdateCheckListItemStatusCallback(updateCheckListItemStatusCallback)
-    this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
+    // this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
     this.view.setSendProjectChatCallback(sendProjectChatCallback)
     this.view.setSendTaskChatCallback(sendTaskChatCallback)
 
@@ -547,7 +550,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    client.login('wukong', 'wk')
+    // client.login('wukong', 'wk')
   }
 
   connectFailure(): void {
@@ -876,6 +879,10 @@ function addProjectMember(userId: UserId, projectId: ProjectId) {
 
 function removeProjectMember(userId: UserId, projectId: ProjectId) {
   client.removeRow(ProjectMemberTableId, `${userId}#${projectId}`)
+}
+
+function login(userId: UserId, password: string) {
+  client.login(userId, password)
 }
 
 

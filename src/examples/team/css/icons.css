@@ -1,0 +1,172 @@
+.Icon {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  background: black;
+  -webkit-mask-size: cover;
+  background-color: lightgray;
+}
+
+.Icon:hover,
+.Icon:focus {
+  background: limegreen;
+  cursor: pointer;
+}
+
+.IconDescription {
+  -webkit-mask: url(../../../../images/description.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconDescriptionBig {
+  -webkit-mask: url(../../../../images/description.svg);
+  -webkit-mask-size: cover;
+  width: 40px;
+  height: 40px;
+}
+
+.IconTodo {
+  -webkit-mask: url(../../../../images/todo.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconMessages {
+  -webkit-mask: url(../../../../images/messages.svg);
+  -webkit-mask-size: cover;
+}
+
+.IconClose {
+  -webkit-mask: url(../../../../images/close.svg);
+  -webkit-mask-size: cover;
+  width: 20px;
+  height: 20px;
+}
+
+.IconInfo {
+  -webkit-mask: url(../../../../images/info.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+}
+
+.IconExpand {
+  -webkit-mask: url(../../../../images/expand.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+}
+
+.IconDelete {
+  -webkit-mask: url(../../../../images/delete.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+}
+
+.IconAdd {
+  -webkit-mask: url(../../../../images/add.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconAddBig {
+  -webkit-mask: url(../../../../images/add.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconSend {
+  -webkit-mask: url(../../../../images/send.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconGroup {
+  -webkit-mask: url(../../../../images/group.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconCalendar {
+  -webkit-mask: url(../../../../images/calendar.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconCalendarBig {
+  -webkit-mask: url(../../../../images/calendar.svg);
+  width: 35px;
+  height: 35px;
+  -webkit-mask-size: cover;
+}
+
+.IconList {
+  -webkit-mask: url(../../../../images/list.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconMessageBig {
+  -webkit-mask: url(../../../../images/messages.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconCancel {
+  -webkit-mask: url(../../../../images/cancel.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconDrag {
+  -webkit-mask: url(../../../../images/drag.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconApp {
+  -webkit-mask: url(../../../../images/apps.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconUser {
+  -webkit-mask: url(../../../../images/user.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconAddUser {
+  -webkit-mask: url(../../../../images/add_user.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
+.IconLogin {
+  -webkit-mask: url(../../../../images/login.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconClose:hover,
+.IconClose:focus,
+.IconDelete:hover,
+.IconDelete:focus,
+.IconCancel:hover,
+.IconCancel:focus 
+{
+  background: red;
+}

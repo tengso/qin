@@ -13,6 +13,8 @@ export class View {
 
   private afterSortingCallback: (event) => void
 
+  private loginCallback
+
   private addTaskCallback
   private addTaskGroupCallback
 
@@ -52,8 +54,12 @@ export class View {
 
     this.createAppMenu()
     this.createAddUserElement()
+    this.createLoginElement()
   }
 
+  setLoginCallback(callback) {
+    this.loginCallback = callback
+  }
 
   setSortingCallback(callback) {
     this.afterSortingCallback = callback
@@ -152,7 +158,10 @@ export class View {
         <div class="Dropdown">
           <div class="Icon IconApp AppMenuButton"></div>
           <div class="DropdownContent MenuItemList">
-            <img id="UserImage"></img>
+            <div class="LoginContainer">
+              <div class="Icon IconUser Login"></div>
+              <img id="UserImage"></img>
+            </div>
             <div class="Icon IconAddUser AddUserButton"></div>
           </div>
         </div>
@@ -183,6 +192,7 @@ export class View {
         menu.style.display = 'none'
         menuButton.classList.add('IconApp')
         menuButton.classList.remove('IconCancel')
+
         addUser.style.display = 'flex'
         addUser.classList.add('zoomIn')
       }
@@ -191,11 +201,27 @@ export class View {
       }
     })
 
+    const user = appMenu.querySelector('.Login')
+    user.addEventListener('click', () => {
+      const login = this.document.getElementById('Login')
+      if (login) {
+        menu.style.display = 'none'
+        menuButton.classList.add('IconApp')
+        menuButton.classList.remove('IconCancel')
+
+        login.style.display = 'flex'
+        login.classList.add('zoomIn')
+      }
+      else {
+        throw new Error('login element not found')
+      }
+    })
+
     const app = this.document.getElementById('app')
     app.appendChild(appMenu)
   }
 
-  createAddUserElement() {
+  private createAddUserElement() {
     const html = `
     <div class="CancelContainer">
       <div class="Icon IconClose Cancel"></div>
@@ -283,6 +309,57 @@ export class View {
 
     const app = this.document.getElementById('app')
     app.appendChild(addUser)
+  }
+
+  private createLoginElement() {
+    const login = this.document.createElement('div')
+    login.id = 'Login'
+    login.classList.add('animated')
+
+    const html = `
+      <div class="CloseContainer">
+        <div class="Icon IconClose Close"></div>
+      </div>
+      <div class="UserId MInputGroup">
+        <input type="text" required="required" class="MInput UserIdInput"></input>
+        <span class="highlight"></span>
+        <span class="InputBar"></span>
+        <label class="MInputLabel">Id</label>
+      </div>
+      <div class="UserId MInputGroup">
+        <input type="password" required="required" class="MInput PasswordInput"></input>
+        <span class="highlight"></span>
+        <span class="InputBar"></span>
+        <label class="MInputLabel">Password</label>
+      </div>
+      <div class="LoginContainer">
+        <div class="Icon IconLogin Login"></div>
+      </div>
+    `
+    login.innerHTML = html
+
+    function reset() {
+      login.querySelector('.UserIdInput').value = ''
+      login.querySelector('.PasswordInput').value = ''
+    }
+
+    const close = login.querySelector('.Close')
+    close.addEventListener('click', () => {
+      login.style.display = 'none'
+      reset()
+    })
+
+    const doit = login.querySelector('.Login')
+    doit.addEventListener('click', () => {
+      const userId = login.querySelector('.UserIdInput').value
+      const password = login.querySelector('.PasswordInput').value
+      login.style.display = 'none'
+      reset()
+      this.loginCallback(userId, password)
+    })
+
+    const app = this.document.getElementById('app')
+    app.appendChild(login)
   }
 
   private getTaskTotalItemsCount(taskId: TaskId): number {
