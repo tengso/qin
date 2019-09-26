@@ -15,6 +15,8 @@ export class View {
 
   private loginCallback
 
+  private addProjectCallback
+
   private addTaskCallback
   private addTaskGroupCallback
 
@@ -49,6 +51,8 @@ export class View {
 
   private document
 
+  private model: Model
+
   constructor(document) {
     this.document = document
 
@@ -57,12 +61,20 @@ export class View {
     this.createLoginElement()
   }
 
+  setModel(model: Model) {
+    this.model = model;
+  }
+
   setLoginCallback(callback) {
     this.loginCallback = callback
   }
 
   setSortingCallback(callback) {
     this.afterSortingCallback = callback
+  }
+
+  setAddProjectCallback(callback) {
+    this.addProjectCallback = callback
   }
 
   setAddTaskCallback(callback) {
@@ -162,7 +174,10 @@ export class View {
               <div class="Icon IconUser Login"></div>
               <img id="UserImage"></img>
             </div>
+            <div class="Icon IconAddProject AddProjectButton"></div>
             <div class="Icon IconAddUser AddUserButton"></div>
+            <div class="ProjectList">
+            </div>
           </div>
         </div>
     `
@@ -179,6 +194,28 @@ export class View {
         menuButton.classList.remove('IconCancel')
       }
       else {
+        const projectMenuList = appMenu.querySelector('.ProjectList')
+        projectMenuList.innerHTML = ''
+        const projectList = this.model.getAllProject()
+        for (const project of projectList) {
+          const projectLink = this.document.createElement('div')
+          projectLink.classList.add('ProjectLink')
+          projectLink.addEventListener('click', () => {
+            menu.style.display = 'none'
+            menuButton.classList.add('IconApp')
+            menuButton.classList.remove('IconCancel')
+
+            const projectElements = this.document.getElementsByClassName('Project')
+            for (const pe of projectElements) {
+              pe.style.display = 'none'
+            }
+            const projectElement = this.document.getElementById(project.id)
+            projectElement.style.display = 'flex'
+          })
+          projectLink.innerText = project.title
+          projectMenuList.appendChild(projectLink)
+        }
+
         menu.style.display = 'flex'
         menuButton.classList.remove('IconApp')
         menuButton.classList.add('IconCancel')
@@ -201,8 +238,17 @@ export class View {
       }
     })
 
-    const user = appMenu.querySelector('.Login')
-    user.addEventListener('click', () => {
+    const addProjectButton = appMenu.querySelector('.AddProjectButton')
+    addProjectButton.addEventListener('click', () => {
+      menu.style.display = 'none'
+      menuButton.classList.add('IconApp')
+      menuButton.classList.remove('IconCancel')
+
+      this.addProjectCallback()
+    })
+
+    const userLogin = appMenu.querySelector('.Login')
+    userLogin.addEventListener('click', () => {
       const login = this.document.getElementById('Login')
       if (login) {
         menu.style.display = 'none'
@@ -216,6 +262,7 @@ export class View {
         throw new Error('login element not found')
       }
     })
+
 
     const app = this.document.getElementById('app')
     app.appendChild(appMenu)
@@ -320,17 +367,23 @@ export class View {
       <div class="CloseContainer">
         <div class="Icon IconClose Close"></div>
       </div>
-      <div class="UserId MInputGroup">
-        <input type="text" required="required" class="MInput UserIdInput"></input>
-        <span class="highlight"></span>
-        <span class="InputBar"></span>
-        <label class="MInputLabel">Id</label>
+      <div class="IdContainer">
+        <div class="Icon IconFace"></div>
+        <div class="UserId MInputGroup">
+          <input type="text" required="required" class="MInput UserIdInput"></input>
+          <span class="highlight"></span>
+          <span class="InputBar"></span>
+          <label class="MInputLabel">Id</label>
+        </div>
       </div>
-      <div class="UserId MInputGroup">
-        <input type="password" required="required" class="MInput PasswordInput"></input>
-        <span class="highlight"></span>
-        <span class="InputBar"></span>
-        <label class="MInputLabel">Password</label>
+      <div class="PasswordContainer">
+        <div class="Icon IconPassword"></div>
+        <div class="UserId MInputGroup">
+          <input type="password" required="required" class="MInput PasswordInput"></input>
+          <span class="highlight"></span>
+          <span class="InputBar"></span>
+          <label class="MInputLabel">Password</label>
+        </div>
       </div>
       <div class="LoginContainer">
         <div class="Icon IconLogin Login"></div>
@@ -804,7 +857,7 @@ export class View {
     return chatElement
   }
 
-  private createProjectElement(project: Project, model: Model) {
+  private createProjectElement(project: Project) {
     const html = `
         <div class="ProjectOverview">
 
@@ -866,8 +919,8 @@ export class View {
         }
       }
       else {
-        const memberList = model.getAllMember()
-        const existingMemberList = model.getAllProjectMember(project.id)
+        const memberList = this.model.getAllMember()
+        const existingMemberList = this.model.getAllProjectMember(project.id)
 
         memberList.forEach((member, _) => {
           const userElement = this.document.createElement("div")
@@ -876,7 +929,7 @@ export class View {
           })
           if (index == -1) {
             userElement.classList.add('User')
-            const avatar = model.getAsset(member.avatar)
+            const avatar = this.model.getAsset(member.avatar)
             if (avatar) {
               const image = this.document.createElement('img')
               image.classList.add('AddUserImage')
@@ -892,7 +945,7 @@ export class View {
             name.addEventListener('click', () => {
               const userId = member.id
               // check if the member has been added
-              const existingMemberList = model.getAllProjectMember(project.id)
+              const existingMemberList = this.model.getAllProjectMember(project.id)
               const index = existingMemberList.findIndex(existingMember => {
                 return (userId === existingMember.id)
               })
@@ -1018,10 +1071,11 @@ export class View {
     return projectElement
   }
 
-  appendProject(project: Project, model: Model) {
+  appendProject(project: Project) {
     const appElement = this.document.getElementById('app')
-    const projectElement = this.createProjectElement(project, model)
+    const projectElement = this.createProjectElement(project)
     appElement.appendChild(projectElement)
+
   }
 
   appendTaskGroup(project: Project, taskGroup: TaskGroup) {
@@ -1376,7 +1430,7 @@ export class View {
   removeProjectMember(projectId: ProjectId, memberId: UserId): void {
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
-      const memberElement = this.document.getElementById(memberId)
+      const memberElement = projectElement.querySelector(`#${memberId}`)
       if (memberElement) {
         memberElement.parentElement.removeChild(memberElement)
       }
@@ -1551,16 +1605,16 @@ export class View {
     }
   }
 
-  private appendChatMessage(userId: UserId, messageList, message: ChatMessage, model: Model) {
+  private appendChatMessage(userId: UserId, messageList, message: ChatMessage) {
     const messageElement = this.document.createElement('div')
     messageElement.setAttribute('id', message.id)
     const [className, direction] = (userId === message.posterId) ? ['MyChatMessage', 'fadeIn'] : ['ChatMessage', 'fadeIn']
     messageElement.classList.add(className)
 
     let image = ""
-    const member = model.getMember(message.posterId)
+    const member = this.model.getMember(message.posterId)
     if (member) {
-      const asset = model.getAsset(member.avatar)
+      const asset = this.model.getAsset(member.avatar)
       if (asset) {
         image = asset.content
       }
@@ -1593,14 +1647,14 @@ export class View {
     messageList.scrollTop = messageList.scrollHeight
   }
 
-  appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage, model: Model) {
+  appendProjectChatMessage(userId: UserId, projectId: ProjectId, message: ChatMessage) {
     let project = this.document.getElementById(projectId)
     if (project) {
       const chat = project.querySelector('.ProjectChat')
       if (chat) {
         const messageList = chat.querySelector('.MessageList')
         if (messageList) {
-          this.appendChatMessage(userId, messageList, message, model)
+          this.appendChatMessage(userId, messageList, message)
         }
         else {
           throw new Error(`project ${projectId} chat message list not found`)
@@ -1615,7 +1669,7 @@ export class View {
     }
   }
 
-  appendTaskChatMessage(userId: UserId, projectId: ProjectId, taskId: TaskId, message: ChatMessage, model: Model) {
+  appendTaskChatMessage(userId: UserId, projectId: ProjectId, taskId: TaskId, message: ChatMessage) {
     let project = this.document.getElementById(projectId)
     if (project) {
       const task = this.document.getElementById(taskId)
@@ -1624,7 +1678,7 @@ export class View {
         if (chat) {
           const messageList = chat.querySelector('.MessageList')
           if (messageList) {
-            this.appendChatMessage(userId, messageList, message, model)
+            this.appendChatMessage(userId, messageList, message)
           }
           else {
             throw new Error(`project ${projectId} chat message list not found`)

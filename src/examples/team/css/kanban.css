@@ -13,7 +13,7 @@
   top: 10%;
   flex-flow: column;
   height: 35%;
-  width: 10%;
+  width: 15%;
   animation-duration: 0.2s;
  }
 
@@ -31,8 +31,24 @@
   justify-content: center;
  }
 
- #Login .CloseContainer .Close {
-  
+ #Login .PasswordContainer {
+   display: flex;
+   flex-flow: row;
+ }
+
+ #Login .PasswordContainer .IconPassword {
+   align-self: center;
+   margin-right: 10px;
+ }
+
+ #Login .IdContainer {
+   display: flex;
+   flex-flow: row;
+ }
+
+ #Login .IdContainer .IconFace {
+   align-self: center;
+   margin-right: 10px;
  }
 
  #Login .MInput {
@@ -57,7 +73,7 @@
 }
 
 .Project {
-  display: flex;
+  display: none;
   flex-flow: column;
 }
 
@@ -803,6 +819,10 @@ height: 40px;
   margin-top: 10px;
 }
 
+#AppMenu .AddProjectButton {
+  margin-top: 10px;
+}
+
 #AppMenu .MenuItemList {
   flex-flow: column;
   right: 0px;
@@ -813,11 +833,17 @@ height: 40px;
 #AppMenu .LoginContainer {
   display: flex;
   flex-flow: row;
+  border-bottom: 1px solid lightgrey;
+  padding-bottom: 10px;
 }
 
 #AppMenu #UserImage {
   border: none;
   outline: none;
+}
+
+#AppMenu .ProjectLink:hover {
+  background-color: lightgreen;
 }
 /*
  App Menu End

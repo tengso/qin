@@ -20,9 +20,12 @@ export class Control implements ClientCallback {
     const model = new Model()
     this.model = model
     this.view = new View(document)
+    this.view.setModel(model)
     const callback = this.createSortingCallBack(model, client, this.view)
 
     this.view.setLoginCallback(login)
+
+    this.view.setAddProjectCallback(addProjectCallback)
 
     this.view.setSortingCallback(callback)
     this.view.setAddTaskCallback(addTaskCallback)
@@ -88,7 +91,7 @@ export class Control implements ClientCallback {
       else if (tableId === ProjectTableId) {
         const row = this.createProjectRow(values)
         const project = this.model.appendProject(row)
-        this.view.appendProject(project, this.model)
+        this.view.appendProject(project)
       }
       else if (tableId === MemberTableId) {
         const row = this.createMemberRow(values)
@@ -147,12 +150,12 @@ export class Control implements ClientCallback {
       else if (tableId === ProjectChatTableId) {
         const row = this.createProjectChatRow(values)
         const message = this.model.appendProjectChatMessage(row)
-        this.view.appendProjectChatMessage(client.userId, row.projectId, message, this.model)
+        this.view.appendProjectChatMessage(client.userId, row.projectId, message)
       }
       else if (tableId === TaskChatTableId) {
         const row = this.createTaskChatRow(values)
         const message = this.model.appendTaskChatMessage(row)
-        this.view.appendTaskChatMessage(client.userId, row.projectId, row.taskId, message, this.model)
+        this.view.appendTaskChatMessage(client.userId, row.projectId, row.taskId, message)
       }
     }
     catch (exception) {
@@ -883,6 +886,17 @@ function removeProjectMember(userId: UserId, projectId: ProjectId) {
 
 function login(userId: UserId, password: string) {
   client.login(userId, password)
+}
+
+function addProjectCallback(title: Title = 'new project', description: Description, dueDate: Date = new Date()) {
+  const projectId = uuid()
+  const row = [
+    projectId,
+    title, 
+    description,
+    dueDate
+  ]
+  client.appendRow(ProjectTableId, projectId, row)
 }
 
 

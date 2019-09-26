@@ -1122,4 +1122,8 @@ export class Model {
   getAllMember(): Array<Member> {
     return this.memberList
   }
+
+  getAllProject(): Array<Project> {
+    return this.projectList
+  }
 }

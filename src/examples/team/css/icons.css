@@ -161,6 +161,27 @@
   -webkit-mask-size: cover;
 }
 
+.IconPassword {
+  -webkit-mask: url(../../../../images/password.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconFace {
+  -webkit-mask: url(../../../../images/face.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
+.IconAddProject {
+  -webkit-mask: url(../../../../images/add_project.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
