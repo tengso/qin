@@ -169,7 +169,7 @@ export class View {
     const html = `
         <div class="Dropdown">
           <div class="Icon IconApp AppMenuButton"></div>
-          <div class="DropdownContent MenuItemList">
+          <div class="DropdownContent MenuItemList animated slideInRight">
             <div class="LoginContainer">
               <div class="Icon IconUser Login"></div>
               <img id="UserImage"></img>
@@ -198,9 +198,18 @@ export class View {
         projectMenuList.innerHTML = ''
         const projectList = this.model.getAllProject()
         for (const project of projectList) {
+
           const projectLink = this.document.createElement('div')
           projectLink.classList.add('ProjectLink')
-          projectLink.addEventListener('click', () => {
+
+          const projectLinkHTML = `
+              <div class="Icon IconProject ProjectLinkButton"></div>
+              <div Class="ProjectLinkTitle">${project.title}</div>
+          ` 
+          projectLink.innerHTML = projectLinkHTML
+
+          const projectLinkButton = projectLink.querySelector('.ProjectLinkButton')
+          projectLinkButton.addEventListener('click', () => {
             menu.style.display = 'none'
             menuButton.classList.add('IconApp')
             menuButton.classList.remove('IconCancel')
@@ -212,7 +221,7 @@ export class View {
             const projectElement = this.document.getElementById(project.id)
             projectElement.style.display = 'flex'
           })
-          projectLink.innerText = project.title
+
           projectMenuList.appendChild(projectLink)
         }
 

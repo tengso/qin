@@ -826,8 +826,9 @@ height: 40px;
 #AppMenu .MenuItemList {
   flex-flow: column;
   right: 0px;
-  min-width: 40px;
+  /* min-width: 80px; */
   background-color: white;
+  animation-duration: 0.2s;
 }
 
 #AppMenu .LoginContainer {
@@ -842,9 +843,18 @@ height: 40px;
   outline: none;
 }
 
-#AppMenu .ProjectLink:hover {
-  background-color: lightgreen;
+#AppMenu .ProjectList {
+  border-top: 1px solid lightgrey;
+  margin-top: 10px;
 }
+
+#AppMenu .ProjectList .ProjectLink {
+  display: flex;
+  justify-content: row;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 /*
  App Menu End
  */

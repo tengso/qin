@@ -182,6 +182,13 @@
   -webkit-mask-size: cover;
 }
 
+.IconProject {
+  -webkit-mask: url(../../../../images/project.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
