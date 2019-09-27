@@ -469,7 +469,6 @@ class TaskImpl implements Task {
   }
 }
 
-
 export interface Member {
   id: UserId
   name: string
@@ -503,18 +502,35 @@ class AssetImpl implements Asset {
 }
 
 export class Model {
-  private projectList = new Array<ProjectImpl>()
-  private projectMap = new Map<ProjectId, ProjectImpl>()
+  private projectList: Array<ProjectImpl>
+  private projectMap: Map<ProjectId, ProjectImpl>
 
-  private taskToProjectMap = new Map<TaskId, ProjectId>()
-  private taskGroupToProjectMap = new Map<TaskGroupId, ProjectId>()
+  private taskToProjectMap: Map<TaskId, ProjectId>
+  private taskGroupToProjectMap: Map<TaskGroupId, ProjectId>
 
-  private memberList = new Array<Member>()
-  private memberMap = new Map<UserId, MemberImpl>()
+  private memberList: Array<Member>
+  private memberMap: Map<UserId, MemberImpl>
 
-  private assetList = new Array<Asset>()
-  private assetMap = new Map<AssetId, AssetImpl>()
+  private assetList: Array<Asset>
+  private assetMap: Map<AssetId, AssetImpl>
 
+  constructor() {
+    this.reset()
+  }
+
+  reset() {
+    this.projectList = new Array<ProjectImpl>()
+    this.projectMap = new Map<ProjectId, ProjectImpl>()
+
+    this.taskToProjectMap = new Map<TaskId, ProjectId>()
+    this.taskGroupToProjectMap = new Map<TaskGroupId, ProjectId>()
+
+    this.memberList = new Array<Member>()
+    this.memberMap = new Map<UserId, MemberImpl>()
+
+    this.assetList = new Array<Asset>()
+    this.assetMap = new Map<AssetId, AssetImpl>()
+  }
 
   private createMember(values: MemberRow): MemberImpl {
     const member = new MemberImpl()

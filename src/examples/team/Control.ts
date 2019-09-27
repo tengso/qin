@@ -15,6 +15,8 @@ export class Control implements ClientCallback {
   private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId]
   private receivedTables = new Map<TableId, Table>()
 
+  retryLogin = true
+
   constructor(client: Client, document) {
     this.client = client
     const model = new Model()
@@ -24,6 +26,7 @@ export class Control implements ClientCallback {
     const callback = this.createSortingCallBack(model, client, this.view)
 
     this.view.setLoginCallback(login)
+    this.view.setLogoutCallback(logout)
 
     this.view.setAddProjectCallback(addProjectCallback)
 
@@ -614,16 +617,26 @@ export class Control implements ClientCallback {
   }
 
   loginFailure(errorCode: ErrorCode, reason: string): void {
-    this.logMessage(`login failure ${reason} ${errorCode}`)
+    this.logMessage(`login failure ${reason} ${errorCode} ${this.retryLogin}`)
 
     if (errorCode === ErrorCode.UserAlreadyLogin) {
-      this.client.logout()
+      if (this.retryLogin) {
+        this.client.logout()
+      }
     }
   }
 
   logoutSuccess() {
-    this.logMessage(`logout success`)
-    this.client.login(this.client.userId, this.client.password)
+    this.logMessage(`logout success: ${this.retryLogin}`)
+
+    if (this.retryLogin) {
+      this.client.login(this.client.userId, this.client.password)
+    }
+    else {
+      this.view.reset()
+      this.model.reset()
+      this.retryLogin = true
+    }
   }
 
   createUserSuccess() {
@@ -886,6 +899,11 @@ function removeProjectMember(userId: UserId, projectId: ProjectId) {
 
 function login(userId: UserId, password: string) {
   client.login(userId, password)
+}
+
+function logout() {
+  control.retryLogin = false
+  client.logout()
 }
 
 function addProjectCallback(title: Title = 'new project', description: Description, dueDate: Date = new Date()) {

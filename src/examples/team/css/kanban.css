@@ -1,4 +1,18 @@
 /*
+ * Sorting Start
+ */
+.SortableGhost {
+  /* background: lightblue; */
+}
+
+.SortableChosen {
+  background: rgb(195, 227, 247);
+}
+/*
+ * Sorting End
+ */
+
+/*
  * Login Start
  */
  #Login {
@@ -219,7 +233,11 @@
   display: flex;
   flex-flow: column;
   align-self: center;
-  min-height: 200px; 
+  /*
+   * to keep the drop-zone
+   */
+  min-height: 200px;
+  min-width: 200px;
 }
 
 .Task {
@@ -415,10 +433,6 @@
   flex-basis: 100%;
 }
 
-/* .Task .Body .Description .ql-toolbar {
-  display: none;
-} */
-
 .Task .Body .Todo {
   display: none;
   flex-flow: column;
@@ -473,6 +487,7 @@
 .Task .Body .Todo .CheckList .ItemList .Item .DescriptionInput {
   border: none;
   width: 100%;
+  font-size: large;
 }
 
 .Task .Body .Todo .CheckList .ItemList .Item .RemoveItem {

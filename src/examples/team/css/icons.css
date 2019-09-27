@@ -189,12 +189,21 @@
   -webkit-mask-size: cover;
 }
 
+.IconLogout {
+  -webkit-mask: url(../../../../images/logout.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
 .IconDelete:focus,
 .IconCancel:hover,
-.IconCancel:focus 
+.IconCancel:focus,
+.IconLogout:hover,
+.IconLogout:focus
 {
   background: red;
 }

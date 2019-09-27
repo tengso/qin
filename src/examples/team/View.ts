@@ -14,6 +14,7 @@ export class View {
   private afterSortingCallback: (event) => void
 
   private loginCallback
+  private logoutCallback
 
   private addProjectCallback
 
@@ -56,9 +57,20 @@ export class View {
   constructor(document) {
     this.document = document
 
+    this.init()
+  }
+
+  init() {
     this.createAppMenu()
     this.createAddUserElement()
     this.createLoginElement()
+  }
+
+  reset( 
+  ) {
+    const appElement = this.document.getElementById('app')
+    appElement.innerHTML = ''
+    this.init()
   }
 
   setModel(model: Model) {
@@ -67,6 +79,10 @@ export class View {
 
   setLoginCallback(callback) {
     this.loginCallback = callback
+  }
+
+  setLogoutCallback(callback) {
+    this.logoutCallback = callback
   }
 
   setSortingCallback(callback) {
@@ -173,6 +189,7 @@ export class View {
             <div class="LoginContainer">
               <div class="Icon IconUser Login"></div>
               <img id="UserImage"></img>
+              <div class="Icon IconLogout Logout"></div>
             </div>
             <div class="Icon IconAddProject AddProjectButton"></div>
             <div class="Icon IconAddUser AddUserButton"></div>
@@ -270,6 +287,15 @@ export class View {
       else {
         throw new Error('login element not found')
       }
+    })
+
+    const userLogout = appMenu.querySelector('.Logout')
+    userLogout.addEventListener('click', () => {
+      menu.style.display = 'none'
+      menuButton.classList.add('IconApp')
+      menuButton.classList.remove('IconCancel')
+
+      this.logoutCallback()
     })
 
 
@@ -798,9 +824,11 @@ export class View {
 
     new Sortable(taskList, {
       group: project.id,
-      // animation: 150,
+      animation: 150,
       onEnd: this.afterSortingCallback,
-      handle: '.DragTask'
+      handle: '.DragTask',
+      ghostClass: 'SortableGhost',
+      chosenClass: 'SortableChosen',
     })
 
     return taskGroupElement
@@ -1029,9 +1057,11 @@ export class View {
 
     new Sortable(taskGroupListElement, {
       group: `${project.id}-TaskGroup`,
-      // animation: 150,
+      animation: 150,
       onEnd: this.afterSortingCallback,
       handle: '.DragTaskGroup',
+      ghostClass: 'SortableGhost',
+      chosenClass: 'SortableChosen',
     })
 
     // Project Chat
