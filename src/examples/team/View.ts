@@ -66,11 +66,10 @@ export class View {
     this.createLoginElement()
   }
 
-  reset( 
+  clear( 
   ) {
     const appElement = this.document.getElementById('app')
     appElement.innerHTML = ''
-    this.init()
   }
 
   setModel(model: Model) {

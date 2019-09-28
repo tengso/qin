@@ -60,6 +60,10 @@ export class Control implements ClientCallback {
     this.view.setAddUserCallback(addUser)
   }
 
+  clear() {
+    this.view.clear()
+  }
+
   tableSnap(table: Table) {
     this.logMessage(`table - ${JSON.stringify(table)}`)
 
@@ -100,14 +104,17 @@ export class Control implements ClientCallback {
         const row = this.createMemberRow(values)
         this.model.appendMember(row)
 
-        const member = this.model.getMember(this.client.userId)
-        console.log(`user: ${this.client.userId}`)
-
-        if (member) {
-          console.log(`member: ${member.id}`)
-          const asset = this.model.getAsset(member.avatar)
-          if (asset) {
-            this.view.setUserImage(asset.content)
+        console.log(`debug: incoming member: ${row.id} user: ${this.client.userId}`)
+        if (row.id === this.client.userId) {
+          const member = this.model.getMember(this.client.userId)
+          if (member) {
+            console.log(`debug found member: ${member.id}`)
+            const asset = this.model.getAsset(member.avatar)
+            if (asset) {
+              console.log(`debug found asset: ${asset.name}`)
+              console.log(`debug set user image: ${member.id}`)
+              this.view.setUserImage(asset.content)
+            }
           }
         }
       }
@@ -633,8 +640,6 @@ export class Control implements ClientCallback {
       this.client.login(this.client.userId, this.client.password)
     }
     else {
-      this.view.reset()
-      this.model.reset()
       this.retryLogin = true
     }
   }
@@ -688,7 +693,7 @@ export class Control implements ClientCallback {
 
 let control: Control
 
-function getClient(host: string, port: number): Client {
+function createClient(host: string, port: number): Client {
   if (!client) {
     client = new Client(WebSocket)
     control = new Control(client, document)
@@ -701,7 +706,7 @@ function getClient(host: string, port: number): Client {
   }
 }
 
-let client: Client = getClient('localhost', 8080)
+let client: Client = createClient('localhost', 8080)
 
 function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'Task title', description: Description = 'Task description', dueDate: Date = new Date()) {
   // @ts-ignore
@@ -904,6 +909,11 @@ function login(userId: UserId, password: string) {
 function logout() {
   control.retryLogin = false
   client.logout()
+
+  control.clear()
+
+  client = undefined;
+  client = createClient('localhost', 8080)
 }
 
 function addProjectCallback(title: Title = 'new project', description: Description, dueDate: Date = new Date()) {
