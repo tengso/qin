@@ -186,8 +186,9 @@ export class View {
           <div class="Icon IconApp AppMenuButton"></div>
           <div class="DropdownContent MenuItemList animated slideInRight">
             <div class="LoginContainer">
-              <div class="Icon IconUser Login"></div>
-              <img id="UserImage"></img>
+              <div class="Icon IconUser Login">
+                <img id="UserImage"></img>
+              </div>
               <div class="Icon IconLogout Logout"></div>
             </div>
             <div class="Icon IconAddProject AddProjectButton"></div>
@@ -276,12 +277,18 @@ export class View {
     userLogin.addEventListener('click', () => {
       const login = this.document.getElementById('Login')
       if (login) {
-        menu.style.display = 'none'
-        menuButton.classList.add('IconApp')
-        menuButton.classList.remove('IconCancel')
+        const image = userLogin.querySelector('#UserImage')
+        // don't show login window if there is user already 
+        // logged in
+        console.log(`debug ${image.src}`)
+        if (image.src === '') {
+          menu.style.display = 'none'
+          menuButton.classList.add('IconApp')
+          menuButton.classList.remove('IconCancel')
 
-        login.style.display = 'flex'
-        login.classList.add('zoomIn')
+          login.style.display = 'flex'
+          login.classList.add('zoomIn')
+        }
       }
       else {
         throw new Error('login element not found')
@@ -1524,6 +1531,7 @@ export class View {
     const imageElement = this.document.getElementById('UserImage')
     if (imageElement) {
       imageElement.src = image
+      imageElement.parentNode.classList.remove('IconUser', 'Icon')
     }
     else {
       throw new Error(`Login Image not found`)
