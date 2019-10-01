@@ -1,4 +1,4 @@
-import { UserId } from '../../TableFlowMessages'
+import { UserId, RowId } from '../../TableFlowMessages'
 
 export type Title = string
 export type Description = string
@@ -296,3 +296,39 @@ export const BaseChatTableColumns = [
 export const TaskChatTableColumns = BaseChatTableColumns.concat([ChatTableColumnName.TaskId])
 
 export const ProjectChatTableColumns = BaseChatTableColumns
+
+/**
+ * Task Attachment
+ */
+
+export const TaskAttachmentTableId = 'task_attachment_table_id'
+
+export type AttachmentId = string
+
+export interface TaskAttachmentRow {
+  id: AttachmentId
+  assetId: AssetId
+  projectId: ProjectId
+  taskId: TaskId
+  description: Description
+}
+
+export function createTaskAttachmentId(projectId: ProjectId, taskId: TaskId, assetId: AssetId): AttachmentId {
+  return `${projectId}#${taskId}#${assetId}`
+}
+
+export enum TaskAttachmentTableColumnName {
+  AttachmentId = 'id',
+  AssetId = 'assetId',
+  ProjectId = 'projectId',
+  TaskId = 'taskId',
+  Description = 'description'
+}
+
+export const TaskAttachmentTableColumns = [
+  TaskAttachmentTableColumnName.AttachmentId,
+  TaskAttachmentTableColumnName.AssetId,
+  TaskAttachmentTableColumnName.ProjectId,
+  TaskAttachmentTableColumnName.TaskId,
+  TaskAttachmentTableColumnName.Description,
+]

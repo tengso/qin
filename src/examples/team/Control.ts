@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, U
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns, TaskAttachmentTableId, createTaskAttachmentId, TaskAttachmentRow, AttachmentId } from './Core'
 import uuid = require('uuid');
 import { string } from 'yargs';
 
@@ -12,7 +12,7 @@ export class Control implements ClientCallback {
   private client: Client
 
   // note: order matters
-  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId]
+  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId, TaskAttachmentTableId]
   private receivedTables = new Map<TableId, Table>()
 
   retryLogin = true
@@ -53,6 +53,8 @@ export class Control implements ClientCallback {
     // this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
     this.view.setSendProjectChatCallback(sendProjectChatCallback)
     this.view.setSendTaskChatCallback(sendTaskChatCallback)
+    this.view.setAddTaskAttachmentCallback(addTaskAttachmentCallback)
+    this.view.setRemoveTaskAttachmentCallback(removeTaskAttachmentCallback)
 
     this.view.setAddProjectMemberCallback(addProjectMember)
     this.view.setRemoveProjectMemberCallback(removeProjectMember)
@@ -157,6 +159,19 @@ export class Control implements ClientCallback {
         const item = this.model.appendCheckListItem(row)
         this.view.appendCheckListItem(row.projectId, row.taskId, item)
       }
+      else if (tableId === TaskAttachmentTableId) {
+        const row = this.createTaskAttachmentRow(values)
+        const item = this.model.appendTaskAttachmentItem(row)
+        const asset = {
+          id: 'AssetId',
+          name: 'AssetName',
+          type: 'AssetType',
+          description: 'Description',
+          content: 'any',
+        }
+        // const asset = this.model.getAsset(item.assetId)
+        this.view.appendTaskAttachmentItem(item.id, row.projectId, row.taskId, item.description, asset)
+      }
       else if (tableId === ProjectChatTableId) {
         const row = this.createProjectChatRow(values)
         const message = this.model.appendProjectChatMessage(row)
@@ -226,6 +241,11 @@ export class Control implements ClientCallback {
       const row = this.createCheckListRow(values)
       const item = this.model.removeCheckListItem(row)
       this.view.removeCheckListItem(row.projectId, row.taskId, row.id, item.status)
+    }
+    else if (tableId === TaskAttachmentTableId) {
+      const row = this.createTaskAttachmentRow(values)
+      const item = this.model.removeTaskAttachmentItem(row)
+      this.view.removeTaskAttachmentItem(row.id)
     }
   }
 
@@ -532,6 +552,19 @@ export class Control implements ClientCallback {
     return row
   }
 
+  createTaskAttachmentRow(values: ColumnValue[]): TaskAttachmentRow {
+
+    const row: TaskAttachmentRow = {
+      id: values[0] as AttachmentId,
+      assetId: values[1] as AssetId,
+      projectId: values[2] as ProjectId,
+      taskId: values[3] as TaskId,
+      description: values[4] as Description,
+    }
+
+    return row
+  }
+
   private createProjectChatRow(values: ColumnValue[]): ProjectChatRow {
 
     const row: ProjectChatRow = {
@@ -792,6 +825,22 @@ function addTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
 
 function removeTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
   client.removeRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId))
+}
+
+function addTaskAttachmentCallback(assetId: AssetId, projectId: ProjectId, taskId: TaskId, description: Description) {
+  const attachmentId = createTaskAttachmentId(projectId, taskId, assetId)
+  const values = [
+    attachmentId,
+    assetId,
+    projectId,
+    taskId,
+    description,
+  ]
+  client.appendRow(TaskAttachmentTableId, attachmentId, values)
+}
+
+function removeTaskAttachmentCallback(attachmentId: AttachmentId) {
+  client.removeRow(TaskAttachmentTableId, attachmentId)
 }
 
 function addCheckListItemCallback(taskId: TaskId, description: Description, status: ItemStatus) {

@@ -440,6 +440,27 @@
   justify-content: space-between;
 }
 
+.Task .Body .Attachment {
+  display: none;
+  flex-flow: column;
+  flex-basis: 100%;
+  justify-content: space-between;
+}
+
+.Task .Body .Attachment .AttachmentItemList {
+  display: flex;
+  flex-flow: column;
+  flex-basis: 90%;
+  overflow: auto;
+}
+
+.Task .Body .Attachment .AppendAttachmentItemContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  flex-basis: 10%;
+}
+
 .Task .Body .Todo .AppendItem {
   display: flex;
   justify-content: center;

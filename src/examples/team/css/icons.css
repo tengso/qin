@@ -30,6 +30,11 @@
   -webkit-mask-size: cover;
 }
 
+.IconAttachment {
+  -webkit-mask: url(../../../../images/attachment.svg);
+  -webkit-mask-size: cover;
+}
+
 .IconMessages {
   -webkit-mask: url(../../../../images/messages.svg);
   -webkit-mask-size: cover;

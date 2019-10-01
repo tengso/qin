@@ -1,4 +1,4 @@
-import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId, ProjectChatRow, Message, MessageId, PosterId, TaskChatRow } from './Core'
+import { TaskRow, TaskGroupRow, ProjectRow, ProjectId, TaskGroupId, TaskId, Title, Description, MemberRow, AssetId, AssetRow, AssetName, AssetType, CheckListRow, ItemStatus, ItemId, ProjectChatRow, Message, MessageId, PosterId, TaskChatRow, TaskAttachmentRow, AttachmentId } from './Core'
 import { UserId } from '../../TableFlowMessages'
 
 // class Node<Value> {
@@ -357,6 +357,12 @@ export class CheckListItem {
   status: ItemStatus
 }
 
+export class AttachmentItem {
+  id: AttachmentId
+  assetId: AssetId
+  description: Description
+}
+
 export interface Task {
   readonly id: TaskId
   title: Title
@@ -372,6 +378,9 @@ export interface Task {
   getItem(itemId: ItemId): CheckListItem | undefined
 
   appendChatMessage(message: ChatMessage): ChatMessage
+
+  appendAttachment(attachment: AttachmentItem): AttachmentItem
+  removeAttachment(attachmentId: AttachmentId): AttachmentItem
 }
 
 class TaskImpl implements Task {
@@ -388,6 +397,9 @@ class TaskImpl implements Task {
 
   private chatMessageList = new Array<ChatMessage>()
   private chatMessageMap = new Map<MessageId, ChatMessage>()
+
+  private attachmentList = new Array<AttachmentItem>()
+  private attachmentMap = new Map<AttachmentId, AttachmentItem>()
 
   appendChatMessage(message: ChatMessage): ChatMessage {
     if (!this.chatMessageMap.get(message.id)) {
@@ -419,6 +431,29 @@ class TaskImpl implements Task {
     }
     else {
       throw new Error(`owner ${memberId} not found`)
+    }
+  }
+
+  appendAttachment(attachment: AttachmentItem): AttachmentItem {
+    if (!this.attachmentMap.get(attachment.id)) {
+      this.attachmentList.push(attachment)
+      this.attachmentMap.set(attachment.id, attachment)
+      return attachment
+    }
+    else {
+      throw new Error(`owner ${attachment.id} exists`)
+    }
+  }
+
+  removeAttachment(attachmentId: AttachmentId): AttachmentItem {
+    const index = this.attachmentList.findIndex(attachment => {return attachment.id === attachmentId})
+    if (index != -1) {
+      const attachment = this.attachmentList.splice(index, 1)
+      this.attachmentMap.delete(attachmentId)
+      return attachment[0]
+    }
+    else {
+      throw new Error(`owner ${attachmentId} not found`)
     }
   }
 
@@ -996,6 +1031,14 @@ export class Model {
     return item
   }
 
+  private createAttachmentItem(row: TaskAttachmentRow): AttachmentItem {
+    const item = new AttachmentItem()
+    item.id = row.id
+    item.assetId = row.assetId
+    item.description = row.description
+    return item
+  }
+
   appendCheckListItem(row: CheckListRow): CheckListItem {
     const project = this.projectMap.get(row.projectId)
     if (project) {
@@ -1003,6 +1046,39 @@ export class Model {
       if (task) {
         const item = this.createCheckListItem(row)
         return task.appendItem(item)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
+    }
+  }
+
+  appendTaskAttachmentItem(row: TaskAttachmentRow): AttachmentItem {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        const item = this.createAttachmentItem(row)
+        return task.appendAttachment(item)
+      }
+      else {
+        throw new Error(`task ${row.taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${project.id} not found`)
+    }
+  }
+
+  removeTaskAttachmentItem(row: TaskAttachmentRow): AttachmentItem {
+    const project = this.projectMap.get(row.projectId)
+    if (project) {
+      const task = project.getTask(row.taskId)
+      if (task) {
+        return task.removeAttachment(row.id)
       }
       else {
         throw new Error(`task ${row.taskId} not found`)

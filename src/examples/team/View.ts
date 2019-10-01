@@ -1,6 +1,6 @@
 import { UserId } from '../../TableFlowMessages'
-import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model } from './Model'
-import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description } from './Core'
+import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model, Asset } from './Model'
+import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description, AttachmentId, AssetId } from './Core'
 import Quill from 'quill'
 import flatpickr from 'flatpickr'
 
@@ -37,6 +37,9 @@ export class View {
   private removeCheckListItemCallback
   private updateCheckListItemStatusCallback
   private updateCheckListItemDescriptionCallback
+
+  private addTaskAttachmentCallback
+  private removeTaskAttachmentCallback
 
   private sendProjectChatCallback
   private sendTaskChatCallback
@@ -130,6 +133,14 @@ export class View {
 
   setRemoveTaskOwnerCallback(callback) {
     this.removeTaskOwnerCallback = callback
+  }
+
+  setAddTaskAttachmentCallback(callback: (assetId: AssetId, projectId: ProjectId, taskId: TaskId, description: Description) => void) {
+    this.addTaskAttachmentCallback = callback
+  }
+
+  setRemoveTaskAttachmentCallback(callback) {
+    this.removeTaskAttachmentCallback = callback
   }
 
   setAddCheckListItemCallback(callback) {
@@ -583,6 +594,7 @@ export class View {
           <div class="Tab">
             <div class="Icon IconDescription OpenDescription"></div>
             <div class="Icon IconTodo OpenTodo"></div>
+            <div class="Icon IconAttachment OpenAttachment"></div>
             <div class="Icon IconMessages OpenTaskChat"></div>
           </div>
           <div class="Description">
@@ -597,7 +609,15 @@ export class View {
               </div>
             </div>
             <div class="AppendItem">
-              <div class="Icon IconAdd AppendItemButton"></input>
+              <div class="Icon IconAdd AppendItemButton"></div>
+            </div>
+          </div>
+          <div class="Attachment">
+            <div class="AttachmentItemList">
+            </div>
+            <div class="AppendAttachmentItemContainer">
+              <div class="Icon IconAdd AppendAttachmentItemButton">
+              </div>
             </div>
           </div>
         </div>
@@ -651,6 +671,7 @@ export class View {
 
     const todo = taskElement.querySelector('.Todo')
     const chat = taskElement.querySelector('.TaskChat')
+    const attachment = taskElement.querySelector('.Attachment')
 
     const hideDetails = taskElement.querySelector('.CloseButton')
     hideDetails.addEventListener('click', () => {
@@ -662,14 +683,20 @@ export class View {
 
     const openDescription = taskElement.querySelector('.OpenDescription')
     const openTodo = taskElement.querySelector('.OpenTodo')
+    const openAttachment = taskElement.querySelector('.OpenAttachment')
     const openChat = taskElement.querySelector('.OpenTaskChat')
 
     const initTabCallback = () => {
+      description.style.display = 'flex'
+
       todo.style.display = 'none'
       chat.style.display = 'none'
-      description.style.display = 'flex'
+      attachment.style.display = 'none'
+
       openDescription.style.background = 'lightgreen' 
+
       openTodo.style.background = 'lightgrey' 
+      openAttachment.style.background = 'lightgrey' 
       openChat.style.background = 'lightgrey' 
     }
 
@@ -677,22 +704,47 @@ export class View {
 
     openTodo.addEventListener('click', () => {
       todo.style.display = 'flex'
+
       chat.style.display = 'none'
       description.style.display = 'none'
-      openDescription.style.background = 'lightgrey' 
+      attachment.style.display = 'none'
+
       openTodo.style.background = 'lightgreen' 
+
+      openDescription.style.background = 'lightgrey' 
       openChat.style.background = 'lightgrey' 
+      openAttachment.style.background = 'lightgrey' 
+    })
+
+    openAttachment.addEventListener('click', () => {
+      attachment.style.display = 'flex'
+
+      todo.style.display = 'none'
+      chat.style.display = 'none'
+      description.style.display = 'none'
+
+      openAttachment.style.background = 'lightgreen' 
+
+      openDescription.style.background = 'lightgrey' 
+      openChat.style.background = 'lightgrey' 
+      openTodo.style.background = 'lightgrey' 
     })
 
     openChat.addEventListener('click', () => {
-      todo.style.display = 'none'
       chat.style.display = 'flex'
+
+      todo.style.display = 'none'
+      attachment.style.display = 'none'
       description.style.display = 'none'
+
       const messageList = body.querySelector('.MessageList')
       messageList.scrollTop = messageList.scrollHeight
+
+      openChat.style.background = 'lightgreen' 
+
       openDescription.style.background = 'lightgrey' 
       openTodo.style.background = 'lightgrey' 
-      openChat.style.background = 'lightgreen' 
+      openAttachment.style.background = 'lightgrey' 
     })
 
     const showDetails = taskElement.querySelector('.ShowDetails .Button')
@@ -781,6 +833,21 @@ export class View {
       const status = ItemStatus.Open
       const description = 'new item'
       this.addCheckListItemCallback(task.id, description, status)
+    })
+
+    const appendAttachment= taskElement.querySelector('.Attachment .AppendAttachmentItemButton')
+    appendAttachment.addEventListener('click', () => {
+      console.log(`append attachment`)
+      const description = 'new'
+      const projectElement = taskElement.closest('.Project')
+      if (projectElement) {
+        const assetId = 'test'
+        this.addTaskAttachmentCallback(assetId, projectElement.id, task.id, description)
+      }
+      else {
+        throw new Error(`project for ${task.id} not found`)
+      }
+
     })
 
     const removeTaskButton = taskElement.querySelector('.RemoveButton')
@@ -1789,5 +1856,67 @@ export class View {
       throw new Error(`project element for ${projectId} not found`)
     }
   }
-}
 
+  appendTaskAttachmentItem(attachmentId: AttachmentId, projectId: ProjectId, taskId: TaskId, description: Description, asset: Asset) {
+    const project = this.document.getElementById(projectId)
+    if (project) {
+      const task = this.document.getElementById(taskId)
+      if (task) {
+        const attachmentList = task.querySelector('.AttachmentItemList')
+        
+        const itemElement = this.document.createElement('div')
+        itemElement.setAttribute('class', 'AttachmentItem')
+        itemElement.setAttribute('id', attachmentId)
+
+        const html = `
+          <div class="ItemHeader">
+          </div>
+          <div class="ItemType">
+            ${asset.type}
+          </div>
+          <div class="ItemName">
+            ${asset.name}
+          </div>
+          <div class="AssetId">
+            ${asset.id}
+          </div>
+          <div class="ItemDescription">
+            <input class="DescriptionInput" value="${description}"</input>
+          </div>
+          <div class="RemoveItem">
+            <input type="image" src="../../../images/close.svg" class="RemoveItemButton"></input>
+          </div>
+        `
+        itemElement.innerHTML = html
+
+        // const descInput = itemElement.querySelector('.DescriptionInput')
+        // descInput.onblur = () => {
+        //   this.removeTaskAttachmentCallback(attachmentId)
+        // }
+
+        const removeButton = itemElement.querySelector('.RemoveItemButton')
+        removeButton.addEventListener('click', () => {
+          this.removeTaskAttachmentCallback(attachmentId)
+        })
+
+        attachmentList.appendChild(itemElement)
+      }
+      else {
+        throw new Error(`task ${taskId} not found`)
+      }
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  removeTaskAttachmentItem(attachmentId: AttachmentId) {
+    const attachment = this.document.getElementById(attachmentId)
+    if (attachment) {
+      attachment.parentElement.removeChild(attachment)
+    }
+    else {
+      throw new Error(`${attachmentId} not found`)
+    }
+  }
+}
