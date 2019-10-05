@@ -31,6 +31,7 @@
     "@types/sortablejs": "^1.7.2",
     "@types/yargs": "^13.0.2",
     "animate.css": "^3.7.2",
+    "file-saver": "^2.0.2",
     "flatpickr": "^4.6.2",
     "popper.js": "^1.15.0",
     "pretty": "^2.0.0",
