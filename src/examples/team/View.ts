@@ -3,6 +3,7 @@ import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model, As
 import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description, AttachmentId, AssetId } from './Core'
 import Quill from 'quill'
 import flatpickr from 'flatpickr'
+import uuid = require('uuid');
 
 // TODO: disable delete remove task group when non-empty task list
 
@@ -135,7 +136,7 @@ export class View {
     this.removeTaskOwnerCallback = callback
   }
 
-  setAddTaskAttachmentCallback(callback: (assetId: AssetId, projectId: ProjectId, taskId: TaskId, description: Description) => void) {
+  setAddTaskAttachmentCallback(callback: (asset: Asset, projectId: ProjectId, taskId: TaskId, description: Description) => void) {
     this.addTaskAttachmentCallback = callback
   }
 
@@ -616,8 +617,7 @@ export class View {
             <div class="AttachmentItemList">
             </div>
             <div class="AppendAttachmentItemContainer">
-              <div class="Icon IconAdd AppendAttachmentItemButton">
-              </div>
+              <input class="AttachmentFileInput" type="file">
             </div>
           </div>
         </div>
@@ -835,19 +835,36 @@ export class View {
       this.addCheckListItemCallback(task.id, description, status)
     })
 
-    const appendAttachment= taskElement.querySelector('.Attachment .AppendAttachmentItemButton')
-    appendAttachment.addEventListener('click', () => {
-      console.log(`append attachment`)
-      const description = 'new'
-      const projectElement = taskElement.closest('.Project')
-      if (projectElement) {
-        const assetId = 'test'
-        this.addTaskAttachmentCallback(assetId, projectElement.id, task.id, description)
-      }
-      else {
-        throw new Error(`project for ${task.id} not found`)
-      }
+    const loadAttachmentFile = taskElement.querySelector('.AttachmentFileInput')
+    loadAttachmentFile.addEventListener('input', () => {
+      if (loadAttachmentFile.files.length > 0) {
+        const file = loadAttachmentFile.files[0]
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onloadend = (evt) => {
+          // @ts-ignore
+          const content = evt.target.result
 
+          const assetId = uuid()
+          const assetName = file.name
+          const assetType = file.type
+          const assetDescription = `${task.id}#attachment`
+          const asset: Asset = {
+            id: assetId,
+            name: assetName,
+            type: assetType,
+            description: assetDescription,
+            content: content,
+          }
+
+          const description = 'new'
+          const projectElement = taskElement.closest('.Project')
+          if (projectElement) {
+            const assetId = 'test'
+            this.addTaskAttachmentCallback(asset, projectElement.id, task.id, description)
+          }
+        }
+      }
     })
 
     const removeTaskButton = taskElement.querySelector('.RemoveButton')
@@ -1871,18 +1888,17 @@ export class View {
         const html = `
           <div class="ItemHeader">
           </div>
-          <div class="ItemType">
-            ${asset.type}
-          </div>
           <div class="ItemName">
             ${asset.name}
           </div>
-          <div class="AssetId">
-            ${asset.id}
+          <div class="ItemType">
+            ${asset.type}
           </div>
+          <!--
           <div class="ItemDescription">
             <input class="DescriptionInput" value="${description}"</input>
           </div>
+          -->
           <div class="RemoveItem">
             <input type="image" src="../../../images/close.svg" class="RemoveItemButton"></input>
           </div>

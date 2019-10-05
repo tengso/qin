@@ -402,6 +402,10 @@
   animation-duration: 0.2s;
 }
 
+.Task:hover {
+  box-shadow: 0px 16px 32px 0px rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
 .Task .Body .Close {
   display: flex;
   flex-flow: row;
@@ -444,21 +448,49 @@
   display: none;
   flex-flow: column;
   flex-basis: 100%;
-  justify-content: space-between;
 }
 
 .Task .Body .Attachment .AttachmentItemList {
   display: flex;
   flex-flow: column;
-  flex-basis: 90%;
+  flex-basis: 300px;
   overflow: auto;
+}
+
+.AttachmentItemList .AttachmentItem {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-evenly;
+  padding: 5px;
+}
+
+.AttachmentItem .ItemName {
+  flex-basis: 60%;
+  margin-left: 10px;
+}
+
+.AttachmentItem .ItemType {
+  flex-basis: 30%
+}
+
+.AttachmentItem .RemoveItem {
+  display: flex;
+  flex-flow: row;
+  flex-basis: 100%;
+  flex-basis: 10%;
+  justify-content: center;
 }
 
 .Task .Body .Attachment .AppendAttachmentItemContainer {
   display: flex;
+  flex-flow: row;
   justify-content: center;
   width: 100%;
   flex-basis: 10%;
+}
+
+.AppendAttachmentItemContainer .AttachmentFileInput {
+  align-self: center;
 }
 
 .Task .Body .Todo .AppendItem {
@@ -468,16 +500,13 @@
   flex-basis: 10%;
 }
 
-.Task .Body .Todo .AppendItemButton:hover {
-  opacity: 0.5;
-}
-
 .Task .Body .Todo .CheckList {
   padding-top: 15px;
   display: flex;
   flex-flow: column;
-  flex-basis: 90%;
+  flex-basis: 80%;
   overflow: auto;
+  flex-basis: 300px;
 }
 
 .Task .Body .Todo .CheckList .ItemList {

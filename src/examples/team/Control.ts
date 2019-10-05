@@ -1,7 +1,7 @@
 import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, UserId, logoutFailure, createUserFailure, removeUserSuccess, removeUserFailure, createTableFailure, removeTableSuccess, removeTableFailure, appendRowFailure, insertRowFailure, removeRowFailure, updateCellFailure, moveRowAndUpdateCellFailure, loginSuccess, loginFailure } from '../../TableFlowMessages'
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
-import { Model, TaskGroup } from './Model'
+import { Model, TaskGroup, Asset } from './Model'
 import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns, TaskAttachmentTableId, createTaskAttachmentId, TaskAttachmentRow, AttachmentId } from './Core'
 import uuid = require('uuid');
 import { string } from 'yargs';
@@ -162,14 +162,7 @@ export class Control implements ClientCallback {
       else if (tableId === TaskAttachmentTableId) {
         const row = this.createTaskAttachmentRow(values)
         const item = this.model.appendTaskAttachmentItem(row)
-        const asset = {
-          id: 'AssetId',
-          name: 'AssetName',
-          type: 'AssetType',
-          description: 'Description',
-          content: 'any',
-        }
-        // const asset = this.model.getAsset(item.assetId)
+        const asset = this.model.getAsset(item.assetId)
         this.view.appendTaskAttachmentItem(item.id, row.projectId, row.taskId, item.description, asset)
       }
       else if (tableId === ProjectChatTableId) {
@@ -596,7 +589,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    // client.login('wukong', 'wk')
+    client.login('wukong', 'wk')
   }
 
   connectFailure(): void {
@@ -827,16 +820,35 @@ function removeTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
   client.removeRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId))
 }
 
-function addTaskAttachmentCallback(assetId: AssetId, projectId: ProjectId, taskId: TaskId, description: Description) {
-  const attachmentId = createTaskAttachmentId(projectId, taskId, assetId)
-  const values = [
+function addTaskAttachmentCallback(asset: Asset, projectId: ProjectId, taskId: TaskId, description: Description) {
+  const ts = new Date()
+  const assetValues = [
+    asset.id,
+    asset.name,
+    asset.type,
+    asset.description,
+    client.userId,
+    ts,
+    client.userId,
+    ts,
+    asset.content, 
+  ]
+  const appendAsset = client.appendRow(AssetTableId, asset.id, assetValues, false)
+
+  const attachmentId = createTaskAttachmentId(projectId, taskId, asset.id)
+  const attachmentValues = [
     attachmentId,
-    assetId,
+    asset.id,
     projectId,
     taskId,
     description,
   ]
-  client.appendRow(TaskAttachmentTableId, attachmentId, values)
+  const appendAttachment = client.appendRow(TaskAttachmentTableId, attachmentId, attachmentValues, false)
+
+  console.log(appendAsset)
+  console.log(appendAttachment)
+
+  client.executeTransaction([appendAsset, appendAttachment])
 }
 
 function removeTaskAttachmentCallback(attachmentId: AttachmentId) {
@@ -937,8 +949,8 @@ function addUser(userId: UserId, userName: string, title: Title, description: De
     ]
     const addMember = client.appendRow(MemberTableId, memberRowId, row, false)  
 
-    console.log(addAvatarAsset)
-    console.log(addMember)
+    // console.log(addAvatarAsset)
+    // console.log(addMember)
     client.executeTransaction([addAvatarAsset, addMember])
   }
 }
