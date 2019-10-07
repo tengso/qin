@@ -469,6 +469,10 @@
   margin-left: 10px;
 }
 
+.AttachmentItem .ItemName:hover {
+  text-decoration: underline;
+}
+
 .AttachmentItem .ItemType {
   flex-basis: 30%
 }

@@ -1644,7 +1644,7 @@ export class View {
             <input class="DescriptionInput" value="${item.description}"</input>
           </div>
           <div class="RemoveItem">
-            <input type="image" src="../../../images/close.svg" class="RemoveItemButton"></input>
+            <div class="Icon IconClose RemoveItemButton"></div>
           </div>
         `
         itemElement.innerHTML = html
@@ -1925,7 +1925,7 @@ export class View {
           </div>
           -->
           <div class="RemoveItem">
-            <input type="image" src="../../../images/close.svg" class="RemoveItemButton"></input>
+            <div class="Icon IconClose RemoveItemButton"></div>
           </div>
         `
         itemElement.innerHTML = html
