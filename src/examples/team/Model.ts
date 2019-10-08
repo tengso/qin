@@ -130,7 +130,7 @@ class ProjectImpl implements Project {
   }
 
   appendMember(member: Member) {
-    console.log(`append project member ${member.id}`)
+    // console.log(`append project member ${member.id}`)
     if (!this.memberMap.get(member.id)) {
       this.memberList.push(member)
       this.memberMap.set(member.id, member)
@@ -141,7 +141,7 @@ class ProjectImpl implements Project {
   }
 
   removeMember(memberId: UserId) {
-    console.log(`remove project member ${memberId}`)
+    // console.log(`remove project member ${memberId}`)
     const index = this.memberList.findIndex((member) => {
       return member.id === memberId})
     if (index != -1) {
@@ -159,7 +159,7 @@ class ProjectImpl implements Project {
   }
 
   getTaskGroup(taskGroupId: TaskGroupId): TaskGroupImpl | undefined {
-    console.log(this.taskGroupMap)
+    // console.log(this.taskGroupMap)
     return this.taskGroupMap.get(taskGroupId)
   }
 
@@ -184,7 +184,7 @@ class ProjectImpl implements Project {
   }
 
   appendTaskGroup(taskGroup: TaskGroupImpl): void {
-    console.log(taskGroup)
+    // console.log(taskGroup)
     this.taskGroupList.push(taskGroup)
     this.taskGroupMap.set(taskGroup.id, taskGroup)
   }
@@ -938,7 +938,7 @@ export class Model {
 
   appendAsset(values: AssetRow) {
     const asset = this.createAsset(values)
-    console.log(`append asset ${asset.id}`)
+    // console.log(`append asset ${asset.id}`)
     this.assetList.push(asset)
     this.assetMap.set(asset.id, asset)
   }
@@ -1121,7 +1121,7 @@ export class Model {
 
   updateCheckListItemStatus(itemId: ItemId, status: ItemStatus): Task {
     const [item, task] = this.findCheckListItem(itemId)
-    console.log('update item ${item}')
+    // console.log('update item ${item}')
     if (item) {
       item.status = status
       return task
@@ -1133,7 +1133,7 @@ export class Model {
 
   updateCheckListItemDescription(itemId: ItemId, description: Description) {
     const [item, _] = this.findCheckListItem(itemId)
-    console.log('update item ${item}')
+    // console.log('update item ${item}')
     if (item) {
       item.description = description
     }

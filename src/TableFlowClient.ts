@@ -154,13 +154,13 @@ export class Client {
 
   createUser(userId: string, userName: string, password: string) {
     const msg = createUser(this.sessionId, userId, userName, password, this.userId)
-    console.log(msg)
+    // console.log(msg)
     this.connection.send(msg)
   }
 
   removeUser(userId: string) {
     const msg = removeUser(this.sessionId, userId, this.userId)
-    console.log(msg)
+    // console.log(msg)
     this.connection.send(msg)
   }
 
@@ -229,7 +229,7 @@ export class Client {
     this.connection.onmessage = (e) => {
       const returnMsg = JSON.parse(e.data.toString())
 
-      console.log(`received: ${e.data.toString()}`)
+      // console.log(`received: ${e.data.toString()}`)
 
       switch (returnMsg.msgType) {
         case MsgType.LoginSuccess: {

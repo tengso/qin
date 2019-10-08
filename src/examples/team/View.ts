@@ -293,7 +293,7 @@ export class View {
         const image = userLogin.querySelector('#UserImage')
         // don't show login window if there is user already 
         // logged in
-        console.log(`debug ${image.src}`)
+        // console.log(`debug ${image.src}`)
         if (image.src === '') {
           menu.style.display = 'none'
           menuButton.classList.add('IconApp')
@@ -758,7 +758,7 @@ export class View {
 
     const title = taskElement.querySelector('.Title .Input')
     title.onblur = () => {
-      console.log(`update task title ${task.id}`)
+      // console.log(`update task title ${task.id}`)
       this.updateTaskTitleCallback(task.id, title.value)
     }
 
@@ -767,7 +767,7 @@ export class View {
       altInput: true,
       altFormat: "M-d",
       onChange: (selectedDates, DateString, instance) => {
-        console.log(selectedDates)
+        // console.log(selectedDates)
         // console.log(`update task due date ${task.id}`)
         this.updateTaskDueDateCallback(task.id, selectedDates[0])
       }
@@ -783,14 +783,14 @@ export class View {
       event.preventDefault()
       if (event.dataTransfer) {
         const memberId = event.dataTransfer.getData('memberId')
-        console.log(`add owner ${memberId}`)
+        // console.log(`add owner ${memberId}`)
         if (memberId) {
           const members = ownerList.children
           for (let i = 0; i < members.length; i++) {
             const existingMemberId = members[i].getAttribute('id')
-            console.log(`existing member ${memberId}`)
+            // console.log(`existing member ${memberId}`)
             if (existingMemberId === memberId) {
-              console.log(`member ${memberId} exists`)
+              // console.log(`member ${memberId} exists`)
               return
             }
           }
@@ -803,7 +803,7 @@ export class View {
       else {
         throw new Error(`dataTransfer not found on event`)
       }
-      console.log('dropped')
+      // console.log('dropped')
     }
 
     ownerList.ondragover = (event) => {
@@ -902,7 +902,7 @@ export class View {
 
     const title = taskGroupElement.querySelector('.Input')
     title.onblur = () => {
-      console.log(`update task group title ${taskGroup.id}`)
+      // console.log(`update task group title ${taskGroup.id}`)
       this.updateTaskGroupTitleCallback(taskGroup.id, title.value)
     }
 
@@ -967,7 +967,7 @@ export class View {
       }
     };
 
-    console.log(chatElement)
+    // console.log(chatElement)
 
     const quill = new Quill(messageElement, options)
 
@@ -1129,7 +1129,7 @@ export class View {
       altInput: true,
       altFormat: "M-d",
       onChange: (selectedDates, DateString, instance) => {
-        console.log(selectedDates)
+        // console.log(selectedDates)
         // console.log(`update task due date ${task.id}`)
         this.updateProjectDueDateCallback(project.id, selectedDates[0])
       }
@@ -1180,7 +1180,7 @@ export class View {
     })
 
     openChatElement.onclick = function() {
-      console.log('open clicked')
+      // console.log('open clicked')
       if (chatElement.style.display === "flex") {
         chatElement.classList.remove('slideInRight')
         chatElement.classList.add('slideOutRight')
@@ -1272,7 +1272,7 @@ export class View {
   }
 
   insertTask(taskGroup: TaskGroup, task: Task, index: number) {
-    console.log(`insert task: ${index}`)
+    // console.log(`insert task: ${index}`)
     const taskGroupElement = this.document.getElementById(taskGroup.id)
     if (taskGroupElement) {
       const taskList = taskGroupElement.querySelector('.TaskList')
@@ -1450,7 +1450,7 @@ export class View {
       throw new Error(`invalid move from task ${taskId} is after task ${afterTaskId}`)
     }
 
-    console.log(`move task ${taskId} to task group ${toTaskGroupId} after task id ${afterTaskId}`)
+    // console.log(`move task ${taskId} to task group ${toTaskGroupId} after task id ${afterTaskId}`)
 
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
@@ -1540,7 +1540,7 @@ export class View {
       memberImageElement.setAttribute('src', image)
       memberImageElement.setAttribute('draggable', 'true')
       memberImageElement.ondragstart = (event) => {
-        console.log('drag start')
+        // console.log('drag start')
         event.dataTransfer.setData("memberId", member.id)
         event.dataTransfer.dropEffect = 'copy'
       }
