@@ -539,10 +539,10 @@ export class View {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
     taskElement.setAttribute('id', task.id)
-    taskElement.classList.add('animated', 'bounceIn')
+    taskElement.classList.add('animated', 'fadeIn')
     taskElement.addEventListener('animationend', () => {
       taskElement.classList.remove('animated')
-      taskElement.classList.remove('bounceIn')
+      taskElement.classList.remove('fadeIn')
     })
 
     var options = { month: 'short', day: 'numeric'};
@@ -1261,7 +1261,7 @@ export class View {
   removeTask(taskId: TaskId) {
     const taskElement = this.document.getElementById(taskId)
     if (taskElement) {
-      taskElement.classList.add('animated', 'bounceOut')
+      taskElement.classList.add('animated', 'fadeOut')
       taskElement.addEventListener('animationend', () => {
         taskElement.parentNode.removeChild(taskElement)
       })
@@ -1335,9 +1335,7 @@ export class View {
       if (taskElement) {
         const dueDateElement = taskElement.querySelector('.DueDate')
         if (dueDateElement) {
-          var options = { month: 'short', day: 'numeric' }
-          const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
-          dueDateElement.value = formattedDueDate
+          dueDateElement._flatpickr.setDate(dueDate)
         }
         else {
           throw new Error(`task element ${taskId} title not found`)
@@ -1842,13 +1840,12 @@ export class View {
   }
 
   updateProjectDueDate(projectId: ProjectId, dueDate: Date) {
+    console.log(`update due date ${dueDate}`)
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
       const dueDateElement = projectElement.querySelector('.ProjectContainer .DueDateContainer .DueDate')
       if (dueDateElement) {
-        var options = { month: 'short', day: 'numeric' }
-        const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
-        dueDateElement.value = formattedDueDate 
+        dueDateElement._flatpickr.setDate(dueDate)
       }
       else {
         throw new Error(`due date element for ${projectId} not found`)

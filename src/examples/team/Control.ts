@@ -277,7 +277,7 @@ export class Control implements ClientCallback {
         this.view.updateProjectDescription(projectId, description)
       }
       else if (column === ProjectTableColumnName.DueDate) {
-        const dueDate = value as Date
+        const dueDate = new Date(value as string)
         this.model.updateProjectDueDate(projectId, dueDate)
         this.view.updateProjectDueDate(projectId, dueDate)
       }
@@ -713,7 +713,7 @@ export class Control implements ClientCallback {
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
-    // console.log(msg)
+    console.log(msg)
   }
 }
 
