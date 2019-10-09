@@ -33,10 +33,10 @@ function publish(msg, callback): void {
       sessionIds.forEach(sessionId => {
         if (sessionIdToSocket.has(sessionId)) {
           sessionIdToSocket.get(sessionId).send(msg)
-          console.log(`published: ${msg}`)
+          // console.log(`published: ${msg}`)
         }
         else {
-          console.log(`can't find socket for ${sessionId}`)
+          // console.log(`can't find socket for ${sessionId}`)
         }
       })
     }
@@ -49,7 +49,7 @@ function publish(msg, callback): void {
 
 function Reply(ws) {
   return msg => {
-    console.log(`reply: ${msg}`)
+    // console.log(`reply: ${msg}`)
     ws.send(msg)
   }
 }
@@ -65,7 +65,7 @@ function handleLogin(ws, reply, userId: UserId, password: Password) {
     }
     else if (isRoot(userId, password) || (user.password === password)) {
       db.getSessionId(userId, (sessionId: SessionId) => {
-        console.log(sessionId)
+        // console.log(sessionId)
         if (!sessionId) {
           const sessionId = uuid()
           sessionIdToSocket.set(sessionId, ws)
@@ -86,7 +86,7 @@ function handleLogin(ws, reply, userId: UserId, password: Password) {
 
 // FIXME: check sessionId
 function handleLogout(reply, userId: UserId) {
-  console.log(`logout: ${userId}`)
+  // console.log(`logout: ${userId}`)
   db.getSessionId(userId, (sessionId) => {
     if (sessionId) {
       db.removeSessionId(userId, (res) => {
@@ -201,7 +201,7 @@ function handleInsertRow(reply, message) {
 
   // console.log(`append row\n${JSON.stringify(table)}\n${tableUpdate}`)
 
-  console.log(`after row id: ${afterRowId}`)
+  // console.log(`after row id: ${afterRowId}`)
 
   db.getSessionId(updatorId, sessionId => {
     if (sessionId && sessionId == uncheckedSessionId) {
@@ -209,10 +209,10 @@ function handleInsertRow(reply, message) {
         if (table) {
           let i = -1
           if (afterRowId) {
-            console.log(`${table.rows.length}`)
+            // console.log(`${table.rows.length}`)
             let index 
             for (index = 0; index < table.rows.length; index++) {
-              console.log(`row: ${table.rows[index].rowId}`)
+              // console.log(`row: ${table.rows[index].rowId}`)
               if (table.rows[index].rowId === afterRowId) {
                 i = index
                 break
@@ -226,12 +226,12 @@ function handleInsertRow(reply, message) {
           table.version = table.version + 1
           table.rows.splice(i + 1, 0, {rowId: rowId, values: values})
 
-          console.log(table)
+          // console.log(table)
 
           db.setTableSnap(tableId, table, () => {
-            console.log('saved table')
+            // console.log('saved table')
             db.setTableUpdate(tableId, table.version, message, () => {
-            console.log('saved updated')
+            // console.log('saved updated')
               const update = {
                 updateType: message.msgType,
                 tableId: tableId,
@@ -242,7 +242,7 @@ function handleInsertRow(reply, message) {
               const msg = sendTableUpdate(sessionId, updatorId, update)
               publish(msg, () => {
                 reply(insertRowSuccess(rowId))
-                console.log('sent response')
+                // console.log('sent response')
               })
             })
           })
@@ -269,10 +269,10 @@ function handleRemoveRow(reply, message) {
     if (sessionId && sessionId === uncheckedSessionId) {
       db.getTableSnap(tableId, table => {
         if (table) {
-          console.log(JSON.stringify(table))
-          console.log(rowId)
+          // console.log(JSON.stringify(table))
+          // console.log(rowId)
           const rowIndex = getRowIndex(table, rowId) 
-          console.log(rowIndex)
+          // console.log(rowIndex)
           if (rowIndex != -1) {
             const row = table.rows.splice(rowIndex, 1)[0]
             table.version = table.version + 1
@@ -326,8 +326,8 @@ function handleUpdateCell(reply, message) {
               reply(updateCellFailure(tableId, rowId, columnName, `column ${columnName} not exists`))
             }
             else {
-              console.log(JSON.stringify(table))
-              console.log(rowIndex)
+              // console.log(JSON.stringify(table))
+              // console.log(rowIndex)
               table.version = table.version + 1
               const row = table.rows[rowIndex]
               row.values[columnIndex] = value
@@ -389,8 +389,8 @@ function handleMoveRowAndUpdateCell(reply, message) {
                 reply(moveRowAndUpdateCellFailure(tableId, rowId, afterRowId, columnName, `column ${columnName} not exists`))
               }
               else {
-                console.log(JSON.stringify(table))
-                console.log(rowIndex)
+                // console.log(JSON.stringify(table))
+                // console.log(rowIndex)
                 row.values[columnIndex] = value
               }
             }
@@ -530,10 +530,10 @@ function handleSubscribeTables(reply, message) {
       db.setSubscriber(sessionId, subscriberId, () => {
         db.getTables(tables => {
           if (tables) {
-            console.log(tables)
-            console.log(typeof tables)
+            // console.log(tables)
+            // console.log(typeof tables)
             Object.entries(tables).forEach(([_, table]: [TableId, Table]) => {
-              console.log(table)
+              // console.log(table)
               reply(sendTableSnap(sessionId, subscriberId, table))
               reply(subscribeTablesSuccess(sessionId, subscriberId))
             })
@@ -571,7 +571,7 @@ export class TableFlowServer {
         const message = JSON.parse(msg as string)
         console.log(`recv: ${message.msgType}`)
         if (message.msgType === MsgType.Transaction) {
-          console.log('transaction')
+          // console.log('transaction')
           for (const msg of message.payLoad) {
             const message = JSON.parse(msg as string)
             this.handleMessage(ws, message)

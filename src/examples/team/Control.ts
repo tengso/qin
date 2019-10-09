@@ -106,15 +106,15 @@ export class Control implements ClientCallback {
         const row = this.createMemberRow(values)
         this.model.appendMember(row)
 
-        console.log(`debug: incoming member: ${row.id} user: ${this.client.userId}`)
+        // console.log(`debug: incoming member: ${row.id} user: ${this.client.userId}`)
         if (row.id === this.client.userId) {
           const member = this.model.getMember(this.client.userId)
           if (member) {
-            console.log(`debug found member: ${member.id}`)
+            // console.log(`debug found member: ${member.id}`)
             const asset = this.model.getAsset(member.avatar)
             if (asset) {
-              console.log(`debug found asset: ${asset.name}`)
-              console.log(`debug set user image: ${member.id}`)
+              // console.log(`debug found asset: ${asset.name}`)
+              // console.log(`debug set user image: ${member.id}`)
               this.view.setUserImage(asset.content)
             }
           }
@@ -128,9 +128,9 @@ export class Control implements ClientCallback {
         const row = this.createProjectMemberRow(values)
         const member = this.model.getMember(row.memberId)
         if (member) {
-          console.log(member.avatar)
+          // console.log(member.avatar)
           const asset = member.avatar ? this.model.getAsset(member.avatar) : undefined
-          console.log(asset)
+          // console.log(asset)
           const image = asset ? asset.content : undefined
 
           this.model.appendProjectMember(row.projectId, member)
@@ -380,7 +380,7 @@ export class Control implements ClientCallback {
       // console.log(`to: ${to} ${toIndex}`)
 
       const elementClass = event.item.getAttribute('class')
-      console.log(elementClass)
+      // console.log(elementClass)
 
       if (elementClass === 'TaskGroup') {
         const tableId = TaskGroupTableId    
@@ -713,7 +713,7 @@ export class Control implements ClientCallback {
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
-    console.log(msg)
+    // console.log(msg)
   }
 }
 
@@ -845,8 +845,8 @@ function addTaskAttachmentCallback(asset: Asset, projectId: ProjectId, taskId: T
   ]
   const appendAttachment = client.appendRow(TaskAttachmentTableId, attachmentId, attachmentValues, false)
 
-  console.log(appendAsset)
-  console.log(appendAttachment)
+  // console.log(appendAsset)
+  // console.log(appendAttachment)
 
   client.executeTransaction([appendAsset, appendAttachment])
 }

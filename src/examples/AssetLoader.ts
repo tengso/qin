@@ -21,13 +21,13 @@ class Callback extends DefaultClientCallback {
   }
 
   appendRow = (tableId: TableId, rowId: RowId, values: Object[]) => {
-    console.log(`appended: ${tableId}, ${rowId}`)
+    // console.log(`appended: ${tableId}, ${rowId}`)
 
     const image = document.getElementById('image') as HTMLImageElement
     if (image) {
       const i = AssetTableColumns.indexOf(AssetTableColumnName.Content)
-      console.log(i)
-      console.log(values.length)
+      // console.log(i)
+      // console.log(values.length)
       const content = values[i] as string
       image.src = content
     }
