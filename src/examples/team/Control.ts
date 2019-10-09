@@ -589,7 +589,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    client.login('wukong', 'wk')
+    // client.login('wukong', 'wk')
   }
 
   connectFailure(): void {
@@ -732,7 +732,7 @@ function createClient(host: string, port: number): Client {
   }
 }
 
-let client: Client = createClient('localhost', 8080)
+let client: Client = createClient(window.location.hostname, 8080)
 
 function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'Task title', description: Description = 'Task description', dueDate: Date = new Date()) {
   // @ts-ignore
@@ -974,7 +974,7 @@ function logout() {
   control.clear()
 
   client = undefined;
-  client = createClient('localhost', 8080)
+  client = createClient(window.location.hostname, 8080)
 }
 
 function addProjectCallback(title: Title = 'new project', description: Description, dueDate: Date = new Date()) {
