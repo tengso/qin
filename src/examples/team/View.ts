@@ -55,6 +55,8 @@ export class View {
 
   private addUserCallback
 
+  private removeProjectCallback
+
   private document
 
   private model: Model
@@ -193,6 +195,10 @@ export class View {
     this.addUserCallback = callback
   }
 
+  setRemoveProjectCallback(callback) {
+    this.removeProjectCallback = callback
+  }
+
   private createAppMenu() {
     const html = `
         <div class="Dropdown">
@@ -228,7 +234,6 @@ export class View {
         projectMenuList.innerHTML = ''
         const projectList = this.model.getAllProject()
         for (const project of projectList) {
-
           const projectLink = this.document.createElement('div')
           projectLink.classList.add('ProjectLink')
 
@@ -561,7 +566,7 @@ export class View {
             </div>
           </div>
           <div class="Title">
-            <input class="Input" value=${task.title}>
+            <input class="Input" value="${task.title}">
             </input>
           </div>
           <div class="OwnerSection">
@@ -590,8 +595,13 @@ export class View {
           </div>
         </div>
         <div class="Body">
-          <div class="Close">
-            <div class="Icon IconClose CloseButton"></div>
+          <div class="Header">
+            <div class="Title">
+              <div>${task.title}</div>
+            </div>
+            <div class="Close">
+              <div class="Icon IconClose CloseButton"></div>
+            </div>
           </div>
           <div class="Tab">
             <div class="Icon IconDescription OpenDescription"></div>
@@ -880,7 +890,7 @@ export class View {
     const html = `
         <div class="TaskGroupContainer">
           <div class="Icon IconDrag DragTaskGroup"></div>
-          <input class="Input" value=${taskGroup.title}></input>
+          <input class="Input" value="${taskGroup.title}"></input>
           <div class="Remove">
             <div class="Icon IconDelete RemoveTaskGroup"></div>
           </div>
@@ -1018,6 +1028,11 @@ export class View {
               </div>
             </div>
           </div>
+
+          <div class="RemoveProject">
+            <div class="Icon IconDeleteBig RemoveProjectButton"></div>
+          </div>
+
         </div>
 
         <div class="AddTaskGroup">
@@ -1198,6 +1213,11 @@ export class View {
       }
     }
 
+    const removeProjectButton = projectElement.querySelector('.RemoveProjectButton')
+    removeProjectButton.addEventListener('click', () => {
+      this.removeProjectCallback(project.id)
+    })
+
     return projectElement
   }
 
@@ -1205,7 +1225,6 @@ export class View {
     const appElement = this.document.getElementById('app')
     const projectElement = this.createProjectElement(project)
     appElement.appendChild(projectElement)
-
   }
 
   appendTaskGroup(project: Project, taskGroup: TaskGroup) {
@@ -1317,6 +1336,13 @@ export class View {
         }
         else {
           throw new Error(`task element ${taskId} title not found`)
+        }
+        const bodyTitleElement = taskElement.querySelector('.Body .Header .Title')
+        if (bodyTitleElement) {
+          bodyTitleElement.value = title
+        }
+        else {
+          throw new Error(`task body element ${taskId} title not found`)
         }
       }
       else {
@@ -1840,7 +1866,7 @@ export class View {
   }
 
   updateProjectDueDate(projectId: ProjectId, dueDate: Date) {
-    console.log(`update due date ${dueDate}`)
+    // console.log(`update due date ${dueDate}`)
     const projectElement = this.document.getElementById(projectId)
     if (projectElement) {
       const dueDateElement = projectElement.querySelector('.ProjectContainer .DueDateContainer .DueDate')
@@ -1964,6 +1990,16 @@ export class View {
     }
     else {
       throw new Error(`${attachmentId} not found`)
+    }
+  }
+
+  removeProject(projectId: ProjectId) {
+    const project = this.document.getElementById(projectId)
+    if (project) {
+      project.parentElement.removeChild(project)
+    }
+    else {
+      throw new Error(`project ${projectId} not found`)
     }
   }
 }

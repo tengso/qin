@@ -60,6 +60,8 @@ export class Control implements ClientCallback {
     this.view.setRemoveProjectMemberCallback(removeProjectMember)
 
     this.view.setAddUserCallback(addUser)
+
+    this.view.setRemoveProjectCallback(removeProjectCallback)
   }
 
   clear() {
@@ -84,7 +86,7 @@ export class Control implements ClientCallback {
   }
 
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
-    this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
+    // this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
     
     try {
       if (tableId === TaskTableId) {
@@ -228,7 +230,8 @@ export class Control implements ClientCallback {
     }
     else if (tableId === ProjectTableId) {
       const row = this.createProjectRow(values)
-      throw new Error('remove project not supported yet')
+      this.model.removeProject(row.id)
+      this.view.removeProject(row.id)
     }
     else if (tableId === CheckListTableId) {
       const row = this.createCheckListRow(values)
@@ -589,7 +592,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    // client.login('wukong', 'wk')
+    client.login('wukong', 'wk')
   }
 
   connectFailure(): void {
@@ -713,7 +716,7 @@ export class Control implements ClientCallback {
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
-    console.log(msg)
+    // console.log(msg)
   }
 }
 
@@ -988,6 +991,10 @@ function addProjectCallback(title: Title = 'new project', description: Descripti
   client.appendRow(ProjectTableId, projectId, row)
 }
 
+function removeProjectCallback(projectId: ProjectId) {
+  // FIXME: remove project contents
+  client.removeRow(ProjectTableId, projectId)
+}
 
 // @ts-ignore
 window.client = client

@@ -131,6 +131,14 @@
   margin-left: 40px;
 }
 
+.ProjectOverview .RemoveProject {
+  align-self: center;
+}
+
+.ProjectOverview .RemoveProject .RemoveProjectButton {
+  align-self: center;
+}
+
 .ProjectContainer .DueDateContainer .DueDate {
   font-size: large;
   align-self: center;
@@ -146,7 +154,7 @@
 .MemberListContainer {
   display: flex;
   flex-flow: row;
-  flex-basis: 100%;
+  flex-basis: 40%;
   justify-content: flex-end;
 }
 
@@ -400,6 +408,24 @@
   height: 60%;
   width: 40%;
   animation-duration: 0.2s;
+}
+
+.Task .Body .Header {
+  display: flex;
+  flex-flow: row;
+  width: 100%;
+}
+
+.Task .Body .Header .Title {
+  display: flex;
+  flex-flow: row;
+  justify-content: center;
+  width: 90%;
+  font-weight: bold;
+}
+
+.Task .Body .Header .Close {
+  width: 10%;
 }
 
 .Task:hover {

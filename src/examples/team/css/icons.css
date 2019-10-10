@@ -68,6 +68,13 @@
   -webkit-mask-size: cover;
 }
 
+.IconDeleteBig {
+  -webkit-mask: url(../../../../images/delete.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconAdd {
   -webkit-mask: url(../../../../images/add.svg);
   width: 25px;
@@ -205,6 +212,8 @@
 .IconClose:focus,
 .IconDelete:hover,
 .IconDelete:focus,
+.IconDeleteBig:hover,
+.IconDeleteBig:focus,
 .IconCancel:hover,
 .IconCancel:focus,
 .IconLogout:hover,
