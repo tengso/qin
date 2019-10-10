@@ -479,7 +479,7 @@
 .Task .Body .Attachment .AttachmentItemList {
   display: flex;
   flex-flow: column;
-  flex-basis: 300px;
+  flex-basis: 280px;
   overflow: auto;
 }
 
@@ -536,7 +536,7 @@
   flex-flow: column;
   flex-basis: 80%;
   overflow: auto;
-  flex-basis: 300px;
+  flex-basis: 280px;
 }
 
 .Task .Body .Todo .CheckList .ItemList {
