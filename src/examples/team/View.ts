@@ -540,6 +540,12 @@ export class View {
     }
   }
 
+  private getTooltipDate(d: Date) {
+    var tooltipOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+    console.log(typeof d)
+    return d.toLocaleDateString(undefined, tooltipOptions)
+  }
+
   private createTaskElement(task: Task) {
     const taskElement = this.document.createElement('div')
     taskElement.setAttribute('class', 'Task')
@@ -549,10 +555,6 @@ export class View {
       taskElement.classList.remove('animated')
       taskElement.classList.remove('fadeIn')
     })
-
-    var options = { month: 'short', day: 'numeric'};
-    const dueDate = new Date(task.dueDate)
-    const formattedDueDate = dueDate.toLocaleDateString(undefined, options)
 
     const completedItems = 0
     const totalItems = 0
@@ -583,8 +585,10 @@ export class View {
             </div>
           </div>
           <div class="Overview">
-            <div class="DueDateContainer">
-              <div class="Icon IconCalendar DueDateSelector"></div>
+            <div class="DueDateContainer tooltip">
+              <span class="DueDateTooltip tooltiptext">${this.getTooltipDate(new Date(task.dueDate))}</span>
+              <div class="Icon IconCalendar DueDateSelector">
+              </div>
               <input type="text" class="DueDate"  value="${task.dueDate}"</input>
             </div>
             <div class="Progress">
@@ -1065,9 +1069,11 @@ export class View {
               <div class="Title">
                 <input class="TitleInput" value="${project.title}"></input>
               </div>
-              <div class="DueDateContainer">
+              <div class="DueDateContainer tooltip">
+                <span class="ProjectDueDateTooltip tooltiptext">${this.getTooltipDate(new Date(project.dueDate))}
+                </span>
                 <div class="Icon IconCalendarBig DueDateSelector"></div>
-                <input type="text" class="DueDate"  value="${project.dueDate}"</input>
+                <input type="text" class="DueDate" value="${project.dueDate}"></input>
               </div>
               <!-- <div class="Description">
                 <div class="Icon IconDescription OpenDescription">
@@ -1423,6 +1429,8 @@ export class View {
         const dueDateElement = taskElement.querySelector('.DueDate')
         if (dueDateElement) {
           dueDateElement._flatpickr.setDate(dueDate)
+          const tooltip = taskElement.querySelector('.DueDateTooltip')
+          tooltip.innerText = this.getTooltipDate(new Date(dueDate))
         }
         else {
           throw new Error(`task element ${taskId} title not found`)
@@ -1933,6 +1941,8 @@ export class View {
       const dueDateElement = projectElement.querySelector('.ProjectContainer .DueDateContainer .DueDate')
       if (dueDateElement) {
         dueDateElement._flatpickr.setDate(dueDate)
+        const tooltip = projectElement.querySelector('.ProjectDueDateTooltip')
+        tooltip.innerText = this.getTooltipDate(new Date(dueDate))
       }
       else {
         throw new Error(`due date element for ${projectId} not found`)
