@@ -138,6 +138,13 @@
   -webkit-mask-size: cover;
 }
 
+.IconCancelSmall {
+  -webkit-mask: url(../../../../images/cancel.svg);
+  width: 25px;
+  height: 25px;
+  -webkit-mask-size: cover;
+}
+
 .IconDrag {
   -webkit-mask: url(../../../../images/drag.svg);
   width: 25px;
@@ -216,6 +223,8 @@
 .IconDeleteBig:focus,
 .IconCancel:hover,
 .IconCancel:focus,
+.IconCancelSmall:hover,
+.IconCancelSmall:focus,
 .IconLogout:hover,
 .IconLogout:focus
 {

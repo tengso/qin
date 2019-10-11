@@ -371,6 +371,7 @@ export interface Task {
 
   appendOwner(member: Member): void
   removeOwner(memberId: UserId): void
+  getAllOwner(): Array<Member>
 
   appendItem(item: CheckListItem): CheckListItem
   removeItem(itemId: ItemId): CheckListItem
@@ -432,6 +433,10 @@ class TaskImpl implements Task {
     else {
       throw new Error(`owner ${memberId} not found`)
     }
+  }
+
+  getAllOwner(): Array<Member> {
+    return this.ownerList
   }
 
   appendAttachment(attachment: AttachmentItem): AttachmentItem {

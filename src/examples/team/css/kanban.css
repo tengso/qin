@@ -306,8 +306,18 @@
   padding-left: 20px;
 }
 
+.Owner {
+  margin-bottom: 15px;
+  display: flex;
+  flex-flow: row;
+}
+
 .Task .Header .OwnerPlaceholder {
   padding-top: 7px;
+}
+
+.Task .Header .OwnerPlaceholder .NewOwnerList {
+  /* display: none; */
 }
 
 .Task .Header .OwnerList {

@@ -569,10 +569,16 @@ export class View {
             <input class="Input" value="${task.title}">
             </input>
           </div>
+
           <div class="OwnerSection">
-            <div class="OwnerPlaceholder">
-              <div class='Icon IconGroup'></div>
+
+            <div class="OwnerPlaceholder Dropdown">
+              <div class="Icon IconGroup AddOwnerButton"></div>
+              <div class="DropdownContent NewOwnerListContainer">
+                  <div class="NewOwnerList"></div>
+              </div>
             </div>
+
             <div class="OwnerList">
             </div>
           </div>
@@ -635,6 +641,61 @@ export class View {
     `
 
     taskElement.innerHTML = html
+
+    const addOwnerButton = taskElement.querySelector('.AddOwnerButton')
+    addOwnerButton.addEventListener('click', () => {
+      const ownerList = taskElement.querySelector('.NewOwnerList')
+      if (ownerList.parentNode.style.display === 'block') {
+        addOwnerButton.classList.add('IconGroup')
+        addOwnerButton.classList.remove('IconCancelSmall')
+        ownerList.parentNode.style.display = 'none'
+        while (ownerList.firstChild) {
+          ownerList.removeChild(ownerList.firstChild);
+        }
+      }
+      else {
+        const projectElement = taskElement.closest('.Project')
+        const memberList = this.model.getAllProjectMember(projectElement.id)
+        const existingOwnerList = this.model.getProject(projectElement.id).getTask(task.id).getAllOwner()
+
+        memberList.forEach((member, _) => {
+          const index = existingOwnerList.findIndex(existingOwner => {
+            return (member.id === existingOwner.id)
+          })
+          if (index == -1) {
+            const userElement = this.document.createElement("div")
+            userElement.classList.add('Owner')
+            const avatar = this.model.getAsset(member.avatar)
+            if (avatar) {
+              const image = this.document.createElement('img')
+              image.classList.add('AddUserImage')
+              image.src = avatar.content
+              userElement.appendChild(image)
+            }
+            const name = this.document.createElement('div')
+            name.classList.add('AddUserName')
+            name.innerText = member.name
+            userElement.appendChild(name)
+
+            ownerList.appendChild(userElement)
+            name.addEventListener('click', () => {
+              const userId = member.id
+              // check if the member has been added
+              const existingOwnerList = this.model.getProject(projectElement.id).getTask(task.id).getAllOwner()
+              const index = existingOwnerList.findIndex(existingOwner => {
+                return (userId === existingOwner.id)
+              })
+              if (index == -1) {
+                this.addTaskOwnerCallback(task.id, userId)
+              }
+            })
+          }
+        })
+        addOwnerButton.classList.remove('IconGroup')
+        addOwnerButton.classList.add('IconCancelSmall')
+        ownerList.parentNode.style.display = 'block'
+      }
+    })
 
     const chatClassName = 'TaskChat'
     const callback = (inputElement) => {
