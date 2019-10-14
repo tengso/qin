@@ -352,6 +352,7 @@ export enum ActivityType {
 
 export interface ActivityRow {
   id: ActivityId
+  projectId: ProjectId
   userId: UserId
   type: ActivityType
   comment: Comment
@@ -359,7 +360,8 @@ export interface ActivityRow {
 }
 
 export enum ActivityColumnName {
-  ActivityId = 'id',
+  Id = 'id',
+  ProjectId = 'projectId',
   UserId = 'userId',
   Type = 'type',
   Comment = 'comment',
@@ -367,7 +369,8 @@ export enum ActivityColumnName {
 }
 
 export const ActivityTableColumns = [
-  ActivityColumnName.ActivityId,
+  ActivityColumnName.Id,
+  ActivityColumnName.ProjectId,
   ActivityColumnName.UserId,
   ActivityColumnName.Type,
   ActivityColumnName.Comment,

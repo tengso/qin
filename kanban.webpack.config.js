@@ -6,6 +6,7 @@ module.exports = {
     './built/examples/team/Model.js',
     './built/examples/team/View.js',
     './built/examples/team/Control.js',
+    './built/examples/team/Callback.js',
   ],
   mode: 'development',
   output: {

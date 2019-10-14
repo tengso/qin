@@ -6,16 +6,18 @@ import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow
 import uuid = require('uuid');
 import { string } from 'yargs';
 
+import { Callbacks } from './Callback'
+
 export class Control implements ClientCallback {
   private view: View 
   private model: Model
   private client: Client
 
+  private retryLogin: boolean
+
   // note: order matters
   private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId, TaskAttachmentTableId]
   private receivedTables = new Map<TableId, Table>()
-
-  retryLogin = true
 
   constructor(client: Client, document) {
     this.client = client
@@ -23,45 +25,51 @@ export class Control implements ClientCallback {
     this.model = model
     this.view = new View(document)
     this.view.setModel(model)
-    const callback = this.createSortingCallBack(model, client, this.view)
+    const callbacks = new Callbacks(this.client, this.model, this)
+    
+    this.registerCallbacks(this.view, callbacks)
 
-    this.view.setLoginCallback(login)
-    this.view.setLogoutCallback(logout)
+    this.retryLogin = false
+  }
 
-    this.view.setAddProjectCallback(addProjectCallback)
+  registerCallbacks(view: View, callbacks: Callbacks) {
+    view.setLoginCallback(callbacks.login)
+    view.setLogoutCallback(callbacks.logout)
 
-    this.view.setSortingCallback(callback)
-    this.view.setAddTaskCallback(addTaskCallback)
-    this.view.setAddTaskGroupCallback(addTaskGroupCallback)
-    this.view.setRemoveTaskCallback(removeTaskCallback)
-    this.view.setRemoveTaskGroupCallback(removeTaskGroupCallback)
-    this.view.setUpdateTaskGroupTitleCallback(updateTaskGroupTitleCallback)
+    view.setAddProjectCallback(callbacks.addProjectCallback)
 
-    this.view.setUpdateTaskTitleCallback(updateTaskTitleCallback)
-    this.view.setUpdateTaskDescriptionCallback(updateTaskDescriptionCallback)
-    this.view.setUpdateTaskDueDateCallback(updateTaskDueDateCallback)
+    view.setSortingCallback(callbacks.createSortingCallBack())
+    view.setAddTaskCallback(callbacks.addTaskCallback)
+    view.setAddTaskGroupCallback(callbacks.addTaskGroupCallback)
+    view.setRemoveTaskCallback(callbacks.removeTaskCallback)
+    view.setRemoveTaskGroupCallback(callbacks.removeTaskGroupCallback)
+    view.setUpdateTaskGroupTitleCallback(callbacks.updateTaskGroupTitleCallback)
 
-    this.view.setUpdateProjectTitleCallback(updateProjectTitleCallback)
-    this.view.setUpdateProjectDescriptionCallback(updateProjectDescriptionCallback)
-    this.view.setUpdateProjectDueDateCallback(updateProjectDueDateCallback)
+    view.setUpdateTaskTitleCallback(callbacks.updateTaskTitleCallback)
+    view.setUpdateTaskDescriptionCallback(callbacks.updateTaskDescriptionCallback)
+    view.setUpdateTaskDueDateCallback(callbacks.updateTaskDueDateCallback)
 
-    this.view.setAddTaskOwnerCallback(addTaskOwnerCallback)
-    this.view.setRemoveTaskOwnerCallback(removeTaskOwnerCallback)
-    this.view.setAddCheckListItemCallback(addCheckListItemCallback)
-    this.view.setRemoveCheckListItemCallback(removeCheckListItemCallback)
-    this.view.setUpdateCheckListItemStatusCallback(updateCheckListItemStatusCallback)
+    view.setUpdateProjectTitleCallback(callbacks.updateProjectTitleCallback)
+    view.setUpdateProjectDescriptionCallback(callbacks.updateProjectDescriptionCallback)
+    view.setUpdateProjectDueDateCallback(callbacks.updateProjectDueDateCallback)
+
+    view.setAddTaskOwnerCallback(callbacks.addTaskOwnerCallback)
+    view.setRemoveTaskOwnerCallback(callbacks.removeTaskOwnerCallback)
+    view.setAddCheckListItemCallback(callbacks.addCheckListItemCallback)
+    view.setRemoveCheckListItemCallback(callbacks.removeCheckListItemCallback)
+    view.setUpdateCheckListItemStatusCallback(callbacks.updateCheckListItemStatusCallback)
     // this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
-    this.view.setSendProjectChatCallback(sendProjectChatCallback)
-    this.view.setSendTaskChatCallback(sendTaskChatCallback)
-    this.view.setAddTaskAttachmentCallback(addTaskAttachmentCallback)
-    this.view.setRemoveTaskAttachmentCallback(removeTaskAttachmentCallback)
+    view.setSendProjectChatCallback(callbacks.sendProjectChatCallback)
+    view.setSendTaskChatCallback(callbacks.sendTaskChatCallback)
+    view.setAddTaskAttachmentCallback(callbacks.addTaskAttachmentCallback)
+    view.setRemoveTaskAttachmentCallback(callbacks.removeTaskAttachmentCallback)
 
-    this.view.setAddProjectMemberCallback(addProjectMember)
-    this.view.setRemoveProjectMemberCallback(removeProjectMember)
+    view.setAddProjectMemberCallback(callbacks.addProjectMember)
+    view.setRemoveProjectMemberCallback(callbacks.removeProjectMember)
 
-    this.view.setAddUserCallback(addUser)
+    view.setAddUserCallback(callbacks.addUser)
 
-    this.view.setRemoveProjectCallback(removeProjectCallback)
+    view.setRemoveProjectCallback(callbacks.removeProjectCallback)
   }
 
   clear() {
@@ -69,7 +77,7 @@ export class Control implements ClientCallback {
   }
 
   tableSnap(table: Table) {
-    this.logMessage(`table - ${JSON.stringify(table)}`)
+    this.logMessage(`table - ${JSON.stringify(table.tableName)}`)
 
     if (this.expectedTables.includes(table.tableId)) {
       this.receivedTables.set(table.tableId, table)
@@ -170,12 +178,12 @@ export class Control implements ClientCallback {
       else if (tableId === ProjectChatTableId) {
         const row = this.createProjectChatRow(values)
         const message = this.model.appendProjectChatMessage(row)
-        this.view.appendProjectChatMessage(client.userId, row.projectId, message)
+        this.view.appendProjectChatMessage(this.client.userId, row.projectId, message)
       }
       else if (tableId === TaskChatTableId) {
         const row = this.createTaskChatRow(values)
         const message = this.model.appendTaskChatMessage(row)
-        this.view.appendTaskChatMessage(client.userId, row.projectId, row.taskId, message)
+        this.view.appendTaskChatMessage(this.client.userId, row.projectId, row.taskId, message)
       }
     }
     catch (exception) {
@@ -369,78 +377,6 @@ export class Control implements ClientCallback {
     }
   }
 
-  createSortingCallBack(model: Model, client, view: View) {
-
-    const callback = (event) => {
-      // const itemId = event.item.id
-      // const from = event.from.id
-      // const fromIndex = event.oldIndex 
-      // const to = event.to.id
-      // const toIndex = event.newIndex
-
-      // console.log(`moved item: ${itemId}`)
-      // console.log(`from: ${from} ${fromIndex}`)
-      // console.log(`to: ${to} ${toIndex}`)
-
-      const elementClass = event.item.getAttribute('class')
-      // console.log(elementClass)
-
-      if (elementClass === 'TaskGroup') {
-        const tableId = TaskGroupTableId    
-        const taskGroupId = event.item.id
-        const toTaskGroupIndex = event.newIndex
-
-        const projectId = model.getProjectIdByTaskGroupId(taskGroupId)
-        if (projectId) {
-          if (toTaskGroupIndex === 0) {
-            client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
-          }
-          else {
-            const afterTaskGroupId = event.item.parentElement.children[toTaskGroupIndex - 1].getAttribute('id')
-            if (afterTaskGroupId) {
-              client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroupId, undefined, undefined) 
-            }
-            else {
-              throw new Error(`task group index ${toTaskGroupIndex} not found`)
-            }
-          }
-        }
-        else {
-          throw new Error(`task group id ${taskGroupId} not found`)
-        }
-      }
-      else if (elementClass === 'Task') {
-        const tableId = TaskTableId    
-        const taskId = event.item.id
-
-        const fromTaskGroupId = event.from.parentElement.id
-        const fromTaskIndex = event.oldIndex 
-        const toTaskGroupId = event.to.parentElement.id
-        const toTaskIndex = event.newIndex
-
-        const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
-        const columnValue = columnName ? toTaskGroupId : undefined
-
-        const projectId = model.getProjectIdByTaskId(taskId)
-        if (projectId) {
-          if (toTaskIndex == 0) {
-            client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
-          }
-          else {
-            const afterTaskId = event.item.parentElement.children[toTaskIndex - 1].getAttribute('id')
-            if (afterTaskId) {
-              client.moveRowAndUpdateCell(tableId, taskId, afterTaskId, columnName, columnValue) 
-            }
-            else {
-              throw new Error(`task index ${toTaskIndex} not found`)
-            }
-          }
-        }
-      }
-    }
-
-    return callback
-  }
 
   private createTaskRow(values: ColumnValue[]): TaskRow {
     const row: TaskRow = {
@@ -592,7 +528,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    client.login('wukong', 'wk')
+    // client.login('wukong', 'wk')
   }
 
   connectFailure(): void {
@@ -656,9 +592,8 @@ export class Control implements ClientCallback {
     this.logMessage(`login failure ${reason} ${errorCode} ${this.retryLogin}`)
 
     if (errorCode === ErrorCode.UserAlreadyLogin) {
-      if (this.retryLogin) {
-        this.client.logout()
-      }
+      this.retryLogin = true
+      this.client.logout()
     }
   }
 
@@ -667,9 +602,7 @@ export class Control implements ClientCallback {
 
     if (this.retryLogin) {
       this.client.login(this.client.userId, this.client.password)
-    }
-    else {
-      this.retryLogin = true
+      this.retryLogin = false
     }
   }
 
@@ -716,285 +649,19 @@ export class Control implements ClientCallback {
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
-    // console.log(msg)
+    console.log(msg)
   }
 }
 
-let control: Control
-
-function createClient(host: string, port: number): Client {
-  if (!client) {
-    client = new Client(WebSocket)
-    control = new Control(client, document)
-    client.addCallback(control)
-    client.connect(host, port)
-    return client
-  }
-  else {
-    return client
-  }
+export function init(host: string, port: number): Client {
+  const client = new Client(WebSocket)
+  const control = new Control(client, document)
+  client.addCallback(control)
+  client.connect(host, port)
+  return client
 }
 
-let client: Client = createClient(window.location.hostname, 8080)
-
-function addTaskCallback(taskGroupId: TaskGroupId, title: Title = 'Task title', description: Description = 'Task description', dueDate: Date = new Date()) {
-  // @ts-ignore
-  const projectId = control.model.getProjectIdByTaskGroupId(taskGroupId)
-  if (projectId) {
-    const taskId = uuid()
-
-    const row: ColumnValue[] = [
-      taskId,
-      title,
-      description,
-      dueDate,
-      projectId,
-      taskGroupId,
-    ]
-
-    client.insertRow(TaskTableId, taskId, undefined, row)
-  }
-  else {
-    throw new Error(`project not found for task group ${taskGroupId}`)
-  }
-}
-
-function addTaskGroupCallback(projectId: ProjectId, title: Title = 'new task group', description: Description = 'desc') {
-  const taskGroupId = uuid()
-  const row: ColumnValue[] = [
-    taskGroupId,
-    title,
-    description,
-    projectId,
-  ]
-
-  client.appendRow(TaskGroupTableId, taskGroupId, row)
-}
-
-function removeTaskGroupCallback(taskGroupId: TaskGroupId) {
-  client.removeRow(TaskGroupTableId, taskGroupId)
-}
-
-function removeTaskCallback(taskId: TaskId) {
-  client.removeRow(TaskTableId, taskId)
-}
-
-function updateTaskGroupTitleCallback(taskGroupId: TaskGroupId, title: Title) {
-  client.updateCell(TaskGroupTableId, taskGroupId, 'title', title)
-}
-
-function updateTaskTitleCallback(taskId: TaskId, title: Title) {
-  client.updateCell(TaskTableId, taskId, 'title', title)
-}
-
-function updateTaskDescriptionCallback(taskId: TaskId, description: Description) {
-  client.updateCell(TaskTableId, taskId, 'description', description)
-}
-
-function updateTaskDueDateCallback(taskId: TaskId, dueDate: Date) {
-  client.updateCell(TaskTableId, taskId, 'dueDate', dueDate)
-}
-
-function updateProjectTitleCallback(projectId: ProjectId, title: Title) {
-  client.updateCell(ProjectTableId, projectId, 'title', title)
-}
-
-function updateProjectDescriptionCallback(projectId: ProjectId, description: Description) {
-  client.updateCell(ProjectTableId, projectId, 'description', description)
-}
-
-function updateProjectDueDateCallback(projectId: ProjectId, dueDate: Date) {
-  client.updateCell(ProjectTableId, projectId, 'dueDate', dueDate)
-}
-
-function getTaskOwnerRowId(taskId: TaskId, ownerId: UserId) {
-  return `${TaskOwnerTableId}-${taskId}-${ownerId}`
-}
-
-function addTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
-  const row = [
-    ownerId,
-    taskId
-  ]
-  client.appendRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId), row)
-}
-
-function removeTaskOwnerCallback(taskId: TaskId, ownerId: UserId) {
-  client.removeRow(TaskOwnerTableId, getTaskOwnerRowId(taskId, ownerId))
-}
-
-function addTaskAttachmentCallback(asset: Asset, projectId: ProjectId, taskId: TaskId, description: Description) {
-  const ts = new Date()
-  const assetValues = [
-    asset.id,
-    asset.name,
-    asset.type,
-    asset.description,
-    client.userId,
-    ts,
-    client.userId,
-    ts,
-    asset.content, 
-  ]
-  const appendAsset = client.appendRow(AssetTableId, asset.id, assetValues, false)
-
-  const attachmentId = createTaskAttachmentId(projectId, taskId, asset.id)
-  const attachmentValues = [
-    attachmentId,
-    asset.id,
-    projectId,
-    taskId,
-    description,
-  ]
-  const appendAttachment = client.appendRow(TaskAttachmentTableId, attachmentId, attachmentValues, false)
-
-  // console.log(appendAsset)
-  // console.log(appendAttachment)
-
-  client.executeTransaction([appendAsset, appendAttachment])
-}
-
-function removeTaskAttachmentCallback(attachmentId: AttachmentId) {
-  client.removeRow(TaskAttachmentTableId, attachmentId)
-}
-
-function addCheckListItemCallback(taskId: TaskId, description: Description, status: ItemStatus) {
-  const rowId = uuid()
-  // FIXME: how to get project id?
-  // @ts-ignore
-  const projectId = control.model.getProjectIdByTaskId(taskId)
-  const row = [
-    rowId,
-    projectId, 
-    taskId, 
-    description,
-    status,
-  ]
-  client.appendRow(CheckListTableId, rowId, row)
-}
-
-function removeCheckListItemCallback(itemId: ItemId) {
-  client.removeRow(CheckListTableId, itemId)
-}
-
-function updateCheckListItemStatusCallback(itemId: ItemId, status: ItemStatus) {
-  client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Status, status)
-}
-
-function updateCheckListItemDescriptionCallback(itemId: ItemId, description: Description) {
-  client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Description, description)
-}
-
-function sendProjectChatCallback(projectId: ProjectId, message: Message, replyToId: MessageId) {
-  const id = uuid()
-  const row = [
-    id, 
-    projectId, 
-    replyToId, 
-    client.userId, 
-    message, 
-    new Date(),
-  ]
-  client.appendRow(ProjectChatTableId, id, row)
-}
-
-function sendTaskChatCallback(taskId: TaskId, message: Message, replyToId: MessageId) {
-  // @ts-ignore
-  const projectId = control.model.getProjectIdByTaskId(taskId)
-
-  const id = uuid()
-
-  const row = [
-    id, 
-    projectId, 
-    replyToId, 
-    client.userId, 
-    message, 
-    new Date(),
-    taskId
-  ]
-  client.appendRow(TaskChatTableId, id, row)
-}
-
-function addUser(userId: UserId, userName: string, title: Title, description: Description, avatarFile) {
-  const reader = new FileReader()
-  reader.readAsDataURL(avatarFile)
-  reader.onloadend = (evt) => {
-    const assetId = uuid()
-    const ts = new Date()
-    const assetName = `${userId}-avatar`
-    const assetType = 'image'
-    const assetDescription = assetName
-    // @ts-ignore
-    const content = evt.target.result
-
-    const values = [
-      assetId as AssetId,
-      assetName as AssetName,
-      assetType as AssetType,
-      assetDescription,
-      client.userId,
-      ts,
-      client.userId,
-      ts,
-      content, 
-    ]
-
-    const addAvatarAsset = client.appendRow(AssetTableId, assetId, values, false)
-
-    const memberRowId = uuid()
-    const row = [
-      userId,
-      userName,
-      title,
-      description,
-      assetId,
-    ]
-    const addMember = client.appendRow(MemberTableId, memberRowId, row, false)  
-
-    // console.log(addAvatarAsset)
-    // console.log(addMember)
-    client.executeTransaction([addAvatarAsset, addMember])
-  }
-}
-
-function addProjectMember(userId: UserId, projectId: ProjectId) {
-  client.appendRow(ProjectMemberTableId, `${userId}#${projectId}`, [userId, projectId])
-}
-
-function removeProjectMember(userId: UserId, projectId: ProjectId) {
-  client.removeRow(ProjectMemberTableId, `${userId}#${projectId}`)
-}
-
-function login(userId: UserId, password: string) {
-  client.login(userId, password)
-}
-
-function logout() {
-  control.retryLogin = false
-  client.logout()
-
-  control.clear()
-
-  client = undefined;
-  client = createClient(window.location.hostname, 8080)
-}
-
-function addProjectCallback(title: Title = 'new project', description: Description, dueDate: Date = new Date()) {
-  const projectId = uuid()
-  const row = [
-    projectId,
-    title, 
-    description,
-    dueDate
-  ]
-  client.appendRow(ProjectTableId, projectId, row)
-}
-
-function removeProjectCallback(projectId: ProjectId) {
-  // FIXME: remove project contents
-  client.removeRow(ProjectTableId, projectId)
-}
+init(window.location.hostname, 8080)
 
 // @ts-ignore
-window.client = client
+// window.client = client
