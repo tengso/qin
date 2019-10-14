@@ -332,3 +332,44 @@ export const TaskAttachmentTableColumns = [
   TaskAttachmentTableColumnName.TaskId,
   TaskAttachmentTableColumnName.Description,
 ]
+
+/**
+ * Activity
+ */
+
+export const ActivityTableId = 'activity_table_id'
+
+export type ActivityId = string
+
+export enum ActivityType {
+  CreateTask,
+  CreateProject,
+  RemoveTask,
+  RemoveProject,
+  PostTaskComment,
+  PostProjectComment,
+}
+
+export interface ActivityRow {
+  id: ActivityId
+  userId: UserId
+  type: ActivityType
+  comment: Comment
+  timestamp: Date
+}
+
+export enum ActivityColumnName {
+  ActivityId = 'id',
+  UserId = 'userId',
+  Type = 'type',
+  Comment = 'comment',
+  Timestamp = 'timestamp'
+}
+
+export const ActivityTableColumns = [
+  ActivityColumnName.ActivityId,
+  ActivityColumnName.UserId,
+  ActivityColumnName.Type,
+  ActivityColumnName.Comment,
+  ActivityColumnName.Timestamp,
+]
