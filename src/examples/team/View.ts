@@ -1,6 +1,6 @@
 import { UserId } from '../../TableFlowMessages'
 import { Project, TaskGroup, Task, Member, CheckListItem, ChatMessage, Model, Asset } from './Model'
-import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description, AttachmentId, AssetId, AssetTableColumnName } from './Core'
+import { ProjectId, TaskGroupId, TaskId, Title, ItemId, ItemStatus, Description, AttachmentId, AssetId, AssetTableColumnName, ActivityRow, createActivityNote } from './Core'
 import Quill from 'quill'
 import flatpickr from 'flatpickr'
 import uuid = require('uuid');
@@ -1109,6 +1109,7 @@ export class View {
 
         <div class="TaskGroupList" id="${project.id}-task-group-list">
         </div>
+
     `
 
     const projectElement = this.document.createElement('div')
@@ -1285,7 +1286,55 @@ export class View {
       this.removeProjectCallback(project.id)
     })
 
+    this.createActivityElement(projectElement)
+
     return projectElement
+  }
+
+  private createActivityElement(project: HTMLElement) {
+    const html = `
+        <div class="OpenActivity">
+          <div class="Icon IconNotification OpenActivityButton"></div>
+        </div>
+        <div class="ActivitySection">
+          <div class="ActivityList"></div>
+        </div>
+    `
+    const activity = this.document.createElement('div')
+    activity.classList.add('ActivityContainer')
+    activity.innerHTML = html
+
+    const open = activity.querySelector('.OpenActivityButton')
+    const section = activity.querySelector('.ActivitySection')
+    const list = activity.querySelector('.ActivityList')
+
+    section.addEventListener('animationend', () => {
+      if (section.classList.contains('slideOutLeft')) {
+        section.style.display = 'none'
+      }
+    })
+
+    open.addEventListener('click', () => {
+      if (section.style.display === 'flex') {
+        section.classList.add('slideOutLeft')
+        section.classList.remove('slideInLeft')
+
+        open.classList.remove('IconCancel')
+        open.classList.add('IconNotification')
+      }
+      else {
+        section.classList.remove('slideOutLeft')
+        section.classList.add('slideInLeft')
+        section.style.display = 'flex'
+
+        open.classList.remove('IconNotification')
+        open.classList.add('IconCancel')
+
+        list.scrollTop = list.scrollHeight
+      }
+    })
+
+    project.appendChild(activity)
   }
 
   appendProject(project: Project) {
@@ -2071,6 +2120,54 @@ export class View {
     }
     else {
       throw new Error(`project ${projectId} not found`)
+    }
+  }
+
+  getUserImage(userId: UserId): string {
+    const member = this.model.getMember(userId)
+    if (member) {
+      const image = this.model.getAsset(member.avatar)
+      if (image) {
+        return image.content
+      }
+    }
+  }
+
+  createTimestamp(t: Date): string {
+    var options = { 
+      month: 'short', 
+      day: 'numeric', 
+      hour: 'numeric', 
+      minute: 'numeric'
+    }
+    return t.toLocaleDateString(undefined, options)
+  }
+
+  appendActivity(row: ActivityRow) {
+    console.log(`act: ${row.projectId}`)
+    const project = this.document.getElementById(row.projectId)
+    if (project) {
+      const activityList = project.querySelector('.ActivityList')
+      const activity = this.document.createElement('div')
+      activity.id = row.id
+      activity.classList.add('Activity')
+
+      const html = `
+        <img class="ActivityUserImage" src='${this.getUserImage(row.userId)}'>
+        </img>
+        <div class="ActivityUserId">${row.userId}</div>
+        <div class="ActivityNote">${createActivityNote(row)}</div>
+        <div class="ActivityTime">
+          <div>${this.createTimestamp(new Date(row.timestamp))}</div>
+        </div>
+      `
+      activity.innerHTML = html
+
+      activityList.appendChild(activity)
+      activityList.scrollTop = activityList.scrollHeight
+    }
+    else {
+      throw new Error(``)
     }
   }
 }

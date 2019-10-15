@@ -215,6 +215,13 @@
   -webkit-mask-size: cover;
 }
 
+.IconNotification {
+  -webkit-mask: url(../../../../images/notification.svg);
+  width: 40px;
+  height: 40px;
+  -webkit-mask-size: cover;
+}
+
 .IconClose:hover,
 .IconClose:focus,
 .IconDelete:hover,
@@ -229,4 +236,10 @@
 .IconLogout:focus
 {
   background: red;
+}
+
+.IconNotification:hover,
+.IconNotification:focus
+{
+  background: orangered;
 }

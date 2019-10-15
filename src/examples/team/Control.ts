@@ -2,7 +2,7 @@ import { ErrorCode, SessionId, TableId, RowId, ColumnName, Table, ColumnValue, U
 import { ClientCallback, Client } from '../../TableFlowClient'
 import { View } from './View'
 import { Model, TaskGroup, Asset } from './Model'
-import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns, TaskAttachmentTableId, createTaskAttachmentId, TaskAttachmentRow, AttachmentId } from './Core'
+import { Title, Description, TaskId, TaskGroupId, ProjectId, TaskRow, ProjectRow, TaskGroupRow, TaskGroupTableId, TaskTableId, ProjectTableId, TaskGroupTableColumns, TaskGroupTableColumnName, TaskTableColumns, TaskTableColumnName, ProjectMemberTableId, ProjectMemberTableColumnName, ProjectMemberTableColumns, MemberTableId, MemberRow, MemberTableColumnName, MemberTableColumns, AssetTableId, AssetRow, AssetId, AssetName, AssetType, ProjectMemberRow, TaskOwnerTableId, TaskOwnerRow, TaskOwnerTableColumns, TaskOwnerTableColumnName, CheckListTableId, CheckListRow, ItemId, ItemStatus, CheckListTableColumns, CheckListTableColumnName, ProjectChatTableId, ProjectChatRow, MessageId, PosterId, Message, TaskChatTableId, TaskChatRow, ProjectTableColumnName, ProjectTableColumns, TaskAttachmentTableId, createTaskAttachmentId, TaskAttachmentRow, AttachmentId, ActivityTableId, ActivityType, ActivityRow, ActivityId } from './Core'
 import uuid = require('uuid');
 import { string } from 'yargs';
 
@@ -16,7 +16,7 @@ export class Control implements ClientCallback {
   private retryLogin: boolean
 
   // note: order matters
-  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId, TaskAttachmentTableId]
+  private expectedTables = [AssetTableId, MemberTableId, ProjectTableId, TaskGroupTableId, TaskTableId, ProjectMemberTableId, TaskOwnerTableId, CheckListTableId, ProjectChatTableId, TaskChatTableId, TaskAttachmentTableId, ActivityTableId]
   private receivedTables = new Map<TableId, Table>()
 
   constructor(client: Client, document) {
@@ -184,6 +184,10 @@ export class Control implements ClientCallback {
         const row = this.createTaskChatRow(values)
         const message = this.model.appendTaskChatMessage(row)
         this.view.appendTaskChatMessage(this.client.userId, row.projectId, row.taskId, message)
+      }
+      else if (tableId === ActivityTableId) {
+        const row = this.createActivityRow(values)
+        this.view.appendActivity(row)
       }
     }
     catch (exception) {
@@ -521,6 +525,20 @@ export class Control implements ClientCallback {
       message: values[4] as Message,
       postTime: values[5] as Date,
       taskId: values[6] as TaskId,
+    }
+
+    return row
+  }
+
+  private createActivityRow(values: ColumnValue[]): ActivityRow {
+
+    const row: ActivityRow = {
+      id: values[0] as ActivityId,
+      projectId: values[1] as ProjectId,
+      userId: values[2] as UserId,
+      type: values[3] as ActivityType,
+      comment: values[4] as Comment,
+      timestamp: values[5] as Date
     }
 
     return row

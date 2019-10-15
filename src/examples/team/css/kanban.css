@@ -1,3 +1,81 @@
+/**
+ Activity Start
+ */
+.ActivityContainer {
+
+}
+
+.OpenActivityButton {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  outline: none;
+}
+
+.ActivitySection {
+  z-index: 1; 
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 8px;
+  background-color: rgb(255,255,255); 
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  left: 70px;
+  flex-flow: column;
+  height: 85%;
+  width: 40%;
+  resize: both;
+  animation-duration: 0.1s;
+}
+
+.ActivityList {
+  display: flex;
+  flex-flow: column;
+  overflow: auto;
+}
+
+.Activity {
+  padding: 15px;
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  flex-basis: 100%;
+  border-radius: 5px;
+  /* border-top: 1px solid lightgrey;
+  border-left: 1px solid lightgrey;
+  border-right: 1px solid lightgrey; */
+}
+
+.ActivityUserImage {
+  margin-right: 5px;
+  height: 25px;
+  width: 25px;
+}
+
+.ActivityUserId {
+  flex-basis: 10%;
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.ActivityNote {
+  flex-basis: 90%;
+  color: dodgerblue;
+}
+
+.ActivityTime {
+  flex-basis: 50%;
+  display: flex;
+  justify-content: flex-end;
+  font-size: small;
+}
+ /**
+  Activity End
+  */
+
 /* Tooltip container */
 .tooltip {
   position: relative;
@@ -713,11 +791,11 @@ height: 40px;
   bottom: 50px;
   right: 70px;
   flex-flow: column;
-  height: 90%;
+  height: 85%;
   width: 30%;
   resize: both;
   animation-duration: 0.1s;
-  padding-top: 100px;
+  padding-top: 20px;
   border: 1px solid lightgrey;
 }
 

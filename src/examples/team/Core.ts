@@ -343,10 +343,13 @@ export type ActivityId = string
 
 export enum ActivityType {
   CreateTask,
-  CreateProject,
+  UpdateTaskTitle,
   RemoveTask,
-  RemoveProject,
   PostTaskComment,
+
+  CreateProject,
+  UpdateProjectTitle,
+  RemoveProject,
   PostProjectComment,
 }
 
@@ -376,3 +379,32 @@ export const ActivityTableColumns = [
   ActivityColumnName.Comment,
   ActivityColumnName.Timestamp,
 ]
+
+export function createActivityNote(row: ActivityRow) {
+  switch (row.type) {
+    case ActivityType.CreateTask: {
+      return `Created Task <b>${row.comment}</b>`
+    }
+    case ActivityType.UpdateTaskTitle: {
+      return `Updated Task Title to <b>${row.comment}</b>`
+    }
+    case ActivityType.RemoveTask: {
+      return `Removed Task <b>${row.comment}</b>`
+    }
+    case ActivityType.PostTaskComment: {
+      return `Posted Comment on Task <b>${row.comment}</b>`
+    }
+    case ActivityType.CreateProject: {
+      return `Created Project <b>${row.comment}</b>`
+    }
+    case ActivityType.RemoveProject: {
+      return `Removed Project <b>${row.comment}</b>`
+    }
+    case ActivityType.UpdateProjectTitle: {
+      return `Updated Project Title To <b>${row.comment}</b>`
+    }
+    case ActivityType.PostProjectComment: {
+      return `Posted Comment on Project <b>${row.comment}</b>`
+    }
+  }
+}

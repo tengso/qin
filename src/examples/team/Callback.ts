@@ -19,7 +19,7 @@ export class Callbacks {
     console.log(`client: ${this.client}`)
   }
 
-  addTaskCallback = (taskGroupId: TaskGroupId, title: Title = 'Task title', description: Description = 'Task description', dueDate: Date = new Date()) => {
+  addTaskCallback = (taskGroupId: TaskGroupId, title: Title = 'New Task', description: Description = 'Task description', dueDate: Date = new Date()) => {
     // @ts-ignore
     const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
     if (projectId) {
@@ -35,7 +35,7 @@ export class Callbacks {
       ]
 
       const activityId = uuid()
-      const comment = ''
+      const comment = title
       const activityRow = [
         activityId,
         projectId,
@@ -72,7 +72,28 @@ export class Callbacks {
   }
 
   removeTaskCallback = (taskId: TaskId) => {
-    this.client.removeRow(TaskTableId, taskId)
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    if (projectId) {
+      const removeTask = this.client.removeRow(TaskTableId, taskId, false)
+
+      const task = this.model.getProject(projectId).getTask(taskId)
+      const activityId = uuid()
+      const comment = task.title
+      const activityRow = [
+        activityId,
+        projectId,
+        this.client.userId,
+        ActivityType.RemoveTask,
+        comment,
+        new Date(),
+      ]
+      const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+      this.client.executeTransaction([removeTask, activity])
+    }
+    else {
+      throw new Error(`project for task ${taskId} not found`)
+    }
   }
 
   updateTaskGroupTitleCallback = (taskGroupId: TaskGroupId, title: Title) => {
@@ -80,7 +101,27 @@ export class Callbacks {
   }
 
   updateTaskTitleCallback = (taskId: TaskId, title: Title) => {
-    this.client.updateCell(TaskTableId, taskId, 'title', title)
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    if (projectId) {
+      const updateTitle = this.client.updateCell(TaskTableId, taskId, 'title', title, false)
+
+      const activityId = uuid()
+      const comment = title
+      const activityRow = [
+        activityId,
+        projectId,
+        this.client.userId,
+        ActivityType.UpdateTaskTitle,
+        comment,
+        new Date(),
+      ]
+      const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+      this.client.executeTransaction([updateTitle, activity])
+    }
+    else {
+      throw new Error(`project for task ${taskId} not found`)
+    }
   }
 
   updateTaskDescriptionCallback = (taskId: TaskId, description: Description) => {
@@ -92,7 +133,21 @@ export class Callbacks {
   }
 
   updateProjectTitleCallback = (projectId: ProjectId, title: Title) => {
-    this.client.updateCell(ProjectTableId, projectId, 'title', title)
+    const update = this.client.updateCell(ProjectTableId, projectId, 'title', title, false)
+
+    const activityId = uuid()
+    const comment = title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.UpdateProjectTitle,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([update, activity])
   }
 
   updateProjectDescriptionCallback = (projectId: ProjectId, description: Description) => {
@@ -191,7 +246,22 @@ export class Callbacks {
       message, 
       new Date(),
     ]
-    this.client.appendRow(ProjectChatTableId, id, row)
+    const chat = this.client.appendRow(ProjectChatTableId, id, row, false)
+
+    const project = this.model.getProject(projectId)
+    const activityId = uuid()
+    const comment = project.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.PostProjectComment,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([chat, activity])
   }
 
   sendTaskChatCallback = (taskId: TaskId, message: Message, replyToId: MessageId) => {
@@ -209,7 +279,22 @@ export class Callbacks {
       new Date(),
       taskId
     ]
-    this.client.appendRow(TaskChatTableId, id, row)
+    const chat = this.client.appendRow(TaskChatTableId, id, row, false)
+
+    const task = this.model.getProject(projectId).getTask(taskId)
+    const activityId = uuid()
+    const comment = task.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.PostTaskComment,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([chat, activity])
   }
 
   addUser = (userId: UserId, userName: string, title: Title, description: Description, avatarFile) => {
@@ -282,12 +367,41 @@ export class Callbacks {
       description,
       dueDate
     ]
-    this.client.appendRow(ProjectTableId, projectId, row)
+    const addProject = this.client.appendRow(ProjectTableId, projectId, row, false)
+
+    const activityId = uuid()
+    const comment = title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.CreateProject,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([addProject, activity])
   }
 
   removeProjectCallback = (projectId: ProjectId) => {
     // FIXME: remove project contents
-    this.client.removeRow(ProjectTableId, projectId)
+    const removeProject = this.client.removeRow(ProjectTableId, projectId, false)
+
+    const project = this.model.getProject(projectId)
+    const activityId = uuid()
+    const comment = project.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.RemoveProject,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([removeProject, activity])
   }
 
   createSortingCallBack = () => {
