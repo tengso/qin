@@ -346,11 +346,17 @@ export enum ActivityType {
   UpdateTaskTitle,
   RemoveTask,
   PostTaskComment,
+  UpdateTaskDueDate,
+  AddTaskOwner,
+  RemoveTaskOwner,
 
   CreateProject,
   UpdateProjectTitle,
   RemoveProject,
   PostProjectComment,
+  UpdateProjectDueDate,
+  AddProjectMember,
+  RemoveProjectMember,
 }
 
 export interface ActivityRow {
@@ -404,7 +410,25 @@ export function createActivityNote(row: ActivityRow) {
       return `Updated Project Title To <b>${row.comment}</b>`
     }
     case ActivityType.PostProjectComment: {
-      return `Posted Comment on Project <b>${row.comment}</b>`
+      return `Posted Comment on Project</b>`
+    }
+    case ActivityType.UpdateTaskDueDate: {
+      return `Updated Task <b>${row.comment}</b> Due Date`
+    }
+    case ActivityType.UpdateProjectDueDate: {
+      return `Updated Project Due Date`
+    }
+    case ActivityType.AddTaskOwner: {
+      return `${row.comment}`
+    }
+    case ActivityType.RemoveTaskOwner: {
+      return `${row.comment}`
+    }
+    case ActivityType.AddProjectMember: {
+      return `Added ${row.comment} to Project`
+    }
+    case ActivityType.RemoveProjectMember: {
+      return `Removed ${row.comment} from Project`
     }
   }
 }

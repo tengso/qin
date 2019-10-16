@@ -129,7 +129,23 @@ export class Callbacks {
   }
 
   updateTaskDueDateCallback = (taskId: TaskId, dueDate: Date) => {
-    this.client.updateCell(TaskTableId, taskId, 'dueDate', dueDate)
+    const updateDueDate = this.client.updateCell(TaskTableId, taskId, 'dueDate', dueDate, false)
+
+    const activityId = uuid()
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    const task = this.model.getProject(projectId).getTask(taskId)
+    const comment = task.title 
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.UpdateTaskDueDate,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([updateDueDate, activity])
   }
 
   updateProjectTitleCallback = (projectId: ProjectId, title: Title) => {
@@ -155,7 +171,22 @@ export class Callbacks {
   }
 
   updateProjectDueDateCallback = (projectId: ProjectId, dueDate: Date) => {
-    this.client.updateCell(ProjectTableId, projectId, 'dueDate', dueDate)
+    const updateDueDate = this.client.updateCell(ProjectTableId, projectId, 'dueDate', dueDate, false)
+
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const comment = project.title 
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.UpdateProjectDueDate,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([updateDueDate, activity])
   }
 
   getTaskOwnerRowId = (taskId: TaskId, ownerId: UserId) => {
@@ -167,11 +198,45 @@ export class Callbacks {
       ownerId,
       taskId
     ]
-    this.client.appendRow(TaskOwnerTableId, this.getTaskOwnerRowId(taskId, ownerId), row)
+    const addOwner = this.client.appendRow(TaskOwnerTableId, this.getTaskOwnerRowId(taskId, ownerId), row, false)
+
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const task = project.getTask(taskId)
+    const comment = `Added <b>${ownerId}</b> to Task <b>${task.title}</b>`
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.AddTaskOwner,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([addOwner, activity])
   }
 
   removeTaskOwnerCallback = (taskId: TaskId, ownerId: UserId) => {
-    this.client.removeRow(TaskOwnerTableId, this.getTaskOwnerRowId(taskId, ownerId))
+    const removeOwner = this.client.removeRow(TaskOwnerTableId, this.getTaskOwnerRowId(taskId, ownerId), false)
+
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const task = project.getTask(taskId)
+    const comment = `Removed <b>${ownerId}</b> from Task <b>${task.title}</b>`
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.RemoveTaskOwner,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([removeOwner, activity])
   }
 
   addTaskAttachmentCallback = (asset: Asset, projectId: ProjectId, taskId: TaskId, description: Description) => {
@@ -340,11 +405,39 @@ export class Callbacks {
   }
 
   addProjectMember = (userId: UserId, projectId: ProjectId) => {
-    this.client.appendRow(ProjectMemberTableId, `${userId}#${projectId}`, [userId, projectId])
+    const addMember = this.client.appendRow(ProjectMemberTableId, `${userId}#${projectId}`, [userId, projectId], false)
+
+    const comment = userId
+    const activityId = uuid()
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.AddProjectMember,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([addMember, activity])
   }
 
   removeProjectMember = (userId: UserId, projectId: ProjectId) => {
-    this.client.removeRow(ProjectMemberTableId, `${userId}#${projectId}`)
+    const removeMember = this.client.removeRow(ProjectMemberTableId, `${userId}#${projectId}`, false)
+
+    const comment = userId
+    const activityId = uuid()
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.RemoveProjectMember,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([removeMember, activity])
   }
 
   login = (userId: UserId, password: string) => {
