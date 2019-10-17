@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<script src='dist/sim_main.js'></script>
+<head>QIN Client Sim</head>
+<body>
+    <p>
+        <button id='loginBn'>login</button>
+        user id: <input type='text' id='userId' value='root'></input> 
+        password: <input type='text' id='password' value='root'></input>
+    </p>
+    <p>
+        <button id='logoutBn'>logout</button>
+    </p>
+    <p>
+        <button id='createUserBn'>create user</button>
+        user id: <input type='text' id='newUserId'></input> 
+        user name: <input type='text' id='newUserName'></input> 
+        password: <input type='text' id='newUserPassword'></input>
+    </p>
+    <p>
+        <button id='removeUserBn'>remove user</button>
+        user id: <input type='text' id='removeUserId'></input> 
+    </p>
+    <p>
+        <button id='createTableBn'>create table</button>
+        table id: <input type='text' id='tableIdCT'></input> 
+        table name: <input type='text' id='tableNameCT'></input> 
+        columns: <input type='text' id='tableColumnsCT'></input> 
+    </p>
+    <p>
+        <button id='removeTableBn'>remove table</button>
+        table id: <input type='text' id='tableIdRT'></input> 
+    </p>
+    <p>
+        <button id='appendRowBn'>append row</button>
+        table id: <input type='text' id='tableIdAR'></input> 
+        row id: <input type='text' id='rowIdAR'></input> 
+        values: <input type='text' id='valuesAR'></input> 
+    </p>
+    <p>
+        <button id='removeRowBn'>remove row</button>
+        table id: <input type='text' id='tableIdDR'></input> 
+        row id: <input type='text' id='rowIdDR'></input> 
+    </p>
+    <p>
+        <button id='updateCellBn'>update cell</button>
+        table id: <input type='text' id='tableIdUC'></input> 
+        column: <input type='text' id='columnUC'></input> 
+        row id: <input type='text' id='rowIdUC'></input> 
+        value: <input type='text' id='valueUC'></input> 
+    </p>
+    <p>
+        <button id='subscribeTablesBn'>subscribe tables</button>
+    </p>
+    <p>
+        <button id='unsubscribeTables'>unsubscribe tables</button>
+    </p>
+    <div id="tables">tables</div>
+    <p>
+        table update<br><textarea id="tableUpdate"></textarea>
+    </p>
+    <p>
+        table snap<br><textarea id="tableSnap"></textarea>
+    </p>
+    <p>
+        log<br><textarea id="logs"></textarea>
+    </p>
+    <script>
+        bindListeners()
+    </script>
+</body>

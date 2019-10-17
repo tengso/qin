@@ -546,7 +546,7 @@ export class Control implements ClientCallback {
 
   connectSuccess(client: Client): void {
     this.logMessage('connect success')
-    client.login('wukong', 'wk')
+    // client.login('wukong', 'wk')
   }
 
   connectFailure(): void {

@@ -1430,7 +1430,8 @@ export class View {
     if (projectElement) {
       const taskGroupElement = this.document.getElementById(taskGroupId)
       if (taskGroupElement) {
-        taskGroupElement.children[0].children[1].children[0].value = title
+        const titleElement = taskGroupElement.querySelector('.TaskGroupContainer .Input')
+        titleElement.value = title
       }
       else {
         throw new Error(`task group element ${taskGroupId} not found`)

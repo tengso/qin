@@ -324,7 +324,7 @@ function getUpdateCellValue() {
   return getValue('valueUC') 
 }
 
-client = getClient('localhost', 8080)
+client = getClient(window.location.hostname, 8080)
 
 function bindListeners() {
     document.getElementById('loginBn').addEventListener('click', () => {
