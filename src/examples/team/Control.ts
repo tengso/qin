@@ -58,7 +58,7 @@ export class Control implements ClientCallback {
     view.setAddCheckListItemCallback(callbacks.addCheckListItemCallback)
     view.setRemoveCheckListItemCallback(callbacks.removeCheckListItemCallback)
     view.setUpdateCheckListItemStatusCallback(callbacks.updateCheckListItemStatusCallback)
-    // this.view.setUpdateCheckListItemDescriptionCallback(updateCheckListItemDescriptionCallback)
+    this.view.setUpdateCheckListItemDescriptionCallback(callbacks.updateCheckListItemDescriptionCallback)
     view.setSendProjectChatCallback(callbacks.sendProjectChatCallback)
     view.setSendTaskChatCallback(callbacks.sendTaskChatCallback)
     view.setAddTaskAttachmentCallback(callbacks.addTaskAttachmentCallback)

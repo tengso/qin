@@ -349,6 +349,10 @@ export enum ActivityType {
   UpdateTaskDueDate,
   AddTaskOwner,
   RemoveTaskOwner,
+  AddTaskChecklistItem,
+  RemoveTaskChecklistItem,
+  UpdateTaskChecklistItemTitle,
+  UpdateTaskChecklistItemStatus,
 
   CreateProject,
   UpdateProjectTitle,
@@ -429,6 +433,18 @@ export function createActivityNote(row: ActivityRow) {
     }
     case ActivityType.RemoveProjectMember: {
       return `Removed ${row.comment} from Project`
+    }
+    case ActivityType.AddTaskChecklistItem: {
+      return `Added Checklist Item to Task <b>${row.comment}</b>`
+    }
+    case ActivityType.RemoveTaskChecklistItem: {
+      return `Removed Checklist Item from Task <b>${row.comment}</b>`
+    }
+    case ActivityType.UpdateTaskChecklistItemTitle: {
+      return `Updated Checklist Item of Task <b>${row.comment}</b>`
+    }
+    case ActivityType.UpdateTaskChecklistItemStatus: {
+      return `Changed Checklist Item Status of Task <b>${row.comment}</b>`
     }
   }
 }

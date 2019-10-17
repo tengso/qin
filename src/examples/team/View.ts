@@ -1795,17 +1795,17 @@ export class View {
         status.checked = item.status === ItemStatus.Closed ? true : false
         status.addEventListener('change', () => {
           const newStatus = (status.checked) ? ItemStatus.Closed : ItemStatus.Open
-          this.updateCheckListItemStatusCallback(item.id, newStatus)
+          this.updateCheckListItemStatusCallback(projectId, taskId, item.id, newStatus)
         })
 
         const descInput = itemElement.querySelector('.DescriptionInput')
         descInput.onblur = () => {
-          this.updateCheckListItemDescriptionCallback(item.id, descInput.value)
+          this.updateCheckListItemDescriptionCallback(projectId, taskId, item.id, descInput.value)
         }
 
         const removeButton = itemElement.querySelector('.RemoveItemButton')
         removeButton.addEventListener('click', () => {
-          this.removeCheckListItemCallback(item.id)
+          this.removeCheckListItemCallback(projectId, task.id, item.id)
         })
 
         checkList.querySelector('.ItemList').appendChild(itemElement)

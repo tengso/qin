@@ -274,6 +274,23 @@ export class Callbacks {
     this.client.removeRow(TaskAttachmentTableId, attachmentId)
   }
 
+  createChecklistActivity(projectId: ProjectId, taskId: TaskId, type: ActivityType): string {
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const task = project.getTask(taskId)
+    const comment = task.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      type,
+      comment,
+      new Date(),
+    ]
+
+    return this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+  }
+
   addCheckListItemCallback = (taskId: TaskId, description: Description, status: ItemStatus) => {
     const rowId = uuid()
     // FIXME: how to get project id?
@@ -286,19 +303,36 @@ export class Callbacks {
       description,
       status,
     ]
-    this.client.appendRow(CheckListTableId, rowId, row)
+    const addItem = this.client.appendRow(CheckListTableId, rowId, row, false)
+
+    const activity = this.createChecklistActivity(projectId, taskId, ActivityType.AddTaskChecklistItem)
+
+    this.client.executeTransaction([addItem, activity])
   }
 
-  removeCheckListItemCallback = (itemId: ItemId) => {
-    this.client.removeRow(CheckListTableId, itemId)
+  removeCheckListItemCallback = (projectId: ProjectId, taskId: TaskId, itemId: ItemId) => {
+    const removeItem = this.client.removeRow(CheckListTableId, itemId, false)
+
+    const activity = this.createChecklistActivity(projectId, taskId, ActivityType.RemoveTaskChecklistItem)
+
+    this.client.executeTransaction([removeItem, activity])
   }
 
-  updateCheckListItemStatusCallback = (itemId: ItemId, status: ItemStatus) => {
-    this.client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Status, status)
+  updateCheckListItemStatusCallback = (projectId: ProjectId, taskId: TaskId, itemId: ItemId, status: ItemStatus) => {
+    const updateItem = this.client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Status, status, false)
+
+    const activity = this.createChecklistActivity(projectId, taskId, ActivityType.UpdateTaskChecklistItemStatus)
+
+    this.client.executeTransaction([updateItem, activity])
+
   }
 
-  updateCheckListItemDescriptionCallback = (itemId: ItemId, description: Description) => {
-    this.client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Description, description)
+  updateCheckListItemDescriptionCallback = (projectId: ProjectId, taskId: TaskId, itemId: ItemId, description: Description) => {
+    const updateItem = this.client.updateCell(CheckListTableId, itemId, CheckListTableColumnName.Description, description, false)
+
+    const activity = this.createChecklistActivity(projectId, taskId, ActivityType.UpdateTaskChecklistItemTitle)
+
+    this.client.executeTransaction([updateItem, activity])
   }
 
   sendProjectChatCallback = (projectId: ProjectId, message: Message, replyToId: MessageId) => {
