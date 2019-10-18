@@ -64,11 +64,41 @@ export class Callbacks {
       projectId,
     ]
 
-    this.client.appendRow(TaskGroupTableId, taskGroupId, row)
+    const add = this.client.appendRow(TaskGroupTableId, taskGroupId, row, false)
+
+    const activityId = uuid()
+    const comment = title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.AddTaskGroup,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([add, activity])
   }
 
   removeTaskGroupCallback = (taskGroupId: TaskGroupId) => {
-    this.client.removeRow(TaskGroupTableId, taskGroupId)
+    const remove = this.client.removeRow(TaskGroupTableId, taskGroupId, false)
+
+    const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
+    const taskGroup = this.model.getProject(projectId).getTaskGroup(taskGroupId)
+    const activityId = uuid()
+    const comment = taskGroup.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.RemoveTaskGroup,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([remove, activity])
   }
 
   removeTaskCallback = (taskId: TaskId) => {
@@ -97,7 +127,22 @@ export class Callbacks {
   }
 
   updateTaskGroupTitleCallback = (taskGroupId: TaskGroupId, title: Title) => {
-    this.client.updateCell(TaskGroupTableId, taskGroupId, 'title', title)
+    const update = this.client.updateCell(TaskGroupTableId, taskGroupId, 'title', title, false)
+
+    const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
+    const activityId = uuid()
+    const comment = title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.UpdateTaskGroupTitle,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([update, activity])
   }
 
   updateTaskTitleCallback = (taskId: TaskId, title: Title) => {
@@ -597,13 +642,27 @@ export class Callbacks {
 
         const projectId = this.model.getProjectIdByTaskGroupId(taskGroupId)
         if (projectId) {
+          const activityId = uuid()
+          const taskGroup = this.model.getProject(projectId).getTaskGroup(taskGroupId)
+          const comment = taskGroup.title
+          const activityRow = [
+            activityId,
+            projectId,
+            this.client.userId,
+            ActivityType.MoveTaskGroup,
+            comment,
+            new Date(),
+          ]
+          const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
           if (toTaskGroupIndex === 0) {
-            this.client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined) 
+            const move = this.client.moveRowAndUpdateCell(tableId, taskGroupId, undefined, undefined, undefined, false) 
+            this.client.executeTransaction([move, activity])
           }
           else {
             const afterTaskGroupId = event.item.parentElement.children[toTaskGroupIndex - 1].getAttribute('id')
             if (afterTaskGroupId) {
-              this.client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroupId, undefined, undefined) 
+              const move = this.client.moveRowAndUpdateCell(tableId, taskGroupId, afterTaskGroupId, undefined, undefined, false) 
+              this.client.executeTransaction([move, activity])
             }
             else {
               throw new Error(`task group index ${toTaskGroupIndex} not found`)
@@ -625,16 +684,31 @@ export class Callbacks {
 
         const columnName = fromTaskGroupId != toTaskGroupId ? 'taskGroupId' : undefined
         const columnValue = columnName ? toTaskGroupId : undefined
-
+        
         const projectId = this.model.getProjectIdByTaskId(taskId)
         if (projectId) {
+          const activityId = uuid()
+          const task = this.model.getProject(projectId).getTask(taskId)
+          const comment = task.title
+          const activityRow = [
+            activityId,
+            projectId,
+            this.client.userId,
+            ActivityType.MoveTask,
+            comment,
+            new Date(),
+          ]
+          const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
           if (toTaskIndex == 0) {
-            this.client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue) 
+            const move = this.client.moveRowAndUpdateCell(tableId, taskId, undefined, columnName, columnValue, false) 
+            this.client.executeTransaction([move, activity])
           }
           else {
             const afterTaskId = event.item.parentElement.children[toTaskIndex - 1].getAttribute('id')
             if (afterTaskId) {
-              this.client.moveRowAndUpdateCell(tableId, taskId, afterTaskId, columnName, columnValue) 
+              const move = this.client.moveRowAndUpdateCell(tableId, taskId, afterTaskId, columnName, columnValue, false)
+              this.client.executeTransaction([move, activity])
             }
             else {
               throw new Error(`task index ${toTaskIndex} not found`)

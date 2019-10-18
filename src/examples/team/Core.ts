@@ -356,6 +356,12 @@ export enum ActivityType {
   AddTaskAttachment,
   RemoveTaskAttachment,
   UpdateTaskDescription,
+  MoveTask,
+
+  AddTaskGroup,
+  RemoveTaskGroup,
+  UpdateTaskGroupTitle,
+  MoveTaskGroup,
 
   CreateProject,
   UpdateProjectTitle,
@@ -457,6 +463,21 @@ export function createActivityNote(row: ActivityRow) {
     }
     case ActivityType.UpdateTaskDescription: {
       return `Updated Description of Task <b>${row.comment}</b>`
+    }
+    case ActivityType.MoveTask: {
+      return `Moved Task <b>${row.comment}</b>`
+    }
+    case ActivityType.MoveTaskGroup: {
+      return `Moved Task Group <b>${row.comment}</b>`
+    }
+    case ActivityType.AddTaskGroup: {
+      return `Added Task Group <b>${row.comment}</b>`
+    }
+    case ActivityType.RemoveTaskGroup: {
+      return `Removed Task Group <b>${row.comment}</b>`
+    }
+    case ActivityType.UpdateTaskGroupTitle: {
+      return `Updated Task Group <b>${row.comment}</b>`
     }
   }
 }

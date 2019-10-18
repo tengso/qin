@@ -76,6 +76,8 @@ export interface Project {
   getAllTasks(): Array<Task>
 
   appendChatMessage(message: ChatMessage): ChatMessage
+
+  getTaskGroup(taskGroupId: TaskGroupId): TaskGroup
 }
 
 class ProjectImpl implements Project {
