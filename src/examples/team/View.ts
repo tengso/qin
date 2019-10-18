@@ -2081,7 +2081,7 @@ export class View {
 
         const removeButton = itemElement.querySelector('.RemoveItemButton')
         removeButton.addEventListener('click', () => {
-          this.removeTaskAttachmentCallback(attachmentId)
+          this.removeTaskAttachmentCallback(projectId, taskId, attachmentId)
         })
 
         const saveFile = itemElement.querySelector('.ItemName')

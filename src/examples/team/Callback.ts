@@ -125,7 +125,23 @@ export class Callbacks {
   }
 
   updateTaskDescriptionCallback = (taskId: TaskId, description: Description) => {
-    this.client.updateCell(TaskTableId, taskId, 'description', description)
+    const update = this.client.updateCell(TaskTableId, taskId, 'description', description, false)
+
+    const projectId = this.model.getProjectIdByTaskId(taskId)
+    const task = this.model.getProject(projectId).getTask(taskId)
+    const activityId = uuid()
+    const comment = task.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.UpdateTaskDescription,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([update, activity])
   }
 
   updateTaskDueDateCallback = (taskId: TaskId, dueDate: Date) => {
@@ -264,14 +280,41 @@ export class Callbacks {
     ]
     const appendAttachment = this.client.appendRow(TaskAttachmentTableId, attachmentId, attachmentValues, false)
 
-    // console.log(appendAsset)
-    // console.log(appendAttachment)
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const task = project.getTask(taskId)
+    const comment = task.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.AddTaskAttachment,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
 
-    this.client.executeTransaction([appendAsset, appendAttachment])
+    this.client.executeTransaction([appendAsset, appendAttachment, activity])
   }
 
-  removeTaskAttachmentCallback = (attachmentId: AttachmentId) => {
-    this.client.removeRow(TaskAttachmentTableId, attachmentId)
+  removeTaskAttachmentCallback = (projectId: ProjectId, taskId: TaskId, attachmentId: AttachmentId) => {
+    const remove = this.client.removeRow(TaskAttachmentTableId, attachmentId, false)
+
+    const activityId = uuid()
+    const project = this.model.getProject(projectId)
+    const task = project.getTask(taskId)
+    const comment = task.title
+    const activityRow = [
+      activityId,
+      projectId,
+      this.client.userId,
+      ActivityType.RemoveTaskAttachment,
+      comment,
+      new Date(),
+    ]
+    const activity = this.client.appendRow(ActivityTableId, activityId, activityRow, false)
+
+    this.client.executeTransaction([remove, activity])
   }
 
   createChecklistActivity(projectId: ProjectId, taskId: TaskId, type: ActivityType): string {
