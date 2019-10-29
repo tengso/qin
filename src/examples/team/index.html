@@ -5,9 +5,27 @@
   <link rel="stylesheet" href='node_modules/quill/dist/quill.bubble.css'>
   <link rel="stylesheet" href='node_modules/flatpickr/dist/flatpickr.min.css'>
   <link rel="stylesheet" href='src/examples/css/icons.css'></link>
+  <link rel="stylesheet" href='src/examples/css/fab.css'></link>
   <link rel="stylesheet" href='src/examples/css/minput.css'></link>
   <link rel="stylesheet" href='src/examples/css/kanban.css'></link>
   <body>
+      <div class="fab">
+          <span class="fab-action-button">
+                <i class="fab-action-button__icon"></i>
+          </span>
+          <ul class="fab-buttons">
+            <li class="fab-buttons__item">
+              <a href="#" class="fab-buttons__link" data-tooltip="Activity">
+                <i class="icon-material icon-material_activity"></i>
+              </a>
+            </li>
+            <li class="fab-buttons__item">
+              <a href="#" class="fab-buttons__link" data-tooltip="Chat">
+                <i class="icon-material icon-material_chat"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
     <div id="app"></div>
   </body>
   <script src='dist/kanban_index.js'></script>

@@ -39,7 +39,7 @@ describe('Test Model', function() {
     appElement.setAttribute('id', 'app')
     document.body.appendChild(appElement)
 
-    const view = new View(document)
+    const view = new View(document, undefined)
 
     // FIXME: project interface
     // @ts-ignore
@@ -137,7 +137,7 @@ describe('Test Model', function() {
     appElement.setAttribute('id', 'app')
     document.body.appendChild(appElement)
 
-    const view = new View(document)
+    const view = new View(document, undefined)
 
     // FIXME: project interface
     // @ts-ignore

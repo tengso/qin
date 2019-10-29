@@ -6,6 +6,8 @@ import flatpickr from 'flatpickr'
 import uuid = require('uuid');
 import { saveAs } from 'file-saver'
 
+import { createAppMenu } from './AppMenu'
+
 // TODO: disable delete remove task group when non-empty task list
 
 import Sortable from 'sortablejs'
@@ -18,7 +20,7 @@ export class View {
   private loginCallback
   private logoutCallback
 
-  private addProjectCallback
+  public addProjectCallback
 
   private addTaskCallback
   private addTaskGroupCallback
@@ -61,14 +63,16 @@ export class View {
 
   private model: Model
 
-  constructor(document) {
+  constructor(document, model: Model) {
     this.document = document
+    this.model = model
 
     this.init()
   }
 
   init() {
-    this.createAppMenu()
+    // this.createAppMenu()
+    createAppMenu(this, this.model, this.document)
     this.createAddUserElement()
     this.createLoginElement()
   }
@@ -77,10 +81,6 @@ export class View {
   ) {
     const appElement = this.document.getElementById('app')
     appElement.innerHTML = ''
-  }
-
-  setModel(model: Model) {
-    this.model = model;
   }
 
   setLoginCallback(callback) {
@@ -1309,22 +1309,22 @@ export class View {
     const list = activity.querySelector('.ActivityList')
 
     section.addEventListener('animationend', () => {
-      if (section.classList.contains('slideOutLeft')) {
+      if (section.classList.contains('slideOutRight')) {
         section.style.display = 'none'
       }
     })
 
     open.addEventListener('click', () => {
       if (section.style.display === 'flex') {
-        section.classList.add('slideOutLeft')
-        section.classList.remove('slideInLeft')
+        section.classList.add('slideOutRight')
+        section.classList.remove('slideInRight')
 
         open.classList.remove('IconCancel')
         open.classList.add('IconNotification')
       }
       else {
-        section.classList.remove('slideOutLeft')
-        section.classList.add('slideInLeft')
+        section.classList.remove('slideOutRight')
+        section.classList.add('slideInRight')
         section.style.display = 'flex'
 
         open.classList.remove('IconNotification')

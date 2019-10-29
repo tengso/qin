@@ -23,6 +23,7 @@
         "./src/examples/AssetLoader.ts",
         "./src/examples/Kanban.ts",
         "./src/examples/Callback.ts",
+        "./src/examples/AppMenu.ts",
         "./src/test/**/*"
     ]
 }

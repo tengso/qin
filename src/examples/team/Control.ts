@@ -23,8 +23,7 @@ export class Control implements ClientCallback {
     this.client = client
     const model = new Model()
     this.model = model
-    this.view = new View(document)
-    this.view.setModel(model)
+    this.view = new View(document, model)
     const callbacks = new Callbacks(this.client, this.model, this)
     
     this.registerCallbacks(this.view, callbacks)

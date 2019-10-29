@@ -7,8 +7,8 @@
 
 .OpenActivityButton {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 80px;
+  right: 20px;
   width: 40px;
   height: 40px;
   border: none;
@@ -22,8 +22,8 @@
   background-color: rgb(255,255,255); 
   display: none;
   position: fixed;
-  bottom: 50px;
-  left: 70px;
+  bottom: 90px;
+  right: 70px;
   flex-flow: column;
   height: 85%;
   width: 40%;
@@ -128,8 +128,8 @@
   border-radius: 8px;
   background-color: rgb(255,255,255); 
   position: fixed;
-  right: 8%;
-  top: 10%;
+  right: 40%;
+  top: 35%;
   flex-flow: column;
   height: 35%;
   width: 15%;
