@@ -11,23 +11,23 @@ export function createAppMenu(view: View, model: Model, document: Document) {
           </span>
           <ul class='fab-buttons'>
             <li class="fab-buttons__item">
-              <a href="#" class="fab-buttons__link" data-tooltip="Login">
-                <i class="Icon IconUser Login"></i>
-              </a>
-            </li>
-            <li class="fab-buttons__item">
               <a href="#" class="fab-buttons__link" data-tooltip="Logout">
-                <i class="Icon IconLogout" Logout></i>
+                <i class="Icon IconLogout Logout"></i>
               </a>
             </li>
             <li class="fab-buttons__item">
               <a href="#" class="fab-buttons__link" data-tooltip="Open Project Chat">
-                <i class="Icon IconChat"></i>
+                <i class="Icon IconChat OpenProjectChat"></i>
               </a>
             </li>
             <li class="fab-buttons__item">
               <a href="#" class="fab-buttons__link" data-tooltip="Show Activity">
-                <i class="Icon IconNotification"></i>
+                <i class="Icon IconNotification OpenActivity"></i>
+              </a>
+            </li>
+            <li class="fab-buttons__item">
+              <a href="#" class="fab-buttons__link" data-tooltip="New Project">
+                <div class="Icon IconAddProject AddProject"></div>
               </a>
             </li>
             <li class="fab-buttons__item">
@@ -36,8 +36,8 @@ export function createAppMenu(view: View, model: Model, document: Document) {
               </a>
             </li>
             <li class="fab-buttons__item">
-              <a href="#" class="fab-buttons__link" data-tooltip="New Project">
-                <i class="Icon IconAddProject AddProject"></i>
+              <a href="#" class="fab-buttons__link" data-tooltip="Login">
+                <i class="Icon IconUser Login"></i>
               </a>
             </li>
           </ul>
@@ -75,7 +75,22 @@ export function createAppMenu(view: View, model: Model, document: Document) {
 
   const showProjectListButton = fab.querySelector('.ShowMyProjects')
   showProjectListButton.addEventListener('click', () => {
-    showProjectList(model, document)
+    const myProjects: HTMLElement = document.querySelector('#ProjectList') 
+    myProjects.addEventListener('animationend', () => {
+      if (myProjects.classList.contains('slideOutRight')) {
+        myProjects.style.display = 'none'
+      }
+    })
+    if (myProjects.style.display === "flex") {
+      myProjects.classList.remove('slideInRight')
+      myProjects.classList.add('slideOutRight')
+    }
+    else {
+      populateProjectList(model, document)
+      myProjects.classList.remove('slideOutRight')
+      myProjects.classList.add('slideInRight')
+      myProjects.style.display = 'flex'
+    }
   })
 
   const addProjectButton = appMenu.querySelector('.AddProject')
@@ -83,11 +98,60 @@ export function createAppMenu(view: View, model: Model, document: Document) {
     view.addProjectCallback()
   })
 
+  const logoutButton = appMenu.querySelector('.Logout')
+  logoutButton.addEventListener('click', () => {
+    view.logoutCallback()
+  })
+
+  const openChatButton = appMenu.querySelector('.OpenProjectChat')
+  openChatButton.addEventListener('click', () => {
+    const projectId = document.querySelector('.CurrentProjectId').id
+    const projectElement = document.getElementById(projectId)
+
+    console.log(`open project chat ${projectElement}`)
+
+    const chatElement: HTMLElement = projectElement.querySelector('.ProjectChat') 
+    chatElement.addEventListener('animationend', () => {
+      if (chatElement.classList.contains('slideOutRight')) {
+        chatElement.style.display = 'none'
+      }
+    })
+    if (chatElement.style.display === "flex") {
+      chatElement.classList.remove('slideInRight')
+      chatElement.classList.add('slideOutRight')
+    }
+    else {
+      chatElement.classList.remove('slideOutRight')
+      chatElement.classList.add('slideInRight')
+      chatElement.style.display = 'flex'
+      let messageList = chatElement.querySelector('.MessageList')
+      messageList.scrollTop = messageList.scrollHeight
+    }
+  })
+
+  const openActivityButton = appMenu.querySelector('.OpenActivity')
+    openActivityButton.addEventListener('click', () => {
+      const projectId = document.querySelector('.CurrentProjectId').id
+      const projectElement = document.getElementById(projectId)
+      const activity = projectElement.querySelector('.ActivityContainer')
+      const section: HTMLElement = activity.querySelector('.ActivitySection')
+      const list = activity.querySelector('.ActivityList')
+
+      if (section.style.display === 'flex') {
+        section.classList.add('slideOutRight')
+        section.classList.remove('slideInRight')
+      }
+      else {
+        section.classList.remove('slideOutRight')
+        section.classList.add('slideInRight')
+        section.style.display = 'flex'
+        list.scrollTop = list.scrollHeight
+      }
+    })
 }
 
-function showProjectList(model: Model, document: Document) {
-  const projectMenuList = document.createElement('ProjectList')
-  projectMenuList.classList.add('ProjectList')
+function populateProjectList(model: Model, document: Document) {
+  const projectMenuList = document.getElementById('ProjectList')
   projectMenuList.innerHTML = ''
 
   const projectList = model.getAllProject()
@@ -103,6 +167,7 @@ function showProjectList(model: Model, document: Document) {
 
     const projectLinkButton = projectLink.querySelector('.ProjectLinkButton')
     projectLinkButton.addEventListener('click', () => {
+      projectMenuList.style.display = 'none'
       const projectElements = document.getElementsByClassName('Project')
       // @ts-ignore
       for (const pe of projectElements) {
@@ -110,10 +175,10 @@ function showProjectList(model: Model, document: Document) {
       }
       const projectElement = document.getElementById(project.id)
       projectElement.style.display = 'flex'
+      const currentProjectId = document.querySelector('.CurrentProjectId')
+      currentProjectId.id = project.id
     })
 
     projectMenuList.appendChild(projectLink)
   }
-
-  document.body.appendChild(projectMenuList)
 }

@@ -22,8 +22,8 @@
   background-color: rgb(255,255,255); 
   display: none;
   position: fixed;
-  bottom: 90px;
-  right: 70px;
+  bottom: 50px;
+  right: 140px;
   flex-flow: column;
   height: 85%;
   width: 40%;
@@ -789,7 +789,7 @@ height: 40px;
   display: none;
   position: fixed;
   bottom: 50px;
-  right: 70px;
+  right: 140px;
   flex-flow: column;
   height: 85%;
   width: 30%;
@@ -1148,3 +1148,35 @@ height: 40px;
 /*
  Add User End
  */
+
+
+.MyProjects {
+  z-index: 1; 
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 8px;
+  background-color: rgb(255,255,255); 
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 140px;
+  flex-flow: column;
+  height: 60%;
+  width: 20%;
+  resize: both;
+  animation-duration: 0.1s;
+}
+
+.MyProjects .ProjectLink {
+  display: flex;
+  justify-content: row;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.MyProjects .ProjectLink .ProjectLinkTitle {
+  align-self: center;
+}
+
+.fab-buttons__link {
+  background: transparent;
+}

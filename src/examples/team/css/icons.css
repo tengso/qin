@@ -164,6 +164,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightblue;
 }
 
 .IconAddUser {
@@ -199,6 +200,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightblue;
 }
 
 .IconProject {
@@ -206,6 +208,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightpink;
 }
 
 .IconLogout {
@@ -213,6 +216,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightsalmon;
 }
 
 .IconNotification {
@@ -220,6 +224,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightsalmon;
 }
 
 .IconChat {
@@ -227,6 +232,7 @@
   width: 40px;
   height: 40px;
   -webkit-mask-size: cover;
+  background: lightgreen;
 }
 
 .IconClose:hover,

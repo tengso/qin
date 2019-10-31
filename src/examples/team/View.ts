@@ -18,7 +18,7 @@ export class View {
   private afterSortingCallback: (event) => void
 
   private loginCallback
-  private logoutCallback
+  public logoutCallback
 
   public addProjectCallback
 
@@ -77,8 +77,7 @@ export class View {
     this.createLoginElement()
   }
 
-  clear( 
-  ) {
+  clear() {
     const appElement = this.document.getElementById('app')
     appElement.innerHTML = ''
   }
@@ -1254,7 +1253,7 @@ export class View {
     openChatElement.classList.add('ProjectChatButton', 'Icon', 'IconMessageBig')
 
     projectElement.appendChild(chatElement)
-    projectElement.appendChild(openChatElement)
+    // projectElement.appendChild(openChatElement)
 
     chatElement.addEventListener('animationend', () => {
       if (chatElement.classList.contains('slideOutRight')) {
@@ -1292,10 +1291,16 @@ export class View {
   }
 
   private createActivityElement(project: HTMLElement) {
+    // const html = `
+    //     <div class="OpenActivity">
+    //       <div class="Icon IconNotification OpenActivityButton"></div>
+    //     </div>
+    //     <div class="ActivitySection">
+    //       <div class="ActivityList"></div>
+    //     </div>
+    // `
+
     const html = `
-        <div class="OpenActivity">
-          <div class="Icon IconNotification OpenActivityButton"></div>
-        </div>
         <div class="ActivitySection">
           <div class="ActivityList"></div>
         </div>
@@ -1304,7 +1309,7 @@ export class View {
     activity.classList.add('ActivityContainer')
     activity.innerHTML = html
 
-    const open = activity.querySelector('.OpenActivityButton')
+    // const open = activity.querySelector('.OpenActivityButton')
     const section = activity.querySelector('.ActivitySection')
     const list = activity.querySelector('.ActivityList')
 
@@ -1314,25 +1319,25 @@ export class View {
       }
     })
 
-    open.addEventListener('click', () => {
-      if (section.style.display === 'flex') {
-        section.classList.add('slideOutRight')
-        section.classList.remove('slideInRight')
+    // open.addEventListener('click', () => {
+    //   if (section.style.display === 'flex') {
+    //     section.classList.add('slideOutRight')
+    //     section.classList.remove('slideInRight')
 
-        open.classList.remove('IconCancel')
-        open.classList.add('IconNotification')
-      }
-      else {
-        section.classList.remove('slideOutRight')
-        section.classList.add('slideInRight')
-        section.style.display = 'flex'
+    //     open.classList.remove('IconCancel')
+    //     open.classList.add('IconNotification')
+    //   }
+    //   else {
+    //     section.classList.remove('slideOutRight')
+    //     section.classList.add('slideInRight')
+    //     section.style.display = 'flex'
 
-        open.classList.remove('IconNotification')
-        open.classList.add('IconCancel')
+    //     open.classList.remove('IconNotification')
+    //     open.classList.add('IconCancel')
 
-        list.scrollTop = list.scrollHeight
-      }
-    })
+    //     list.scrollTop = list.scrollHeight
+    //   }
+    // })
 
     project.appendChild(activity)
   }
@@ -2041,8 +2046,8 @@ export class View {
     // write the ArrayBuffer to a blob, and you're done
     var blob = new Blob([ab], {type: mimeString});
     return blob;
-  
   }
+
   appendTaskAttachmentItem(attachmentId: AttachmentId, projectId: ProjectId, taskId: TaskId, description: Description, asset: Asset) {
     const project = this.document.getElementById(projectId)
     if (project) {

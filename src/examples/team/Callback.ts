@@ -572,6 +572,8 @@ export class Callbacks {
     this.control.clear()
 
     this.client = init(window.location.hostname, 8080)
+
+    console.log('done logout')
   }
 
   addProjectCallback = (title: Title = 'new project', description: Description, dueDate: Date = new Date()) => {
