@@ -56,18 +56,8 @@ export function createAppMenu(view: View, model: Model, document: Document) {
   loginButton.addEventListener('click', () => {
     const login = document.getElementById('Login')
     if (login) {
-      // const image = userLogin.querySelector('#UserImage')
-      // // don't show login window if there is user already 
-      // // logged in
-      // // console.log(`debug ${image.src}`)
-      // if (image.src === '') {
-        // menu.style.display = 'none'
-        // menuButton.classList.add('IconApp')
-        // menuButton.classList.remove('IconCancel')
-
-        login.style.display = 'flex'
-        login.classList.add('zoomIn')
-      // }
+      login.style.display = 'flex'
+      login.classList.add('zoomIn')
     }
     else {
       throw new Error('login element not found')

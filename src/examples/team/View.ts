@@ -1765,6 +1765,7 @@ export class View {
     if (imageElement) {
       imageElement.src = image
       imageElement.parentNode.classList.remove('IconUser', 'Icon')
+      imageElement.style.display='inline'
     }
     else {
       throw new Error(`Login Image not found`)
