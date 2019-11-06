@@ -777,8 +777,14 @@ flex-flow: row;
 }
 
 #UserImage {
-width: 40px;
-height: 40px;
+  width: 40px;
+  height: 40px;
+  z-index: 1;
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  border-radius: 50%;
+  border: 1px solid;
 }
 
 .ProjectChat {

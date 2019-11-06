@@ -1,6 +1,7 @@
 import { Model } from "./Model"
 import { View } from "./View"
 
+
 export function createAppMenu(view: View, model: Model, document: Document) {
   console.log('create app menu')
 
