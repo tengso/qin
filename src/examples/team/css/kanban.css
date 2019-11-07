@@ -43,7 +43,13 @@
   flex-flow: row;
   align-items: center;
   flex-basis: 100%;
-  border-radius: 5px;
+  /* border: solid 1px; */
+  margin-bottom: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  background-color: lightcyan;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.19);
+  border-radius: 8px;
   /* border-top: 1px solid lightgrey;
   border-left: 1px solid lightgrey;
   border-right: 1px solid lightgrey; */
