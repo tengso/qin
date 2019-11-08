@@ -7,6 +7,7 @@ import uuid = require('uuid');
 import { string } from 'yargs';
 
 import { Callbacks } from './Callback'
+import { showProjects } from './AppMenu'
 
 export class Control implements ClientCallback {
   private view: View 
@@ -89,6 +90,7 @@ export class Control implements ClientCallback {
           this.appendRow(tableId, row.rowId, row.values)
         })
       }
+      showProjects(this.model)
     }
   }
 

@@ -66,22 +66,7 @@ export function createAppMenu(view: View, model: Model, document: Document) {
 
   const showProjectListButton = fab.querySelector('.ShowMyProjects')
   showProjectListButton.addEventListener('click', () => {
-    const myProjects: HTMLElement = document.querySelector('#ProjectList') 
-    myProjects.addEventListener('animationend', () => {
-      if (myProjects.classList.contains('slideOutRight')) {
-        myProjects.style.display = 'none'
-      }
-    })
-    if (myProjects.style.display === "flex") {
-      myProjects.classList.remove('slideInRight')
-      myProjects.classList.add('slideOutRight')
-    }
-    else {
-      populateProjectList(model, document)
-      myProjects.classList.remove('slideOutRight')
-      myProjects.classList.add('slideInRight')
-      myProjects.style.display = 'flex'
-    }
+    showProjects(model)
   })
 
   const addProjectButton = appMenu.querySelector('.AddProject')
@@ -141,7 +126,7 @@ export function createAppMenu(view: View, model: Model, document: Document) {
     })
 }
 
-function populateProjectList(model: Model, document: Document) {
+export function populateProjectList(model: Model, document: Document) {
   const projectMenuList = document.getElementById('ProjectList')
   projectMenuList.innerHTML = ''
 
@@ -151,10 +136,28 @@ function populateProjectList(model: Model, document: Document) {
     projectLink.classList.add('ProjectLink')
 
     const projectLinkHTML = `
-        <div class="Icon IconProject ProjectLinkButton"></div>
+      <div class="ProjectLinkHead">
         <div Class="ProjectLinkTitle">${project.title}</div>
+        <div class="Icon IconProjectOverview ProjectLinkButton"></div>
+      </div>
+      <div class="ProjectMembers">
+        <div class="MemberList">
+        </div>
+      </div>
     ` 
     projectLink.innerHTML = projectLinkHTML
+
+    const memberListElement = projectLink.querySelector('.MemberList')
+    const memberList = project.getMembers()
+    for (const member of memberList) {
+      const asset = model.getAsset(member.avatar)
+      if (asset) {
+        const image = document.createElement('img')
+        image.classList.add('ProjectLinkMemberImage')
+        image.src = asset.content
+        memberListElement.appendChild(image)
+      }
+    }
 
     const projectLinkButton = projectLink.querySelector('.ProjectLinkButton')
     projectLinkButton.addEventListener('click', () => {
@@ -171,5 +174,31 @@ function populateProjectList(model: Model, document: Document) {
     })
 
     projectMenuList.appendChild(projectLink)
+  }
+}
+
+export function showProjects(model: Model) {
+  console.log('show projects called')
+  const myProjects: HTMLElement = document.querySelector('#ProjectList') 
+  myProjects.addEventListener('animationend', () => {
+    if (myProjects.classList.contains('fadeOut')) {
+      myProjects.style.display = 'none'
+    }
+  })
+  if (myProjects.style.display === "flex") {
+    myProjects.classList.remove('fadeIn')
+    myProjects.classList.add('fadeOut')
+  }
+  else {
+    const currentProjectId = document.querySelector('.CurrentProjectId')
+    const currentProject = document.getElementById(currentProjectId.id)
+    if (currentProject) {
+      currentProject.style.display = 'none'
+    }
+
+    populateProjectList(model, document)
+    myProjects.classList.remove('fadeOut')
+    myProjects.classList.add('fadeIn')
+    myProjects.style.display = 'flex'
   }
 }

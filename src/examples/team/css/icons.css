@@ -211,6 +211,14 @@
   background: lightpink;
 }
 
+.IconProjectOverview {
+  -webkit-mask: url(../../../../images/project.svg);
+  width: 20px;
+  height: 20px;
+  -webkit-mask-size: cover;
+  background: lightgreen;
+}
+
 .IconLogout {
   -webkit-mask: url(../../../../images/logout.svg);
   width: 40px;
