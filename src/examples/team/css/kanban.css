@@ -32,6 +32,7 @@
 }
 
 .ActivityList {
+  margin-top: 20px;
   display: flex;
   flex-flow: column;
   overflow: auto;
@@ -69,7 +70,7 @@
 
 .ActivityNote {
   flex-basis: 90%;
-  color: dodgerblue;
+  color: black;
 }
 
 .ActivityTime {
