@@ -79,6 +79,16 @@
   justify-content: flex-end;
   font-size: small;
 }
+
+#ActivityAlert {
+  z-index: 1; 
+  display: none;
+  position: fixed;
+  bottom: 50px;
+  right: 40px;
+  animation-duration: 0.1s;
+  flex-flow: column;
+}
  /**
   Activity End
   */

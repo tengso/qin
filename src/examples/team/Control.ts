@@ -87,7 +87,7 @@ export class Control implements ClientCallback {
       for (const tableId of this.expectedTables) {
         const table = this.receivedTables.get(tableId)
         table.rows.forEach((row, index) => {
-          this.appendRow(tableId, row.rowId, row.values)
+          this.appendRowImpl(tableId, row.rowId, row.values, true)
         })
       }
       showProjects(this.model)
@@ -95,6 +95,10 @@ export class Control implements ClientCallback {
   }
 
   appendRow(tableId: TableId, rowId: RowId, values: ColumnValue[]) {
+    this.appendRowImpl(tableId, rowId, values)
+  }
+
+  appendRowImpl(tableId: TableId, rowId: RowId, values: ColumnValue[], fromSnap=false) {
     // this.logMessage(`append row - tableId [${tableId}] rowId [${rowId}] value [${values}]`, 'tableUpdate')
     
     try {
@@ -188,7 +192,7 @@ export class Control implements ClientCallback {
       }
       else if (tableId === ActivityTableId) {
         const row = this.createActivityRow(values)
-        this.view.appendActivity(row)
+        this.view.appendActivity(row, fromSnap)
       }
     }
     catch (exception) {

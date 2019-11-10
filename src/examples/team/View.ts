@@ -2150,7 +2150,7 @@ export class View {
     return t.toLocaleDateString(undefined, options)
   }
 
-  appendActivity(row: ActivityRow) {
+  appendActivity(row: ActivityRow, fromSnap: boolean) {
     console.log(`act: ${row.projectId}`)
     const project = this.document.getElementById(row.projectId)
     if (project) {
@@ -2172,6 +2172,25 @@ export class View {
 
       activityList.appendChild(activity)
       activityList.scrollTop = activityList.scrollHeight
+
+      if (!fromSnap) {
+        const alertHTML = this.document.querySelector('#ActivityAlert')
+        
+        const alert = activity.cloneNode(true)
+        alertHTML.appendChild(alert)
+
+        if (!alertHTML.classList.contains('slideInRight')) {
+          alertHTML.style.display = 'flex'
+          alertHTML.classList.remove('slideOutRight')
+          alertHTML.classList.add('slideInRight')
+
+          setTimeout(() => {
+            alertHTML.classList.remove('slideInRight')
+            alertHTML.classList.add('slideOutRight')
+            alertHTML.innerHTML = ''
+          }, 2000)
+        }
+      }
     }
     else {
       throw new Error(``)
