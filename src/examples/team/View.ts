@@ -2175,21 +2175,27 @@ export class View {
 
       if (!fromSnap) {
         const alertHTML = this.document.querySelector('#ActivityAlert')
-        
-        const alert = activity.cloneNode(true)
-        alertHTML.appendChild(alert)
 
-        if (!alertHTML.classList.contains('slideInRight')) {
+        const alert = activity.cloneNode(true)
+
+
+        const showAni = 'sideInLeft'
+        const hideAni = 'slideOutLeft'
+        const showTime = 2000 // mili-seconds
+
+        if (!alertHTML.classList.contains(showAni)) {
+          alertHTML.innerHTML = ''
           alertHTML.style.display = 'flex'
-          alertHTML.classList.remove('slideOutRight')
-          alertHTML.classList.add('slideInRight')
+          alertHTML.classList.remove(hideAni)
+          alertHTML.classList.add(showAni)
 
           setTimeout(() => {
-            alertHTML.classList.remove('slideInRight')
-            alertHTML.classList.add('slideOutRight')
-            alertHTML.innerHTML = ''
-          }, 2000)
+            alertHTML.classList.remove(showAni)
+            alertHTML.classList.add(hideAni)
+          }, showTime)
         }
+
+        alertHTML.appendChild(alert)
       }
     }
     else {
