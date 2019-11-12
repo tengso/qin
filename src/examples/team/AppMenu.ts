@@ -1,4 +1,4 @@
-import { Model } from "./Model"
+import { Model, Project } from "./Model"
 import { View } from "./View"
 
 
@@ -126,54 +126,63 @@ export function createAppMenu(view: View, model: Model, document: Document) {
     })
 }
 
+export function appendToProjectList(project: Project, model: Model, document: Document) {
+  const projectMenuList = document.getElementById('ProjectList')
+  appendToProjectListImpl(projectMenuList, project, model, document)
+}
+
+function appendToProjectListImpl(projectMenuList, project: Project, model: Model, document: Document) {
+  const projectLink = document.createElement('div')
+  projectLink.classList.add('ProjectLink')
+
+  const projectLinkHTML = `
+    <div class="ProjectLinkHead">
+      <div Class="ProjectLinkTitle">${project.title}</div>
+      <div class="Icon IconProjectOverview ProjectLinkButton"></div>
+    </div>
+    <div class="ProjectMembers">
+      <div class="MemberList">
+      </div>
+    </div>
+  ` 
+  projectLink.innerHTML = projectLinkHTML
+
+  const memberListElement = projectLink.querySelector('.MemberList')
+  const memberList = project.getMembers()
+  for (const member of memberList) {
+    const asset = model.getAsset(member.avatar)
+    if (asset) {
+      const image = document.createElement('img')
+      image.classList.add('ProjectLinkMemberImage')
+      image.src = asset.content
+      memberListElement.appendChild(image)
+    }
+  }
+
+  const projectLinkButton = projectLink.querySelector('.ProjectLinkButton')
+  projectLinkButton.addEventListener('click', () => {
+    projectMenuList.style.display = 'none'
+    const projectElements = document.getElementsByClassName('Project')
+    // @ts-ignore
+    for (const pe of projectElements) {
+      pe.style.display = 'none'
+    }
+    const projectElement = document.getElementById(project.id)
+    projectElement.style.display = 'flex'
+    const currentProjectId = document.querySelector('.CurrentProjectId')
+    currentProjectId.id = project.id
+  })
+
+  projectMenuList.appendChild(projectLink)
+}
+
 export function populateProjectList(model: Model, document: Document) {
   const projectMenuList = document.getElementById('ProjectList')
   projectMenuList.innerHTML = ''
 
   const projectList = model.getAllProject()
   for (const project of projectList) {
-    const projectLink = document.createElement('div')
-    projectLink.classList.add('ProjectLink')
-
-    const projectLinkHTML = `
-      <div class="ProjectLinkHead">
-        <div Class="ProjectLinkTitle">${project.title}</div>
-        <div class="Icon IconProjectOverview ProjectLinkButton"></div>
-      </div>
-      <div class="ProjectMembers">
-        <div class="MemberList">
-        </div>
-      </div>
-    ` 
-    projectLink.innerHTML = projectLinkHTML
-
-    const memberListElement = projectLink.querySelector('.MemberList')
-    const memberList = project.getMembers()
-    for (const member of memberList) {
-      const asset = model.getAsset(member.avatar)
-      if (asset) {
-        const image = document.createElement('img')
-        image.classList.add('ProjectLinkMemberImage')
-        image.src = asset.content
-        memberListElement.appendChild(image)
-      }
-    }
-
-    const projectLinkButton = projectLink.querySelector('.ProjectLinkButton')
-    projectLinkButton.addEventListener('click', () => {
-      projectMenuList.style.display = 'none'
-      const projectElements = document.getElementsByClassName('Project')
-      // @ts-ignore
-      for (const pe of projectElements) {
-        pe.style.display = 'none'
-      }
-      const projectElement = document.getElementById(project.id)
-      projectElement.style.display = 'flex'
-      const currentProjectId = document.querySelector('.CurrentProjectId')
-      currentProjectId.id = project.id
-    })
-
-    projectMenuList.appendChild(projectLink)
+    appendToProjectListImpl(projectMenuList, project, model, document)
   }
 }
 
@@ -185,6 +194,7 @@ export function showProjects(model: Model) {
       myProjects.style.display = 'none'
     }
   })
+
   if (myProjects.style.display === "flex") {
     myProjects.classList.remove('fadeIn')
     myProjects.classList.add('fadeOut')

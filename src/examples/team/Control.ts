@@ -7,12 +7,13 @@ import uuid = require('uuid');
 import { string } from 'yargs';
 
 import { Callbacks } from './Callback'
-import { showProjects } from './AppMenu'
+import { showProjects, appendToProjectList } from './AppMenu'
 
 export class Control implements ClientCallback {
   private view: View 
   private model: Model
   private client: Client
+  private document: Document
 
   private retryLogin: boolean
 
@@ -25,6 +26,7 @@ export class Control implements ClientCallback {
     const model = new Model()
     this.model = model
     this.view = new View(document, model)
+    this.document = document
     const callbacks = new Callbacks(this.client, this.model, this)
     
     this.registerCallbacks(this.view, callbacks)
@@ -116,6 +118,9 @@ export class Control implements ClientCallback {
         const row = this.createProjectRow(values)
         const project = this.model.appendProject(row)
         this.view.appendProject(project)
+        if (!fromSnap) {
+          appendToProjectList(project, this.model, this.document)
+        }
       }
       else if (tableId === MemberTableId) {
         const row = this.createMemberRow(values)
