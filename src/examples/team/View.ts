@@ -2181,7 +2181,7 @@ export class View {
 
         const showAni = 'sideInLeft'
         const hideAni = 'slideOutLeft'
-        const showTime = 2000 // mili-seconds
+        const showTime = 3000 // milli-seconds
 
         if (!alertHTML.classList.contains(showAni)) {
           alertHTML.innerHTML = ''
