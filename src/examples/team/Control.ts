@@ -197,7 +197,7 @@ export class Control implements ClientCallback {
       }
       else if (tableId === ActivityTableId) {
         const row = this.createActivityRow(values)
-        this.view.appendActivity(row, fromSnap)
+        this.view.appendActivity(row, fromSnap, this.client.userId)
       }
     }
     catch (exception) {

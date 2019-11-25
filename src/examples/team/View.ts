@@ -2150,9 +2150,13 @@ export class View {
     return t.toLocaleDateString(undefined, options)
   }
 
-  appendActivity(row: ActivityRow, fromSnap: boolean) {
-    console.log(`act: ${row.projectId}`)
+  appendActivity(row: ActivityRow, fromSnap: boolean, userId: UserId) {
+    if (row.userId === userId) {
+      return
+    }
+
     const project = this.document.getElementById(row.projectId)
+
     if (project) {
       const activityList = project.querySelector('.ActivityList')
       const activity = this.document.createElement('div')
@@ -2199,7 +2203,7 @@ export class View {
       }
     }
     else {
-      throw new Error(``)
+      throw new Error(`project not found for project id ${row.projectId}`)
     }
   }
 }
