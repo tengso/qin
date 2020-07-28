@@ -1,0 +1,19 @@
+*INSTALL
+- redis
+    - sudo apt-get install build-essential tcl
+    - http://download.redis.io/releases/redis-5.0.7.tar.gz
+    - cd src; make
+
+- sudo apt install npm
+- sudo npm install -g typescript
+- sudo npm install -g npx
+
+*BUILD
+- npm install
+- tsc -p . 
+- npx webpack --config kanban.webpack.config.js 
+
+*RUN
+- sudo node src/examples/examples.js
+- node built/TableFlowServer.js --dbName=han.test
+- ./redis-server
