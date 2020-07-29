@@ -96,7 +96,7 @@ export class DefaultClientCallback {
 
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
-  updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void = (rowId, columnIndex, value) => {}
+  updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void = (tableId, rowId, columnIndex, value) => {}
 
   moveRowAndUpdateCellSuccess: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
   moveRowAndUpdateCellFailure: (tableId: TableId, rowId: RowId, afterRowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}

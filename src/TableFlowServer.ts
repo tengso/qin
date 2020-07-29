@@ -25,7 +25,7 @@ const dbName = yargs.argv.dbName ? yargs.argv.dbName : 'test'
 // Transient State
 const sessionIdToSocket = new Map<SessionId, WebSocket>()
 
-const db: Storage = new RedisStorage(dbName)
+const db: Storage = new RedisStorage(dbName, 6383)
 
 function publish(msg, callback): void {
   db.getSubscribers(sessionIds => {

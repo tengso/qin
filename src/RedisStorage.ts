@@ -14,10 +14,11 @@ class Hash {
 }
 
 export class RedisStorage implements Storage {
-  private client = redis.createClient()
+  private client
   private hash: Hash
 
-  constructor(namespace: string = 'test') {
+  constructor(namespace: string = 'test', port = 6379) {
+    this.client = redis.createClient(port)
     console.log(`using db: ${namespace}`)
 
     this.client.on('error', function (err) {

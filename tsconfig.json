@@ -10,6 +10,8 @@
         "esModuleInterop": true,
     },
     "include": [
+        "./src/HappyValley.ts",
+        "./src/RedisSubscriber.ts",
         "./src/TableFlowMessages.ts",
         "./src/TableFlowServer.ts",
         "./src/TableFlowClient.ts",
