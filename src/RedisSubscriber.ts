@@ -3,9 +3,13 @@ import { TableId, SessionId, TableName, RowId } from './Core'
 import { ErrorCode, CreatorId, ColumnName, ColumnValue } from './TableFlowMessages'
 
 const WebSocket = require('ws');
-// const redis = require('redis')
+const redis = require('redis')
 
-// const subscriber = redis.createClient()
+const subscriber = redis.createClient()
+const tableId = 'strategy_table_id'
+const rowId = 'test_row_id'
+const symbol = 'HK.MHI2007'
+
 
 const strategy = 'test'
 
@@ -23,14 +27,38 @@ class MyClientCallback extends DefaultClientCallback {
   }
 
   loginSuccess: (sessionId: SessionId) => void  = sessionId => {
-      console.log('login success')
-  }
-  loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
-      console.log('login failure')
+    console.log('login success')
+
+    subscriber.subscribe(pnl_channel, position_channel);
+    subscriber.on("message", function(channel, message) {
+        const data = JSON.parse(message)
+        // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
+
+        if (channel == pnl_channel) {
+            const pnl = data[1][symbol]
+            console.log('pnl', pnl)
+            client.updateCell(tableId, rowId, 'pnl', pnl)
+        }
+        if (channel == position_channel) {
+            const position = data[1][symbol]
+            console.log('position', position)
+            client.updateCell(tableId, rowId, 'position', position)
+        }
+    });
   }
 
-  logoutSuccess: () => void = () => {}
-  logoutFailure: (reason: string) => void = reason => {}
+  loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
+      console.log(`login failure ${reason}`)
+      client.logout()
+  }
+
+  logoutSuccess: () => void = () => {
+        client.login('hv', 'hv')
+  }
+
+  logoutFailure: (reason: string) => void = reason => {
+      console.log(`logout failure ${reason}`)
+  }
 
   createUserSuccess: () => void = () => {}
   createUserFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {}
@@ -61,7 +89,9 @@ class MyClientCallback extends DefaultClientCallback {
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
   removeRow: (rowId: RowId, tableId: TableId, values: ColumnValue[]) => void = rowId => {}
 
-  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
+  updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {
+      console.log('update cell success')
+  }
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {
       console.log('update cell failure')
   }
@@ -74,26 +104,5 @@ class MyClientCallback extends DefaultClientCallback {
 
 const client = new Client(WebSocket)
 client.addCallback(new MyClientCallback())
-client.connect('127.0.0.1', 8080)
+client.connect('127.0.0.1', 9080)
 
-
-const tableId = 'strategy_table_id'
-const rowId = 'test_row_id'
-
-// subscriber.on("message", function(channel, message) {
-//     const data = JSON.parse(message)
-//     // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
-
-//     if (channel == pnl_channel) {
-//         const pnl = data[1]['HK.HSI2007']
-//         // console.log('pnl', pnl)
-//         client.updateCell(tableId, rowId, 'pnl', pnl)
-//     }
-//     if (channel == position_channel) {
-//         const position = data[1]['HK.HSI2007']
-//         // console.log('position', position)
-//         client.updateCell(tableId, rowId, 'position', position)
-//     }
-// });
-
-// subscriber.subscribe(pnl_channel, position_channel);
