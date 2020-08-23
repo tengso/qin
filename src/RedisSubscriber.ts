@@ -69,7 +69,6 @@ const callback = (channel, message, client) => {
     const data = JSON.parse(message)
     console.log(data)
     // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
-    const sent_time = data[0]
     const payload = data[1]
     const ts = payload[0]
     const analysis = payload[1]
