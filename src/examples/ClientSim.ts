@@ -73,6 +73,14 @@ function removeRowUtil(rowId: RowId) {
   row.parentNode.removeChild(row)
 }
 
+function removeAllRowsUtil(tableId: TableId) {
+  const table: HTMLTableElement = document.getElementById(tableId) as HTMLTableElement
+  const rowCount = table.rows.length
+  for (let i = 0; i < rowCount; i++) {
+    table.deleteRow(0)
+  }
+}
+
 function updateCellUtil(rowId: RowId, columnIndex: number, value: ColumnValue) {
   const row = document.getElementById(rowId);
   (row.childNodes[columnIndex] as HTMLElement).innerHTML = value.toString()
@@ -228,15 +236,15 @@ class Callback implements ClientCallback {
   }
 
   removeAllRows(tableId: TableId) {
-
+    removeAllRowsUtil(tableId)
   }
 
   removeAllRowsSuccess() {
-
+    this.logMessage(`remove all rows success`, 'tableUpdate')
   }
 
   removeAllRowsFailure(errorCode: ErrorCode, reason: string)  {
-
+    this.logMessage(`remove all rows failure ${errorCode} - ${reason}`, 'tableUpdate')
   }
 
   private logMessage(msg: string, elementId = 'logs') {
