@@ -1,4 +1,4 @@
-import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendRow, UserId, Password, removeRow, 
+import { ErrorCode, Table, MsgType, createUser, login, logout, SessionId, createTable, appendRow, UserId, Password, removeRow, removeAllRows,
   updateCell, subscribeTables, TableId, RowId, ColumnName, ColumnValue,
   removeUser, removeTable, Row, TableName, CreatorId, insertRow, moveRowAndUpdateCell
   } from './TableFlowMessages';
@@ -45,6 +45,10 @@ export interface ClientCallback {
   removeRow: (rowId: RowId, tableId: TableId, values: ColumnValue[]) => void
   removeRowSuccess: (rowId: RowId) => void
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void
+
+  removeAllRows: (tableId: TableId) => void
+  removeAllRowsSuccess: () => void
+  removeAllRowsFailure: (errorCode: ErrorCode, reason: string) => void
 
   updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void
@@ -93,6 +97,10 @@ export class DefaultClientCallback {
   removeRowSuccess: (rowId: RowId) => void = rowId => {}
   removeRowFailure: (rowId: RowId, errorCode: ErrorCode, reason: string) => void = (rowId, errorCode, reason) => {}
   removeRow: (rowId: RowId, tableId: TableId, values: ColumnValue[]) => void = rowId => {}
+
+  removeAllRows: (tableId: TableId) => void = tableId => {}
+  removeAllRowsSuccess: () => void = () => {}
+  removeAllRowsFailure: (errorCode: ErrorCode, reason: string) => void = (errorCode, reason) => {}
 
   updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {}
   updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
@@ -186,6 +194,14 @@ export class Client {
 
   removeRow(tableId: TableId, rowId: RowId, send: boolean = true) {
     const msg = removeRow(this.sessionId, tableId, rowId, this.userId)
+    if (send) {
+      this.connection.send(msg)
+    }
+    return msg
+  }
+
+  removeAllRows(tableId: TableId, send: boolean = true) {
+    const msg = removeAllRows(this.sessionId, tableId, this.userId)
     if (send) {
       this.connection.send(msg)
     }
@@ -308,6 +324,10 @@ export class Client {
           this.callback.removeRowSuccess(returnMsg.payLoad.rowId)
           break
         }
+        case MsgType.RemoveAllRowsSuccess: {
+          this.callback.removeAllRowsSuccess()
+          break
+        }
         case MsgType.UpdateCellSuccess: {
           this.callback.updateCellSuccess(returnMsg.payLoad.tableId, returnMsg.payLoad.rowId,
             returnMsg.payLoad.columnName)
@@ -332,6 +352,9 @@ export class Client {
               break
             case MsgType.RemoveRow:
               this.callback.removeRow(update.rowId, update.tableId, update.values)
+              break
+            case MsgType.RemoveAllRows:
+              this.callback.removeAllRows(update.tableId)
               break
             case MsgType.UpdateCell:
               this.callback.updateCell(update.tableId, update.rowId, update.columnIndex, update.value)
@@ -374,6 +397,10 @@ export class Client {
         }
         case MsgType.RemoveRowFailure: {
           console.error(`remove row failure: ${returnMsg.payLoad.reason}`)
+          break
+        }
+        case MsgType.RemoveAllRowsFailure: {
+          console.error(`remove all rows failure: ${returnMsg.payLoad.reason}`)
           break
         }
         case MsgType.SubscribeTablesFailure: {

@@ -6,6 +6,7 @@ import { MsgType, SessionId, UserId, UserName, Password, loginFailure, loginSucc
          SubscriberId, subscribeTablesSuccess, UserInfo, Version, Table, Row, sendTableSnap, sendTableUpdate,
          subscribeTablesFailure, ErrorCode, RemoverId,
          removeUserFailure, removeUserSuccess,
+         removeAllRowsFailure, removeAllRowsSuccess,
          removeTableSuccess, removeTableFailure, insertRowFailure, insertRowSuccess, moveRowAndUpdateCellFailure, moveRowAndUpdateCellSuccess } from './TableFlowMessages'
 
 import {Storage} from './Storage'
@@ -301,7 +302,46 @@ function handleRemoveRow(reply, message) {
       })
     }
     else {
-      reply(appendRowFailure(rowId, 'unknown session'))
+      reply(removeRowFailure(rowId, 'unknown session'))
+    }
+  }) 
+}
+
+function handleRemoveAllRows(reply, message) {
+  const pl = message.payLoad
+  const uncheckedSessionId = pl.sessionId
+  const tableId = pl.tableId 
+  const updatorId = pl.updatorId
+
+  db.getSessionId(updatorId, sessionId => {
+    if (sessionId && sessionId === uncheckedSessionId) {
+      db.getTableSnap(tableId, table => {
+        if (table) {
+          // console.log(JSON.stringify(table))
+          // console.log(rowId)
+          // console.log(rowIndex)
+          table.rows = []
+          table.version = table.version + 1
+          db.setTableSnap(tableId, table, () => {
+            db.setTableUpdate(tableId, table.version, message, () => {
+              const update = {
+                updateType: message.msgType,
+                tableId: tableId,
+              }
+              const msg = sendTableUpdate(sessionId, updatorId, update)
+              publish(msg, () => {
+                reply(removeAllRowsSuccess())
+              })
+            })
+          }) 
+        }
+        else {
+          reply(removeAllRowsFailure(`table ${tableId} not exists`))
+        }
+      })
+    }
+    else {
+      reply(removeAllRowsFailure('unknown session'))
     }
   }) 
 }
@@ -617,6 +657,9 @@ export class TableFlowServer {
         break
       case MsgType.RemoveRow:
         handleRemoveRow(reply, message)
+        break
+      case MsgType.RemoveAllRows:
+        handleRemoveAllRows(reply, message)
         break
       case MsgType.UpdateCell:
         handleUpdateCell(reply, message)

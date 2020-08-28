@@ -227,6 +227,17 @@ class Callback implements ClientCallback {
   moveRowAndUpdateCellFailure(tableId: string, rowId: string, afterRowId: string, columnName: string, errorCode: ErrorCode, reason: string) {
   }
 
+  removeAllRows(tableId: TableId) {
+
+  }
+
+  removeAllRowsSuccess() {
+
+  }
+
+  removeAllRowsFailure(errorCode: ErrorCode, reason: string)  {
+
+  }
 
   private logMessage(msg: string, elementId = 'logs') {
     const logs = document.getElementById(elementId) as HTMLTextAreaElement
@@ -305,6 +316,10 @@ function getRemoveRowTableId() {
   return getValue('tableIdDR')
 }
 
+function getRemoveAllRowsTableId() {
+  return getValue('tableIdDAR')
+}
+
 function getRemoveRowRowId() {
   return getValue('rowIdDR') 
 }
@@ -357,6 +372,10 @@ function bindListeners() {
 
     document.getElementById('removeRowBn').addEventListener('click', () => {
       client.removeRow(getRemoveRowTableId(), getRemoveRowRowId())
+    })
+
+    document.getElementById('removeAllRowsBn').addEventListener('click', () => {
+      client.removeAllRows(getRemoveAllRowsTableId())
     })
 
     document.getElementById('updateCellBn').addEventListener('click', () => {

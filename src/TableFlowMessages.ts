@@ -71,6 +71,10 @@ export enum MsgType {
   RemoveRowSuccess = 'removeRowSuccess',
   RemoveRowFailure = 'removeRowFailure',
 
+  RemoveAllRows = 'removeAllRows',
+  RemoveAllRowsSuccess = 'removeAllRowsSuccess',
+  RemoveAllRowsFailure = 'removeAllRowsFailure',
+
   UpdateCell = 'updateCell',
   UpdateCellSuccess = 'updateCellSuccess',
   UpdateCellFailure = 'updateCellFailure',
@@ -374,6 +378,20 @@ export function removeRow(sessionId: SessionId, tableId: TableId, rowId: RowId, 
   return JSON.stringify(msg)
 }
 
+export function removeAllRows(sessionId: SessionId, tableId: TableId, updatorId: UpdatorId) {
+  const msg = {
+    msgType: MsgType.RemoveAllRows,
+    payLoad: {
+      sessionId: sessionId,
+      tableId: tableId,
+      updatorId: updatorId,
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+
 export function removeRowSuccess(rowId: RowId) { 
   const msg = {
     msgType: MsgType.RemoveRowSuccess,
@@ -390,6 +408,27 @@ export function removeRowFailure(rowId: RowId, reason: string) {
     msgType: MsgType.RemoveRowFailure,
     payLoad: {
       rowId: rowId,
+      reason: reason
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeAllRowsSuccess() { 
+  const msg = {
+    msgType: MsgType.RemoveAllRowsSuccess,
+    payLoad: {
+    }
+  }
+
+  return JSON.stringify(msg)
+}
+
+export function removeAllRowsFailure(reason: string) {
+  const msg = {
+    msgType: MsgType.RemoveAllRowsFailure,
+    payLoad: {
       reason: reason
     }
   }

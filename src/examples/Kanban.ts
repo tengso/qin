@@ -202,6 +202,17 @@ class KanbanCallback implements ClientCallback {
 
   }
 
+  removeAllRows(tableId: TableId) {
+
+  }
+
+  removeAllRowsSuccess() {
+
+  }
+
+  removeAllRowsFailure(errorCode: ErrorCode, reason: string)  {
+
+  }
 
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement

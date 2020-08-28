@@ -674,6 +674,18 @@ export class Control implements ClientCallback {
     this.logMessage(`create table: ${tableId} ${tableName} ${columns} ${creatorId}`, 'tableUpdate')
   }
 
+  removeAllRows(tableId: TableId) {
+
+  }
+
+  removeAllRowsSuccess() {
+
+  }
+
+  removeAllRowsFailure(errorCode: ErrorCode, reason: string)  {
+
+  }
+
   private logMessage(msg: string, elementId = 'logs') {
     // const logs = document.getElementById(elementId) as HTMLTextAreaElement
     // logs.value += msg + '\n' 
