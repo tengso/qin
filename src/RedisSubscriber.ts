@@ -8,15 +8,18 @@ const uuid = require('uuid')
 const WebSocket = require('ws');
 const redis = require('redis')
 
+
 class RedisSubscriberCallback extends DefaultClientCallback {
     private channel: String
     private callback
     private client
+    private tableId
 
-    constructor(channel: String, callback) {
+    constructor(channel: String, callback, tableId) {
         super()
         this.channel = channel
         this.callback = callback
+        this.tableId = tableId
     }
 
     connectSuccess: (client: Client) => void = (client) => {
@@ -31,18 +34,8 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     loginSuccess: (sessionId: SessionId) => void  = sessionId => {
         console.log('login success')
 
-        const cb = this.callback
-        const client = this.client
+        this.client.removeAllRows(this.tableId)
 
-        const subscriber = redis.createClient(6381)
-
-        subscriber.subscribe(this.channel);
-
-        console.log(`subscribe to ${this.channel}`)
-
-        subscriber.on("message", function(channel, message) {
-            cb(channel, message, client) 
-        });
     }
 
     loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
@@ -57,13 +50,30 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     logoutFailure: (reason: string) => void = reason => {
         console.log(`logout failure ${reason}`)
     }
-}
 
-const strategy = 'dawn'
-const channel = `strategy_${strategy}_20200820_analytics_channel`
-const tableId = 'strategy_table_v2_id'
-const rowId = `${strategy}_row_id`
-const symbol = 'HK.HSI2008'
+    removeAllRows: (tableId: TableId) => void = tableId => {
+
+    }
+
+    removeAllRowsSuccess: () => void = () => {
+        const cb = this.callback
+        const client = this.client
+
+        const subscriber = redis.createClient(6381)
+
+        subscriber.subscribe(this.channel);
+
+        console.log(`subscribe to ${this.channel}`)
+
+        subscriber.on("message", function(channel, message) {
+            cb(channel, message, client) 
+        });
+    }
+
+    removeAllRowsFailure: (errorCode: ErrorCode, reason: string) => void = (errorCode, reason) => {
+        console.log(`remove all rows failure ${errorCode} ${reason}`)
+    }
+}
 
 const callback = (channel, message, client) => {
     const data = JSON.parse(message)
@@ -86,13 +96,19 @@ const callback = (channel, message, client) => {
 export class RedisSubscriber {
     private client = new Client(WebSocket)
 
-    constructor(channel, callback) {
-        this.client.addCallback(new RedisSubscriberCallback(channel, callback))
+    constructor(channel, callback, tableId) {
+        this.client.addCallback(new RedisSubscriberCallback(channel, callback, tableId))
         this.client.connect('127.0.0.1', 8080)
     }
 }
 
-new RedisSubscriber(channel, callback)
+const strategy = 'dawn'
+const today =  '20200828'
+const channel = `strategy_${strategy}_${today}_analytics_channel`
+const symbol = 'HK.HSI2008'
+const tableId = 'strategy_table_v2_id'
+
+new RedisSubscriber(channel, callback, tableId)
 
 
 
