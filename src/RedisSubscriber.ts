@@ -4,28 +4,37 @@ import { ErrorCode, CreatorId, ColumnName, ColumnValue } from './TableFlowMessag
 import { Callbacks } from './examples/team/Callback';
 
 const uuid = require('uuid')
-
 const WebSocket = require('ws');
 const redis = require('redis')
+const yargs = require('yargs')
 
 
 class RedisSubscriberCallback extends DefaultClientCallback {
-    private channel: String
+    private channel: string
     private callback
-    private client
-    private tableId
+    private client: Client
+    private tableId: string
+    private user: string
+    private password: string
+    private redisHost;
+    private redisPort;
 
-    constructor(channel: String, callback, tableId) {
+    constructor(redisHost, redisPort, user: string, password: string, channel: string, callback, tableId) {
         super()
+
+        this.redisHost = redisHost
+        this.redisPort = redisPort
         this.channel = channel
         this.callback = callback
         this.tableId = tableId
+        this.user = user
+        this.password = password
     }
 
     connectSuccess: (client: Client) => void = (client) => {
         this.client = client
         console.log('connected!!')
-        client.login('hv', 'hv')
+        client.login(this.user, this.password)
     }
 
     connectFailure: () => void = () => {
@@ -35,7 +44,6 @@ class RedisSubscriberCallback extends DefaultClientCallback {
         console.log('login success')
 
         this.client.removeAllRows(this.tableId)
-
     }
 
     loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
@@ -59,7 +67,7 @@ class RedisSubscriberCallback extends DefaultClientCallback {
         const cb = this.callback
         const client = this.client
 
-        const subscriber = redis.createClient(6381)
+        const subscriber = redis.createClient(this.redisPort, this.redisHost)
 
         subscriber.subscribe(this.channel);
 
@@ -80,35 +88,48 @@ const callback = (channel, message, client) => {
     console.log(data)
     // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
     const payload = data[1]
+
     const ts = payload[0]
-    const analysis = payload[1]
-    // // console.log(ts, analysis)
-    const pnl = analysis['pnl'][symbol]
-    const position = analysis['position'][symbol]
-    console.log(ts, pnl, position)
-    // client.updateCell(tableId, rowId, 'pnl', pnl)
-    // client.updateCell(tableId, rowId, 'position', position)
+    const content = payload[1]
+    const contract_price = content?.analysis?.futures_price
+    const index_price = content?.analysis?.index_price
+    const pnl = content?.risk?.pnl[symbol]
+    const position = content?.risk?.position[symbol]
+
+    console.log(ts, pnl, position, contract_price,index_price)
+
     const rowId = uuid()
-    const values = [strategy, pnl, position, ts]
+    const values = [strategy, pnl, position, contract_price, index_price, ts]
+
+    // console.log(values)
     client.appendRow(tableId, rowId, values)
 }
 
 export class RedisSubscriber {
     private client = new Client(WebSocket)
 
-    constructor(channel, callback, tableId) {
-        this.client.addCallback(new RedisSubscriberCallback(channel, callback, tableId))
+    constructor(redisHost, redisPort, user, password, channel, callback, tableId) {
+        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId))
         this.client.connect('127.0.0.1', 8080)
     }
 }
 
-const strategy = 'dawn'
-const today =  '20200828'
-const channel = `strategy_${strategy}_${today}_analytics_channel`
-const symbol = 'HK.HSI2008'
-const tableId = 'strategy_table_v2_id'
+const date = new Date()
+const dateTimeFormat = new Intl.DateTimeFormat('en', { year: 'numeric', month: '2-digit', day: '2-digit' }) 
+const [{ value: month },,{ value: day },,{ value: year }] = dateTimeFormat.formatToParts(date) 
+const today =  `${year}${month}${day}`
 
-new RedisSubscriber(channel, callback, tableId)
+const strategy = 'dawn'
+const channel = `strategy_${strategy}_${today}_analytics_channel`
+const tableId = 'strategy_table_v4_id'
+const user = 'hv'
+const password = 'hv'
+
+const redisHost = yargs.argv.redisHost ? yargs.argv.redisHost : 'localhost'
+const redisPort = yargs.argv.redisPort ? yargs.argv.redisPort : 6381
+const symbol = yargs.argv.symbol ? yargs.argv.symbol : 'HK.HSI2009'
+
+new RedisSubscriber(redisHost, redisPort, user, password, channel, callback, tableId)
 
 
 

@@ -6,17 +6,80 @@ import TimeChart from 'timechart'
 
 
 
-const strategy = 'dawn'
-const tableId = 'strategy_table_v2_id'
-const rowId = `${strategy}_row_id`
-const symbol = 'HK.HSI2008'
+const tableId = 'strategy_table_v4_id'
+
+class Chart {
+    private data = {}
+    private start
+    private chart
+    private elementName: string
+    private seriesProperties: string
+
+    private initializedChart = false
+
+    constructor(elementName: string, seriesProperties) {
+        this.elementName = elementName
+        this.seriesProperties = seriesProperties
+    }
+
+    push(ts: Date, name: string, value: number) {
+        if (!this.initializedChart) {
+            this.start = ts
+            this.initChart(this.start)
+            this.initializedChart = true
+        }
+
+        this.data[name].push(
+            // @ts-ignore
+            { x: ts - this.start, y: value}
+        )
+        this.chart.update()
+    }    
+
+    initChart(start: Date) {
+        const el = document.getElementById(this.elementName);
+
+        console.log(el, this.elementName)
+
+        const seriesOption = []
+        for (const prop of this.seriesProperties) {
+            const name = prop['name']
+            const color = prop['color']
+            this.data[name] = []
+            seriesOption.push({name: name, data: this.data[name], color: color})
+        }
+
+        // @ts-ignore
+        const baseX = start - new Date(0)
+        console.log(seriesOption)
+        this.chart = new TimeChart(el, {
+            // @ts-ignore
+            baseTime: baseX,
+            series: seriesOption,
+            xRange: 'auto',
+            yRange: 'auto',
+            realTime: false,
+            paddingTop: 10,
+            paddingRight: 50,
+        });
+
+        const legends = document.getElementsByTagName("chart-legend")
+        console.log(legends)
+        for (let i = 0; i < legends.length; i++) {
+            const legend = legends[i] as HTMLElement
+            const ls = legend.style
+            ls.position = 'absolute'
+            ls.left = '5px'
+            ls.top = '5px'
+        }
+    }
+}
 
 class HappyValleyCallback extends DefaultClientCallback {
     private client
-    private data = []
-    private chart
-
-    private initializedChart = false
+    private priceChart = new Chart('price_chart', [{name: 'contract price', color: '#0000FF'}, {name: 'index price', color: '#DC143C'}])
+    private pnlChart = new Chart('pnl_chart', [{name: 'pnl', color: '#000000'}])
+    private positionChart = new Chart('position_chart', [{name: 'position', color: '#000000'}])
 
     constructor() {
         super()
@@ -49,83 +112,74 @@ class HappyValleyCallback extends DefaultClientCallback {
         console.log(`logout failure ${reason}`)
     }
 
-    updateCellSuccess: (tableId: TableId, rowId: RowId, columnName: ColumnName) => void = (tableId, rwoId, columnName) => {
-    }
-
-    updateCellFailure: (tableId: TableId, rowId: RowId, columnName: ColumnName, errorCode: ErrorCode, reason: string) => void = (tableId, rwoId, columnName, errorCode, reason) => {}
-
-    updateCell: (tableId: TableId, rowId: RowId, columnIndex: number, value: Object) => void = (tableId, rowId, columnIndex, value) => {
-        // if (!this.initializedChart) {
-        //     this.initChart()
-        //     this.initializedChart = true
-        // }
-        // console.log(`updated cell ${tableId} ${rowId} ${columnIndex} ${value}`)
-        // this.data.push(
-        //     { x: this.x, y: value}
-        // )
-        // this.chart.update()
-        // this.x += 100
-    }
-
     tableSnap: (table: Table) => void = table => {
-        if (table.tableId == tableId) {
-            console.log('received table')
+        // if (table.tableId == tableId) {
+        //     console.log('received table')
 
-            for (const column of table.columns) {
-                console.log(column)
-            }
+        //     for (const column of table.columns) {
+        //         console.log(column)
+        //     }
             
-            var start = null
-            for (const row of table.rows) {
-                const ts = row.values[3] as string
-                console.log(ts)
-                const d = new Date(ts)
-                const pnl = row.values[1]
+        //     for (const row of table.rows) {
+        //         const ts = row.values[4] as string
+        //         console.log(ts)
+        //         const d = new Date(ts)
 
-                if (!this.initializedChart) {
-                    start = d
-                    this.initChart(start)
-                    this.initializedChart = true
-                }
-                this.data.push(
-                    // @ts-ignore
-                    { x: d - start, y: pnl}
-                )
-                this.chart.update()
-            }
-        }
+        //         const pnl = row.values[1]
+        //         const position = row.values[2]
+        //         const price = Number(row.values[3])
+
+        //         if (price != NaN) {
+        //             this.priceChart.push(d, 'price', price)
+        //         }
+        //         else {
+        //             console.log(`wrong price format ${row.values[3]}`)
+        //         }
+        //         // this.chart.pushPosition(d, position)
+        //         // this.chart.pushPrice(d, price)
+        //     }
+        // }
     }
 
-    initChart = (start: Date) => {
-        console.log(start)
-        // @ts-ignore
-        const baseX = start - new Date(0)
-        console.log(baseX)
-        const el = document.getElementById('chart');
-        this.chart = new TimeChart(el, {
-            // @ts-ignore
-            baseTime: baseX,
-            series: [
-                {
-                    name: 'HappyValue',
-                    data: this.data,
-                },
-            ],
-            // xRange: { min: 0, max: 500 * 1000 },
-            xRange: 'auto',
-            yRange: 'auto',
-            realTime: false,
-            zoom: {
-                x: {
-                    autoRange: true,
-                    minDomainExtent: 50,
-                },
-                y: {
-                    autoRange: true,
-                    minDomainExtent: 1,
-                }
-            },
-        });
+    appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {
+        console.log(`append row ${rowId}`)
+
+        const ts = values[5] as string
+        console.log(ts)
+        const d = new Date(ts)
+
+        const pnl = Number(values[1])
+        const position = Number(values[2])
+        const contract_price = Number(values[3])
+        const index_price = Number(values[4])
+
+        if (pnl != NaN) {
+            this.pnlChart.push(d, 'pnl', pnl)
+        }
+        else {
+            console.log(`wrong pnl format ${values[1]}`)
+        }
+
+        if (position != NaN) {
+            this.positionChart.push(d, 'position', position)
+        }
+        else {
+            console.log(`wrong position format ${values[2]}`)
+        }
+
+        if (contract_price != NaN) {
+            this.priceChart.push(d, 'contract price', contract_price)
+        }
+        else {
+            console.log(`wrong contract price format ${values[3]}`)
+        }
+
+        if (index_price != NaN) {
+            this.priceChart.push(d, 'index price', index_price)
+        }
+        else {
+            console.log(`wrong index price format ${values[4]}`)
+        }
     }
 }
 
