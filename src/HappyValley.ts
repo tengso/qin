@@ -59,8 +59,16 @@ class Chart {
             xRange: 'auto',
             yRange: 'auto',
             realTime: false,
-            paddingTop: 10,
-            paddingRight: 50,
+            paddingLeft: 350,
+            paddingRight: 100,
+            zoom: {
+                x: {
+                    autoRange: true,
+                },
+                y: {
+                    autoRange: true,
+                }
+            }
         });
 
         const legends = document.getElementsByTagName("chart-legend")
@@ -113,37 +121,20 @@ class HappyValleyCallback extends DefaultClientCallback {
     }
 
     tableSnap: (table: Table) => void = table => {
-        // if (table.tableId == tableId) {
-        //     console.log('received table')
+        if (table.tableId == tableId) {
+            console.log('received table')
 
-        //     for (const column of table.columns) {
-        //         console.log(column)
-        //     }
+            for (const column of table.columns) {
+                console.log(column)
+            }
             
-        //     for (const row of table.rows) {
-        //         const ts = row.values[4] as string
-        //         console.log(ts)
-        //         const d = new Date(ts)
-
-        //         const pnl = row.values[1]
-        //         const position = row.values[2]
-        //         const price = Number(row.values[3])
-
-        //         if (price != NaN) {
-        //             this.priceChart.push(d, 'price', price)
-        //         }
-        //         else {
-        //             console.log(`wrong price format ${row.values[3]}`)
-        //         }
-        //         // this.chart.pushPosition(d, position)
-        //         // this.chart.pushPrice(d, price)
-        //     }
-        // }
+            for (const row of table.rows) {
+                this.plot(row.values)
+            }
+        }
     }
 
-    appendRow: (tableId: TableId, rowId: RowId, values: Object[]) => void = (tableId, rowId, values) => {
-        console.log(`append row ${rowId}`)
-
+    plot(values) {
         const ts = values[5] as string
         console.log(ts)
         const d = new Date(ts)
@@ -167,18 +158,24 @@ class HappyValleyCallback extends DefaultClientCallback {
             console.log(`wrong position format ${values[2]}`)
         }
 
-        if (contract_price != NaN) {
+        if (contract_price != NaN && contract_price != 0) {
             this.priceChart.push(d, 'contract price', contract_price)
         }
         else {
             console.log(`wrong contract price format ${values[3]}`)
         }
 
-        if (index_price != NaN) {
+        if (index_price != NaN && index_price != 0) {
             this.priceChart.push(d, 'index price', index_price)
         }
         else {
             console.log(`wrong index price format ${values[4]}`)
+        }
+    }
+
+    appendRow: (tableIdParam: TableId, rowId: RowId, values: Object[]) => void = (tableIdParam, rowId, values) => {
+        if (tableIdParam == tableId) {
+            this.plot(values)
         }
     }
 }
