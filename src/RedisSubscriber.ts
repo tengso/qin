@@ -1,5 +1,5 @@
 import { DefaultClientCallback, Client } from './TableFlowClient'
-import { TableId, SessionId, TableName, RowId } from './Core'
+import { Table, TableId, SessionId, TableName, RowId } from './Core'
 import { ErrorCode, CreatorId, ColumnName, ColumnValue } from './TableFlowMessages'
 import { Callbacks } from './examples/team/Callback';
 
@@ -16,10 +16,11 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     private tableId: string
     private user: string
     private password: string
-    private redisHost;
-    private redisPort;
+    private redisHost
+    private redisPort
+    private cleanStart
 
-    constructor(redisHost, redisPort, user: string, password: string, channel: string, callback, tableId) {
+    constructor(redisHost, redisPort, user: string, password: string, channel: string, callback, tableId, cleanStart) {
         super()
 
         this.redisHost = redisHost
@@ -29,6 +30,7 @@ class RedisSubscriberCallback extends DefaultClientCallback {
         this.tableId = tableId
         this.user = user
         this.password = password
+        this.cleanStart = cleanStart
     }
 
     connectSuccess: (client: Client) => void = (client) => {
@@ -43,7 +45,12 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     loginSuccess: (sessionId: SessionId) => void  = sessionId => {
         console.log('login success')
 
-        this.client.removeAllRows(this.tableId)
+        if (this.cleanStart == 'yes') {
+            this.client.removeAllRows(this.tableId)
+        }
+        else {
+            this.startRedisSubs()
+        }
     }
 
     loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
@@ -64,6 +71,12 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     }
 
     removeAllRowsSuccess: () => void = () => {
+        if (this.cleanStart == 'yes') {
+            this.startRedisSubs()
+        }
+    }
+
+    startRedisSubs() {
         const cb = this.callback
         const client = this.client
 
@@ -108,8 +121,9 @@ const callback = (channel, message, client) => {
 export class RedisSubscriber {
     private client = new Client(WebSocket)
 
-    constructor(redisHost, redisPort, user, password, channel, callback, tableId) {
-        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId))
+    constructor(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart) {
+        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId, 
+            cleanStart))
         this.client.connect('127.0.0.1', 8080)
     }
 }
@@ -129,7 +143,9 @@ const redisHost = yargs.argv.redisHost ? yargs.argv.redisHost : 'localhost'
 const redisPort = yargs.argv.redisPort ? yargs.argv.redisPort : 6381
 const symbol = yargs.argv.symbol ? yargs.argv.symbol : 'HK.HSI2009'
 
-new RedisSubscriber(redisHost, redisPort, user, password, channel, callback, tableId)
+const cleanStart = yargs.argv.cleanStart ? yargs.argv.cleanStart : 'no'
+
+new RedisSubscriber(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart)
 
 
 
