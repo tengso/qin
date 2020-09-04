@@ -86,8 +86,20 @@ class Chart {
 class HappyValleyCallback extends DefaultClientCallback {
     private client
     private priceChart = new Chart('price_chart', [{name: 'contract price', color: '#0000FF'}, {name: 'index price', color: '#DC143C'}])
+    private stockAuctionStartPriceChart = new Chart('stock_auction_start_price_chart', [{name: 'contract price', color: '#0000FF'}, {name: 'index price', color: '#DC143C'}])
+    private futureOpenPriceChart = new Chart('future_open_price_chart', [{name: 'contract price', color: '#0000FF'}, {name: 'index price', color: '#DC143C'}])
+    private stockAuctionEndPriceChart = new Chart('stock_auction_end_price_chart', [{name: 'contract price', color: '#0000FF'}, {name: 'index price', color: '#DC143C'}])
     private pnlChart = new Chart('pnl_chart', [{name: 'pnl', color: '#000000'}])
     private positionChart = new Chart('position_chart', [{name: 'position', color: '#000000'}])
+
+    private cutoffStockAuctionStartHours = 8
+    private cutoffStockAuctionStartMinutes = 59
+
+    private cutoffFutureStartHours = 9
+    private cutoffFutureStartMinutes = 14
+
+    private cutoffStockAuctionEndHours = 9
+    private cutoffStockAuctionEndMinutes = 19
 
     constructor() {
         super()
@@ -160,6 +172,22 @@ class HappyValleyCallback extends DefaultClientCallback {
 
         if (contract_price != NaN && contract_price != 0) {
             this.priceChart.push(d, 'contract price', contract_price)
+
+            if ((d.getHours() == this.cutoffStockAuctionStartHours && d.getMinutes() >= this.cutoffStockAuctionStartMinutes) 
+               || d.getHours() > this.cutoffStockAuctionStartHours) {
+                this.stockAuctionStartPriceChart.push(d, 'contract price', contract_price)
+            }
+
+            if ((d.getHours() == this.cutoffFutureStartHours && d.getMinutes() >= this.cutoffFutureStartMinutes) 
+               || d.getHours() > this.cutoffFutureStartHours) {
+                this.futureOpenPriceChart.push(d, 'contract price', contract_price)
+            }
+
+            if ((d.getHours() == this.cutoffStockAuctionEndHours && d.getMinutes() >= this.cutoffStockAuctionEndMinutes) 
+               || d.getHours() > this.cutoffStockAuctionEndHours) {
+                this.stockAuctionEndPriceChart.push(d, 'contract price', contract_price)
+            }
+
         }
         else {
             console.log(`wrong contract price format ${values[3]}`)
@@ -167,6 +195,21 @@ class HappyValleyCallback extends DefaultClientCallback {
 
         if (index_price != NaN && index_price != 0) {
             this.priceChart.push(d, 'index price', index_price)
+
+            if ((d.getHours() == this.cutoffStockAuctionStartHours && d.getMinutes() >= this.cutoffStockAuctionStartMinutes) 
+               || d.getHours() > this.cutoffStockAuctionStartHours) {
+                this.stockAuctionStartPriceChart.push(d, 'index price', index_price)
+            }
+
+            if ((d.getHours() == this.cutoffFutureStartHours && d.getMinutes() >= this.cutoffFutureStartMinutes) 
+               || d.getHours() > this.cutoffFutureStartHours) {
+                this.futureOpenPriceChart.push(d, 'index price', index_price)
+            }
+
+            if ((d.getHours() == this.cutoffStockAuctionEndHours && d.getMinutes() >= this.cutoffStockAuctionEndMinutes) 
+               || d.getHours() > this.cutoffStockAuctionEndHours) {
+                this.stockAuctionEndPriceChart.push(d, 'index price', index_price)
+            }
         }
         else {
             console.log(`wrong index price format ${values[4]}`)
