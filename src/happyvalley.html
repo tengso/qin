@@ -1,31 +1,107 @@
-<link href="https://unpkg.com/tabulator-tables@4.7.2/dist/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.7.2/dist/js/tabulator.min.js"></script>
-<body>
-<div id="example-table"></div>
-</body>
-<script>
-    //define some sample data
- var tabledata = [
- 	{id:1, name:"Oli Bob", age:"12", col:"red", dob:""},
- 	{id:2, name:"Mary May", age:"1", col:"blue", dob:"14/05/1982"},
- 	{id:3, name:"Christine Lobowski", age:"42", col:"green", dob:"22/05/1982"},
- 	{id:4, name:"Brendon Philips", age:"125", col:"orange", dob:"01/08/1980"},
- 	{id:5, name:"Margret Marmajuke", age:"16", col:"yellow", dob:"31/01/1999"},
- ];
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+<!--
+    <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.3.4/vconsole.min.js"></script>
+    <script>
+        var vConsole = new VConsole();
+    </script>
+ -->
+    <title>Happy Valley Dashboard</title>
+    <style>
+        #price_chart, #stock_auction_start_price_chart, #future_open_price_chart, #stock_auction_end_price_chart, #pnl_chart #position_chart {
+            width: 100%;
+            height: 250px;
+            max-height: 90vh;
+        }
 
-//create Tabulator on DOM element with id "example-table"
-var table = new Tabulator("#example-table", {
- 	height:405, // set height of table (in CSS or here), this enables the Virtual DOM and improves render speed dramatically (can be any valid css height value)
- 	data:tabledata, //assign data to table
- 	layout:"fitColumns", //fit columns to width of table (optional)
- 	columns:[ //Define Table Columns
-	 	{title:"Name", field:"name", width:150},
-	 	{title:"Age", field:"age", hozAlign:"left", formatter:"progress"},
-	 	{title:"Favourite Color", field:"col"},
-	 	{title:"Date Of Birth", field:"dob", sorter:"date", hozAlign:"center"},
- 	],
- 	rowClick:function(e, row){ //trigger an alert message when the row is clicked
- 		alert("Row " + row.getData().id + " Clicked!!!!");
- 	},
-});
-</script>
+        #pnl_chart, #position_chart {
+            width: 100%;
+            height: 200px;
+            max-height: 90vh;
+        }
+
+        #spread_chart {
+            width: 100%;
+            height: 100px;
+            max-height: 90vh;
+        }
+
+        .chart_container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id='full_range' class='chart_container'>
+        <div id="price_chart"></div>
+        <div class='price_label'>
+            <label>future:</label>
+            <label class='future_price'></label>
+            <label>index:</label>
+            <label class='index_price'></label>
+            <label>spread:</label>
+            <label class='index_future_spread'></label>
+        </div>
+    </div>
+    <div id='index_future_spread'>
+        <div id="spread_chart"></div>
+    </div>
+    <div id='stock_auction_start' class='chart_container'>
+        <div id="stock_auction_start_price_chart"></div>
+        <div class='price_label'>
+            <label>future:</label>
+            <label class='future_price'></label>
+            <label>index:</label>
+            <label class='index_price'></label>
+            <label>spread:</label>
+            <label class='index_future_spread'></label>
+        </div>
+    </div>
+    <div id='future_open' class='chart_container'>
+        <div id="future_open_price_chart"></div>
+        <div class='price_label'>
+            <label>future:</label>
+            <label class='future_price'></label>
+            <label>index:</label>
+            <label class='index_price'></label>
+            <label>spread:</label>
+            <label class='index_future_spread'></label>
+        </div>
+    </div>
+    <div id='stock_open' class='chart_container'>
+        <div id="stock_auction_end_price_chart"></div>
+        <div class='price_label'>
+            <label>future:</label>
+            <label class='future_price'></label>
+            <label>index:</label>
+            <label class='index_price'></label>
+            <label>spread:</label>
+            <label class='index_future_spread'></label>
+        </div>
+    </div>
+    <div id='pnl'>
+        <div id="pnl_chart"></div>
+    </div>
+    <div id='position'>
+        <div id="position_chart"></div>
+    </div>
+
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://d3js.org/d3-color.v1.min.js"></script>
+    <script src="https://d3js.org/d3-format.v1.min.js"></script>
+    <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+    <script src="https://d3js.org/d3-time.v1.min.js"></script>
+    <script src="https://d3js.org/d3-time-format.v2.min.js"></script>
+    <script src="https://d3js.org/d3-scale.v3.min.js"></script>
+    <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+    <script src="https://d3js.org/d3-axis.v1.min.js"></script>
+    <script src="../dist/happyvalley_main.js"></script>
+</body>
+</html>

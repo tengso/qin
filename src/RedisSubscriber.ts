@@ -96,28 +96,6 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     }
 }
 
-const callback = (channel, message, client) => {
-    const data = JSON.parse(message)
-    console.log(data)
-    // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
-    const payload = data[1]
-
-    const ts = payload[0]
-    const content = payload[1]
-    const contract_price = content?.analysis?.futures_price
-    const index_price = content?.analysis?.index_price
-    const pnl = content?.risk?.pnl[symbol]
-    const position = content?.risk?.position[symbol]
-
-    console.log(ts, pnl, position, contract_price,index_price)
-
-    const rowId = uuid()
-    const values = [strategy, pnl, position, contract_price, index_price, ts]
-
-    // console.log(values)
-    client.appendRow(tableId, rowId, values)
-}
-
 export class RedisSubscriber {
     private client = new Client(WebSocket)
 
@@ -133,17 +111,63 @@ const dateTimeFormat = new Intl.DateTimeFormat('en', { year: 'numeric', month: '
 const [{ value: month },,{ value: day },,{ value: year }] = dateTimeFormat.formatToParts(date) 
 const today =  `${year}${month}${day}`
 
-const strategy = 'dawn'
-const channel = `strategy_${strategy}_${today}_analytics_channel`
-const tableId = 'strategy_table_v4_id'
-const user = 'hv'
-const password = 'hv'
-
 const redisHost = yargs.argv.redisHost ? yargs.argv.redisHost : 'localhost'
 const redisPort = yargs.argv.redisPort ? yargs.argv.redisPort : 6381
-const symbol = yargs.argv.symbol ? yargs.argv.symbol : 'HK.HSI2009'
-
+const symbol = yargs.argv.symbol ? yargs.argv.symbol : 'HK.MHI2009'
+const tableId = yargs.argv.tableId ? yargs.argv.tableId : 'strategy_table_v5_id'
+const user = yargs.argv.user ? yargs.argv.user : 'hv'
+const password = yargs.argv.password ? yargs.argv.password : 'hv'
+const strategy = yargs.argv.strategy ? yargs.argv.strategy : 'dawn'
 const cleanStart = yargs.argv.cleanStart ? yargs.argv.cleanStart : 'no'
+
+const channel = `strategy_${strategy}_${today}_analytics_channel`
+
+const tableColumns = [
+    "strategy_name",
+    "pnl", 
+    "position", 
+    "future_price", 
+    "index_price", 
+    "future_open_price", 
+    "future_price_at_stock_match", 
+    "index_future_spread", 
+    "future_price_moving_average", 
+    "future_price_lower_bound", 
+    "future_price_upper_bound",
+    "update_time",
+]
+
+const callback = (channel, message, client) => {
+    const data = JSON.parse(message)
+    console.log(data)
+    // console.log("Message '" + data + "' on channel '" + channel + "' arrived!")
+    const payload = data[1]
+
+    const ts = payload[0]
+    const content = payload[1]
+
+    const pnl = content?.risk?.pnl[symbol]
+    const position = content?.risk?.position[symbol]
+
+    const future_price = content?.analysis?.future_price
+    const index_price = content?.analysis?.index_price
+    const future_open_price = content?.analysis?.future_open_price
+    const future_price_at_stock_match = content?.analysis?.future_price_at_stock_match
+    const index_future_spread = content?.analysis?.index_future_spread
+    const future_price_moving_average = content?.analysis?.future_price_moving_average
+    const future_price_lower_bound = content?.analysis?.future_price_lower_bound
+    const future_price_upper_bound = content?.analysis?.future_price_upper_bound
+
+    console.log(ts, pnl, position, future_price, index_price, future_open_price, future_price_at_stock_match, index_future_spread, future_price_moving_average,
+        future_price_lower_bound, future_price_upper_bound)
+
+    const rowId = uuid()
+    const values = [strategy, pnl, position, future_price, index_price, future_open_price, future_price_at_stock_match, index_future_spread, 
+        future_price_moving_average, future_price_lower_bound, future_price_upper_bound, ts]
+
+    // console.log(values)
+    client.appendRow(tableId, rowId, values)
+}
 
 new RedisSubscriber(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart)
 
