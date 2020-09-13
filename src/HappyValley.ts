@@ -107,7 +107,7 @@ class HappyValleyCallback extends DefaultClientCallback {
             {name: 'future price', color: '#0000FF', lineWidth: 2}, 
             {name: 'index price', color: '#000066'},
             {name: 'open price', color: '#ff33cc', lineWidth: 2}, 
-            {name: 'at stock open', color: '#DC143C', lineWidth: 2},
+            {name: 'at stock open', color: '#00cc99', lineWidth: 2},
             {name: 'moving average', color: '#DC143C'},
             {name: 'lower bound', color: '#33cc33'},
             {name: 'upper bound', color: '#DC143C'},
