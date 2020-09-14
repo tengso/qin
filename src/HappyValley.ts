@@ -107,7 +107,7 @@ class HappyValleyCallback extends DefaultClientCallback {
             {name: 'future price', color: '#0000FF', lineWidth: 2}, 
             {name: 'index price', color: '#000066'},
             {name: 'open price', color: '#ff33cc', lineWidth: 2}, 
-            {name: 'at stock open', color: '#00cc99', lineWidth: 2},
+            {name: 'at stock open', color: '#000066', lineWidth: 2},
             {name: 'moving average', color: '#DC143C'},
             {name: 'lower bound', color: '#33cc33'},
             {name: 'upper bound', color: '#DC143C'},
@@ -233,8 +233,12 @@ class HappyValleyCallback extends DefaultClientCallback {
     pushToPriceCharts(ts: Date, name: string, value: number) {
         this.priceChart.push(ts, name, value, true)
         this.stockAuctionStartPriceChart.push(ts, name, value, true)
-        this.futureOpenPriceChart.push(ts, name, value, true)
-        this.stockAuctionEndPriceChart.push(ts, name, value, true)
+        if (name != 'index price') {
+            this.futureOpenPriceChart.push(ts, name, value, true)
+            if (name != 'open price') {
+                this.stockAuctionEndPriceChart.push(ts, name, value, true)
+            }
+        }
     }
 
     updateLabel(value: number | string, className: string) {
