@@ -10,8 +10,10 @@
 
 *BUILD
 - npm install
-- tsc -p . 
+- tsc -p tsconfig.json 
 - npx webpack --config kanban.webpack.config.js 
+- npx webpack --config happyvalley.webpack.config.js 
+- npx webpack --config sim.webpack.config.js 
 
 *RUN
 - sudo node src/examples/examples.js
