@@ -253,7 +253,7 @@ class HappyValleyCallback extends DefaultClientCallback {
 const callback = new HappyValleyCallback()
 const client = new Client(WebSocket)
 client.addCallback(callback)
-client.connect('127.0.0.1', 8080)
+client.connect('hv1', 8080)
 
 // main()
 /*
