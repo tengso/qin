@@ -59,7 +59,7 @@ const tableFlowPassword = 'hv_action'
 const tableFlowHost = 'hv1'
 const tableFlowPort = 8080
 
-const redisHost = 'localhost'
+const redisHost = 'hv2'
 const redisPort = 6400
 
 const strategy = 'dawn'
