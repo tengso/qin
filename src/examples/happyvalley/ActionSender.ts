@@ -81,4 +81,5 @@ function getDateTime() {
 }
 window['unwindAction'] = unwindAction
 window['placeOrderAction'] = placeOrderAction
+window['cancelOrderAction'] = cancelOrderAction
 
