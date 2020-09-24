@@ -6,6 +6,25 @@
 </head>
 <script src="../../../dist/new_happyvalley_main.js"></script>
 <body>
-    <button onclick="sendUnwindAction('dawn')">send action</button>
+    <button onclick="unwindAction('dawn')">unwind</button>
+    <div>
+        <button onclick="placeOrderAction('test_place_order')">Place Order</button>
+        <label>price</label>
+        <input type="text" id="place_order_price">
+        <label>mark</label>
+        <input type="text" id="place_order_mark">
+    </div>
+    <div>
+        <button onclick="cancelOrderAction('test_place_order')">Cancel Order</button>
+        <label>order id</label>
+        <input type="text" id="cancel_order_id">
+    </div>
+    <div>
+        <button onclick="modifyOrderAction('test_place_order')">Modify Order</button>
+        <label>order id</label>
+        <input id="modify_order_id">
+        <label>price</label>
+        <input id="modify_order_price">
+    </div>
 </body>
 </html>

@@ -29,18 +29,11 @@ const callback = new ActionCallback(user, password, tableId)
 client.addCallback(callback)
 client.connect(host, port)
 
-const sendUnwindAction = (strategy) => {
+function unwindAction(strategy) {
     const name = 'unwind_risk'
     const sender = user
 
-    const now = new Date()
-    const month = (now.getMonth() + 1).toString().padStart(2, '0')
-    const day = now.getDate().toString().padStart(2, '0')
-    const hour = now.getHours().toString().padStart(2, '0')
-    const minute = now.getMinutes().toString().padStart(2, '0')
-    const second = now.getSeconds().toString().padStart(2, '0')
-    const microSecond = (now.getMilliseconds() * 1000).toString().padStart(6, '0')
-    const sentTime =  `${now.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}.${microSecond}`
+    const sentTime = getDateTime()
 
     const content = JSON.stringify({strategy: strategy})
     const rowId = uuid()
@@ -48,5 +41,30 @@ const sendUnwindAction = (strategy) => {
     client.appendRow(tableId, rowId, values)
 }
 
-window['sendUnwindAction'] = sendUnwindAction
+function  placeOrderAction(strategy) {
+    const name = 'place_order'
+    const sender = user
+    const sentTime = getDateTime()
+
+    const quantity = 1
+    const price = Number((document.getElementById('place_order_price') as HTMLInputElement).value)
+    const mark = (document.getElementById('place_order_mark') as HTMLInputElement).value
+    const content = JSON.stringify({strategy: strategy, price: price, quantity: quantity, mark: mark})
+    const values = [name, content, sender, sentTime]
+    const rowId = uuid()
+    client.appendRow(tableId, rowId, values)
+}
+
+function getDateTime() {
+    const now = new Date()
+    const month = (now.getMonth() + 1).toString().padStart(2, '0')
+    const day = now.getDate().toString().padStart(2, '0')
+    const hour = now.getHours().toString().padStart(2, '0')
+    const minute = now.getMinutes().toString().padStart(2, '0')
+    const second = now.getSeconds().toString().padStart(2, '0')
+    const microSecond = (now.getMilliseconds() * 1000).toString().padStart(6, '0')
+    return `${now.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}.${microSecond}`
+}
+window['unwindAction'] = unwindAction
+window['placeOrderAction'] = placeOrderAction
 
