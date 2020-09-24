@@ -47,9 +47,11 @@ function  placeOrderAction(strategy) {
     const sentTime = getDateTime()
 
     const quantity = 1
+    const symbol = 'HK.MHI2009'
+    const side = 'B'
     const price = Number((document.getElementById('place_order_price') as HTMLInputElement).value)
     const mark = (document.getElementById('place_order_mark') as HTMLInputElement).value
-    const content = JSON.stringify({strategy: strategy, price: price, quantity: quantity, mark: mark})
+    const content = JSON.stringify({strategy: strategy, symbol: symbol, side: side, price: price, quantity: quantity, mark: mark})
     const values = [name, content, sender, sentTime]
     const rowId = uuid()
     client.appendRow(tableId, rowId, values)
