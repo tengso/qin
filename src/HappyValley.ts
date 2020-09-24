@@ -75,7 +75,7 @@ class Chart {
             xRange: 'auto',
             yRange: 'auto',
             realTime: false,
-            paddingLeft: 350,
+            paddingLeft: 400,
             paddingRight: 100,
             zoom: {
                 x: {
@@ -253,7 +253,8 @@ class HappyValleyCallback extends DefaultClientCallback {
 const callback = new HappyValleyCallback()
 const client = new Client(WebSocket)
 client.addCallback(callback)
-client.connect('hv1', 8080)
+const hv1 = '106.52.39.195'
+client.connect(hv1, 8080)
 
 // main()
 /*

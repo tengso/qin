@@ -7,8 +7,8 @@ const tableId = 'action_table_v1_id'
 
 const host = 'hv1'
 const port = 8080
-const user = 'hv2'
-const password = 'hv2'
+const user = 'hv_action_client'
+const password = 'hv_action_client'
 
 class ActionCallback extends GenericTableCallback {
     constructor(user, password, tableId) {
