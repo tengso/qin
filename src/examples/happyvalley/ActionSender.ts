@@ -57,6 +57,18 @@ function  placeOrderAction(strategy) {
     client.appendRow(tableId, rowId, values)
 }
 
+function  cancelOrderAction(strategy) {
+    const name = 'cancel_order'
+    const sender = user
+    const sentTime = getDateTime()
+
+    const order_id = (document.getElementById('cancel_order_id') as HTMLInputElement).value
+    const content = JSON.stringify({strategy: strategy, order_id: order_id})
+    const values = [name, content, sender, sentTime]
+    const rowId = uuid()
+    client.appendRow(tableId, rowId, values)
+}
+
 function getDateTime() {
     const now = new Date()
     const month = (now.getMonth() + 1).toString().padStart(2, '0')
