@@ -71,6 +71,21 @@ function  cancelOrderAction(strategy) {
     client.appendRow(tableId, rowId, values)
 }
 
+
+function  modifyOrderAction(strategy) {
+    const name = 'modify_order'
+    const sender = user
+    const sentTime = getDateTime()
+
+    const order_id = (document.getElementById('modify_order_id') as HTMLInputElement).value
+    const price = Number((document.getElementById('modify_order_price') as HTMLInputElement).value)
+    const quantity = 1
+    const content = JSON.stringify({strategy: strategy, order_id: order_id, price: price, quantity: quantity})
+    const values = [name, content, sender, sentTime]
+    const rowId = uuid()
+    client.appendRow(tableId, rowId, values)
+}
+
 function getDateTime() {
     const now = new Date()
     const month = (now.getMonth() + 1).toString().padStart(2, '0')
@@ -84,4 +99,5 @@ function getDateTime() {
 window['unwindAction'] = unwindAction
 window['placeOrderAction'] = placeOrderAction
 window['cancelOrderAction'] = cancelOrderAction
+window['modifyOrderAction'] = modifyOrderAction
 
