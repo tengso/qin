@@ -92,7 +92,7 @@ function  pegOrderAction(strategy) {
     const sender = user
     const sentTime = getDateTime()
 
-    const pegType = Number((document.getElementById('peg_type') as HTMLInputElement).value)
+    const pegType = (document.getElementById('peg_type') as HTMLInputElement).value
     const offset = Number((document.getElementById('peg_offset') as HTMLInputElement).value)
     const quantity = Math.max(1, Number((document.getElementById('peg_quantity') as HTMLInputElement).value))
     const content = JSON.stringify({strategy: strategy, peg_type: pegType, offset: offset, quantity: quantity, side: 'B'})
