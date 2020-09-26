@@ -95,7 +95,9 @@ function  pegOrderAction(strategy) {
     const pegType = (document.getElementById('peg_type') as HTMLInputElement).value
     const offset = Number((document.getElementById('peg_offset') as HTMLInputElement).value)
     const quantity = Math.min(1, Number((document.getElementById('peg_quantity') as HTMLInputElement).value))
-    const content = JSON.stringify({strategy: strategy, peg_type: pegType, offset: offset, quantity: quantity, side: 'B'})
+    const content = JSON.stringify({
+        strategy: strategy, peg_type: pegType, offset: offset, quantity: quantity, side: 'B', symbol: 'HK.MHI2009'
+    })
     const values = [name, content, sender, sentTime]
     const rowId = uuid()
     client.appendRow(tableId, rowId, values)
