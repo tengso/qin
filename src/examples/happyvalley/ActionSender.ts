@@ -86,6 +86,22 @@ function  modifyOrderAction(strategy) {
     client.appendRow(tableId, rowId, values)
 }
 
+
+function  pegOrderAction(strategy) {
+    const name = 'peg_order'
+    const sender = user
+    const sentTime = getDateTime()
+
+    const pegType = Number((document.getElementById('peg_type') as HTMLInputElement).value)
+    const offset = Number((document.getElementById('peg_offset') as HTMLInputElement).value)
+    const quantity = Math.max(1, Number((document.getElementById('peg_quantity') as HTMLInputElement).value))
+    const content = JSON.stringify({strategy: strategy, peg_type: pegType, offset: offset, quantity: quantity, side: 'B'})
+    const values = [name, content, sender, sentTime]
+    const rowId = uuid()
+    client.appendRow(tableId, rowId, values)
+}
+
+
 function getDateTime() {
     const now = new Date()
     const month = (now.getMonth() + 1).toString().padStart(2, '0')
@@ -96,8 +112,11 @@ function getDateTime() {
     const microSecond = (now.getMilliseconds() * 1000).toString().padStart(6, '0')
     return `${now.getFullYear()}-${month}-${day} ${hour}:${minute}:${second}.${microSecond}`
 }
+
+
 window['unwindAction'] = unwindAction
 window['placeOrderAction'] = placeOrderAction
 window['cancelOrderAction'] = cancelOrderAction
 window['modifyOrderAction'] = modifyOrderAction
+window['pegOrderAction'] = pegOrderAction
 

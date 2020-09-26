@@ -6,7 +6,21 @@
 </head>
 <script src="../../../dist/new_happyvalley_main.js"></script>
 <body>
-    <button onclick="unwindAction('dawn')">unwind</button>
+    <div>
+        <button onclick="unwindAction('dawn')">Unwind</button>
+    </div>
+    <div>
+        <button onclick="pegAction('test_place_order')">Peg</button>
+        <select name="Peg Type" id="peg_type">
+            <option value="passive">Passive</option>
+            <option value="aggressive">Aggressive</option>
+            <option value="absolute">Absolute</option>
+        </select>
+        <label>offset</label>
+        <input type="text" id="peg_offset">
+        <label>quantity</label>
+        <input type="text" id="peg_quantity">
+    </div>
     <div>
         <button onclick="placeOrderAction('test_place_order')">Place Order</button>
         <label>price</label>
