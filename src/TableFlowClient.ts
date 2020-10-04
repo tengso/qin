@@ -134,7 +134,7 @@ export class Client {
     this.connection = new this.webSocketFactory(url)
 
     this.connection.onopen = () => {
-      console.log('connected')
+      console.log('TableFlow client connect to', host, port)
       this.listen()
       this.callback.connectSuccess(this)
     }

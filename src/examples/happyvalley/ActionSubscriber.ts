@@ -4,6 +4,7 @@ import {ErrorCode, Table} from "../../TableFlowMessages";
 import { GenericTableCallback } from "./Common"
 const redis = require('redis')
 const WebSocket = require('ws');
+const yargs = require('yargs')
 
 class Callback extends GenericTableCallback {
     private columns
@@ -20,10 +21,10 @@ class Callback extends GenericTableCallback {
 
     tableSnap = table => {
         if (table.tableId == this.tableId) {
-            console.log('received table')
+            console.log('received table', this.tableId)
 
             for (const column of table.columns) {
-                console.log(column)
+                console.log('column', column)
             }
 
             this.columns = table.columns
@@ -53,16 +54,16 @@ class Callback extends GenericTableCallback {
 
 const actionTableId = 'action_table_v1_id'
 
-const tableFlowUser = 'hv_action'
-const tableFlowPassword = 'hv_action'
+const redisHost = yargs.argv.redisHost ? yargs.argv.redisHost : 'hv2'
+const redisPort = yargs.argv.redisPort ? yargs.argv.redisPort : 6400
 
-const tableFlowHost = 'hv1'
-const tableFlowPort = 8080
+const tableFlowUser = yargs.argv.user ? yargs.argv.user : 'hv_action'
+const tableFlowPassword = yargs.argv.user ? yargs.argv.user : 'hv_action'
 
-const redisHost = 'hv2'
-const redisPort = 6400
+const tableFlowHost = yargs.argv.hanHost ? yargs.argv.hanHost : 'localhost'
+const tableFlowPort = yargs.argv.hanPort ? yargs.argv.hanPort : 8080
 
-const strategy = 'dawn'
+const strategy = yargs.argv.strategy ? yargs.argv.strategy : 'test_place_order'
 
 const now = new Date()
 const year = now.getFullYear()

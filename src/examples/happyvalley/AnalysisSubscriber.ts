@@ -80,6 +80,7 @@ class RedisSubscriberCallback extends DefaultClientCallback {
         const client = this.client
 
         const subscriber = redis.createClient(this.redisPort, this.redisHost)
+        console.log(`connected to redis`, this.redisHost, this.redisPort)
 
         subscriber.subscribe(this.channel);
 
@@ -92,16 +93,6 @@ class RedisSubscriberCallback extends DefaultClientCallback {
 
     removeAllRowsFailure: (errorCode: ErrorCode, reason: string) => void = (errorCode, reason) => {
         console.log(`remove all rows failure ${errorCode} ${reason}`)
-    }
-}
-
-export class RedisSubscriber {
-    private client = new Client(WebSocket)
-
-    constructor(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart) {
-        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId, 
-            cleanStart))
-        this.client.connect('127.0.0.1', 8080)
     }
 }
 
@@ -118,6 +109,8 @@ const user = yargs.argv.user ? yargs.argv.user : 'hv'
 const password = yargs.argv.password ? yargs.argv.password : 'hv'
 const strategy = yargs.argv.strategy ? yargs.argv.strategy : 'dawn'
 const cleanStart = yargs.argv.cleanStart ? yargs.argv.cleanStart : 'no'
+const hanHost = yargs.argv.hanHost ? yargs.argv.hanHost : 'localhost'
+const hanPort = yargs.argv.hanPort ? yargs.argv.hanPort : 6383
 
 const channel = `strategy_${strategy}_${today}_analytics_channel`
 
@@ -135,6 +128,18 @@ const tableColumns = [
     "future_price_upper_bound",
     "update_time",
 ]
+
+export class RedisSubscriber {
+    private client = new Client(WebSocket)
+
+    constructor(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart) {
+        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId,
+            cleanStart))
+        this.client.connect(hanHost, hanPort)
+        console.log('connected to', hanHost, hanPort)
+    }
+}
+
 
 const callback = (channel, message, client) => {
     const data = JSON.parse(message)

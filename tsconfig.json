@@ -26,9 +26,11 @@
         "./src/examples/Kanban.ts",
         "./src/examples/Callback.ts",
         "./src/examples/AppMenu.ts",
+        "./src/examples/WebServer.ts",
         "./src/examples/happyvalley/ActionSender.ts",
         "./src/examples/happyvalley/ActionSubscriber.ts",
         "./src/examples/happyvalley/AnalysisSubscriber.ts",
+        "./src/examples/happyvalley/Dashboard.ts",
         "./src/test/**/*"
     ]
 }

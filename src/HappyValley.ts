@@ -28,7 +28,7 @@ class Chart {
     }
 
     push(ts: Date, name: string, value: number, filterZero=false) {
-
+        console.log(ts, name, value)
         if ((ts.getHours() == this.startHour && ts.getMinutes() >= this.startMinute) || ts.getHours() > this.startHour) {
             if (!this.initializedChart) {
                 this.start = ts
@@ -47,6 +47,7 @@ class Chart {
                 // @ts-ignore
                 { x: ts - this.start, y: value}
             )
+            console.log(this.data)
             this.chart.update()
         }
     }    
@@ -253,7 +254,8 @@ class HappyValleyCallback extends DefaultClientCallback {
 const callback = new HappyValleyCallback()
 const client = new Client(WebSocket)
 client.addCallback(callback)
-const hv1 = '106.52.39.195'
+// const hv1 = '106.52.39.195'
+const hv1 = 'localhost'
 client.connect(hv1, 8080)
 
 // main()

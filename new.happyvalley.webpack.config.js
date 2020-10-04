@@ -2,11 +2,11 @@ const path = require('path');
 
 module.exports = {
   entry: [
-    './built/examples/happyvalley/ActionSender.js',
+    './built/examples/happyvalley/Dashboard.js',
   ],
   mode: 'development',
   output: {
-    filename: 'new_happyvalley_main.js',
+    filename: 'happy_valley_dashboard.js',
     path: path.resolve(__dirname, 'dist'),
   }
 }

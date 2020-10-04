@@ -17,9 +17,9 @@ export class RedisStorage implements Storage {
   private client
   private hash: Hash
 
-  constructor(namespace: string = 'test', port = 6379) {
-    this.client = redis.createClient(port)
-    console.log(`using db: ${namespace}`)
+  constructor(namespace: string = 'test', host = 'localhost', port = 6379) {
+    this.client = redis.createClient(port, host)
+    console.log(`using db: ${namespace}`, host, port)
 
     this.client.on('error', function (err) {
       console.log('Error' + err)

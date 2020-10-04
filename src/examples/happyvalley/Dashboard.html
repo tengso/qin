@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Happy Valley</title>
+</head>
+<style>
+    .instrument_container {
+        display: flex;
+        border: 1px solid;
+        flex-flow: row;
+        justify-content: center;
+        width: 95%;
+        margin: 20px;
+    }
+
+    .instrument {
+        margin: 5px;
+        /*width: 20%;*/
+    }
+
+    .action_container {
+        display: flex;
+        border: 1px solid;
+        flex-flow: row;
+        justify-content: center;
+        width: 95%;
+        margin: 20px;
+    }
+
+    .action {
+        margin: 10px;
+        width: 20%;
+    }
+
+    .series_viewer_container_list {
+        display: flex;
+        flex-flow: column;
+        height: 700px;
+    }
+
+    .series_viewer_container {
+        display: flex;
+        border: solid 1px;
+        /*height: 200px;*/
+        width: 95%;
+        margin: 20px;
+        flex-flow: column;
+        align-items: center;
+    }
+
+    #series_viewer_container_analysis {
+        /*height: 300px;*/
+        height: 50%;
+    }
+
+    #series_viewer_container_position {
+        /*height: 100px;*/
+        height: 25%;
+    }
+
+    #series_viewer_container_pnl {
+        /*height: 100px;*/
+        height: 25%;
+    }
+
+    .series_viewer_plot_container {
+        width: 100%;
+        height: 100%;
+        /*height: 250px;*/
+        max-height: 90vh;
+    }
+
+    .series_viewer_value_container_list {
+        display: flex;
+        flex-flow: row;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+
+    .series_viewer_value_container {
+        margin: 10px
+    }
+
+</style>
+<body>
+<div id="app">
+    <div class="instrument_container">
+        <label class="instrument">Strategy</label>
+        <input class="instrument" type="text" id="strategy" value="dawn">
+        <label class="instrument">Symbol</label>
+        <input class="instrument" type="text" id="symbol" value="HK.MHI2010">
+        <label class="instrument">Quantity</label>
+        <input class="instrument" type="text" id="quantity" value="1">
+    </div>
+    <div class="action_container">
+        <button class="action" type="button" onclick="takeLongPosition()">Long</button>
+        <button class="action" type="button" onclick="takeShortPosition()">Short</button>
+        <button class="action" type="button" onclick="unwindRisk()">Unwind</button>
+    </div>
+</body>
+<script src="../../../dist/happy_valley_dashboard.js"></script>
+</html>

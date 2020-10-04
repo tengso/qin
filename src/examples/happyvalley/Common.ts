@@ -2,6 +2,7 @@ import {Client, DefaultClientCallback} from "../../TableFlowClient";
 import {RowId, SessionId, TableId} from "../../Core";
 import {ErrorCode, Table} from "../../TableFlowMessages";
 
+
 export class GenericTableCallback extends DefaultClientCallback {
     protected client
     protected tableId
@@ -17,21 +18,21 @@ export class GenericTableCallback extends DefaultClientCallback {
 
     connectSuccess: (client: Client) => void = (client) => {
         this.client = client
-        console.log('connected')
+        console.log(this.user, 'connected')
         client.login(this.user, this.password)
     }
 
     connectFailure: () => void = () => {
-        console.log('failed to connect')
+        console.log(this.user, 'failed to connect')
     }
 
     loginSuccess: (sessionId: SessionId) => void  = sessionId => {
-        console.log('login success')
+        console.log(this.user, 'login success')
         this.client.subscribeTables()
     }
 
     loginFailure: (errorCode: ErrorCode, reason: string) => void  = (errorCode, reason) => {
-        console.log(`failed to login ${reason}`)
+        console.log(this.user, `failed to login ${reason}`)
         this.client.logout()
     }
 
@@ -40,6 +41,8 @@ export class GenericTableCallback extends DefaultClientCallback {
     }
 
     logoutFailure: (reason: string) => void = reason => {
-        console.log(`failed to logout ${reason}`)
+        console.log(this.user, `failed to logout ${reason}`)
     }
 }
+
+

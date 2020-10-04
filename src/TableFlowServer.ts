@@ -22,11 +22,16 @@ const root_name = 'super'
 const root_password = 'root'
 
 const dbName = yargs.argv.dbName ? yargs.argv.dbName : 'test'
+const redisHost = yargs.argv.redisHost ? yargs.argv.redisHost : 'localhost'
+const redisPort = yargs.argv.redisPort ? yargs.argv.redisPort: 6383
+
+const host = yargs.argv.host ? yargs.argv.host : 'localhost'
+const port = yargs.argv.port ? yargs.argv.port : 8080
 
 // Transient State
 const sessionIdToSocket = new Map<SessionId, WebSocket>()
 
-const db: Storage = new RedisStorage(dbName, 6383)
+const db: Storage = new RedisStorage(dbName, redisHost, redisPort)
 
 function publish(msg, callback): void {
   db.getSubscribers(sessionIds => {
@@ -603,8 +608,8 @@ function getRowIndex(table: Table, rowId: RowId): number {
 
 export class TableFlowServer {
   constructor() {
-    const wss = new Server({ port: 8080 })
-    console.log('listening')
+    const wss = new Server({ host: host, port: port })
+    console.log('listening', host, port)
     wss.on('connection',  ws => {
       console.log('connected')
       ws.on('message', msg => {
