@@ -4,41 +4,69 @@
     <meta charset="UTF-8">
     <title>Happy Valley Action</title>
 </head>
-<script src="../../../dist/new_happyvalley_main.js"></script>
+<script src="../../../dist/place_order_main.js"></script>
+<style>
+    .place_order_container {
+        display: flex;
+        flex-flow: row;
+        margin: 20px;
+        width: 50%;
+        justify-content: space-between;
+    }
+</style>
 <body>
-    <div>
-        <button onclick="unwindAction('dawn')">Unwind</button>
-    </div>
-    <div>
+    <div class="place_order_container">
         <button onclick="pegOrderAction('test_place_order')">Peg</button>
+
+        <select name="Symbol" id="peg_symbol">
+            <option value="HK.MHI2010">MHI2010</option>
+            <option value="HK.MHI2011">MHI2011</option>
+        </select>
+
         <select name="Peg Type" id="peg_type">
             <option value="peg_passive">Passive</option>
             <option value="peg_aggressive">Aggressive</option>
             <option value="peg_absolute">Absolute</option>
         </select>
-        <label>offset</label>
+
+        <select name="Side" id="peg_side">
+            <option value="B">Buy</option>
+            <option value="S">Sell</option>
+        </select>
+
+        <label>Offset</label>
         <input type="text" id="peg_offset">
-        <label>quantity</label>
+
+        <label>Quantity</label>
         <input type="text" id="peg_quantity">
+
     </div>
-    <div>
+
+    <div class="place_order_container">
         <button onclick="placeOrderAction('test_place_order')">Place Order</button>
         <label>price</label>
         <input type="text" id="place_order_price">
         <label>mark</label>
         <input type="text" id="place_order_mark">
     </div>
-    <div>
+
+    <div class="place_order_container">
         <button onclick="cancelOrderAction('test_place_order')">Cancel Order</button>
         <label>order id</label>
         <input type="text" id="cancel_order_id">
     </div>
-    <div>
+
+    <div class="place_order_container">
         <button onclick="modifyOrderAction('test_place_order')">Modify Order</button>
         <label>order id</label>
         <input id="modify_order_id">
         <label>price</label>
         <input id="modify_order_price">
     </div>
+
+    <div class="place_order_container">
+        <button onclick="unwindAction('dawn')">Unwind</button>
+    </div>
+
 </body>
 </html>

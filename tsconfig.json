@@ -31,6 +31,7 @@
         "./src/examples/happyvalley/ActionSubscriber.ts",
         "./src/examples/happyvalley/AnalysisSubscriber.ts",
         "./src/examples/happyvalley/Dashboard.ts",
+        "./src/examples/happyvalley/PlaceOrder.ts",
         "./src/test/**/*"
     ]
 }

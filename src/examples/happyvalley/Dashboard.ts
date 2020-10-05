@@ -301,15 +301,15 @@ class DashboardCallback extends DefaultClientCallback {
             this.analysisViewer.push(ts, prop.name, value)
         }
 
-        // for (const prop of this.pnlProperties) {
-        //     const value = Number(values[prop.columnIndex])
-        //     this.pnlViewer.push(ts, prop.name, value)
-        // }
-        //
-        // for (const prop of this.positionProperties) {
-        //     const value = Number(values[prop.columnIndex])
-        //     this.positionViewer.push(ts, prop.name, value)
-        // }
+        for (const prop of this.pnlProperties) {
+            const value = Number(values[prop.columnIndex])
+            this.pnlViewer.push(ts, prop.name, value)
+        }
+
+        for (const prop of this.positionProperties) {
+            const value = Number(values[prop.columnIndex])
+            this.positionViewer.push(ts, prop.name, value)
+        }
     }
 
     // updateLabel(value: number | string, className: string) {
