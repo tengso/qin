@@ -24,12 +24,15 @@ export class SeriesViewer {
     private readonly plotElement
     private readonly valueElements = {}
     private startTime
+    private skipZero: boolean
 
-    constructor(parentElement: HTMLElement, name: string, seriesList: Array<SeriesProperties>, startHour: number, startMinute: number) {
+    constructor(parentElement: HTMLElement, name: string, seriesList: Array<SeriesProperties>, startHour: number, startMinute: number,
+                skipZero) {
         this.name = name
         this.seriesList = seriesList
         this.startHour = startHour
         this.startMinute = startMinute
+        this.skipZero = skipZero
 
         this.viewerElement = document.createElement('div')
         parentElement.appendChild(this.viewerElement)
@@ -68,7 +71,7 @@ export class SeriesViewer {
                 this.initialized = true
             }
 
-            if (seriesValue > 0) {
+            if ((this.skipZero && seriesValue > 0) || !this.skipZero) {
                 // console.log('plot', seriesName, seriesValue)
                 this.data[seriesName].push({
                     // @ts-ignore
@@ -228,19 +231,19 @@ class DashboardCallback extends DefaultClientCallback {
             viewerContainerList,
             'analysis',
             this.analysisProperties,
-            0, 0)
+            0, 0, true)
 
         this.pnlViewer = new SeriesViewer(
             viewerContainerList,
             'pnl',
             this.pnlProperties,
-            0, 0)
+            0, 0, false)
 
         this.positionViewer = new SeriesViewer(
             viewerContainerList,
             'position',
             this.positionProperties,
-            0, 0)
+            0, 0, false)
     }
 
     connectSuccess: (client: Client) => void = (client) => {
