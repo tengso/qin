@@ -227,23 +227,26 @@ class DashboardCallback extends DefaultClientCallback {
         viewerContainerList.classList.add('series_viewer_container_list')
         appElement.appendChild(viewerContainerList)
 
+        const startHour = 9
+        const startMinute = 13
+
         this.analysisViewer = new SeriesViewer(
             viewerContainerList,
             'analysis',
             this.analysisProperties,
-            0, 0, true)
+            startHour, startMinute, true)
 
         this.pnlViewer = new SeriesViewer(
             viewerContainerList,
             'pnl',
             this.pnlProperties,
-            0, 0, false)
+            startHour, startMinute, false)
 
         this.positionViewer = new SeriesViewer(
             viewerContainerList,
             'position',
             this.positionProperties,
-            0, 0, false)
+            startHour, startMinute, false)
     }
 
     connectSuccess: (client: Client) => void = (client) => {
