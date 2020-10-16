@@ -2,6 +2,25 @@ import {Client, DefaultClientCallback} from "../../TableFlowClient";
 import {RowId, SessionId, TableId} from "../../Core";
 import {ErrorCode, Table} from "../../TableFlowMessages";
 
+export enum AnalysisTableColumns {
+    strategy_name = 0,
+    pnl = 1,
+    position = 2,
+    future_price = 3,
+    index_price = 4,
+    future_open_price = 5,
+    future_price_at_stock_match = 6,
+    index_future_spread = 7,
+    future_price_moving_average = 8,
+    future_price_lower_bound = 9,
+    future_price_upper_bound = 10,
+    future_return = 11,
+    future_return_moving_average = 12,
+    future_return_lower_bound = 13,
+    future_return_upper_bound = 14,
+    update_time = 15,
+}
+
 
 export class GenericTableCallback extends DefaultClientCallback {
     protected client

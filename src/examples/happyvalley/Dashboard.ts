@@ -1,8 +1,9 @@
-import { DefaultClientCallback, Client } from '../../TableFlowClient'
-import { TableId, SessionId, TableName, RowId } from '../../Core'
-import { ErrorCode, CreatorId, ColumnName, ColumnValue, Table } from '../../TableFlowMessages'
-import { showCompletionScript } from 'yargs';
+import {Client, DefaultClientCallback} from '../../TableFlowClient'
+import {RowId, SessionId, TableId} from '../../Core'
+import {ErrorCode, Table} from '../../TableFlowMessages'
+import {AnalysisTableColumns} from './Common'
 import TimeChart from "timechart";
+
 const uuid = require('uuid')
 
 export interface SeriesProperties {
@@ -199,18 +200,18 @@ class DashboardCallback extends DefaultClientCallback {
     private positionViewer
 
     private analysisProperties: Array<SeriesProperties> = [
-            { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: 3 },
-            { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: 8 },
-            { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: 9 },
-            { name: 'upper bound', color: '#DC143C', lineWidth: 1, columnIndex: 10 },
+            { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_return },
+            { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_moving_average },
+            { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_lower_bound },
+            { name: 'upper bound', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound },
         ]
 
     private pnlProperties: Array<SeriesProperties> = [
-            { name: 'pnl', color: '#000000', lineWidth: 1, columnIndex: 1 }
+            { name: 'pnl', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.pnl }
         ]
 
     private positionProperties: Array<SeriesProperties> = [
-            { name: 'position', color: '#000000', lineWidth: 1, columnIndex: 2 }
+            { name: 'position', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.position }
         ]
 
     // // private spreadChart = new Chart('spread_chart', [ {name: 'spread', color: '#000000'} ], 0, 0)
@@ -299,8 +300,8 @@ class DashboardCallback extends DefaultClientCallback {
 
     updateViewer(values) {
         // console.log('row', values)
-        const strategy = values[0]
-        const ts = new Date(values[values.length - 1] as string)
+        const strategy = values[AnalysisTableColumns.strategy_name]
+        const ts = new Date(values[AnalysisTableColumns.update_time] as string)
 
         for (const prop of this.analysisProperties) {
             const value = Number(values[prop.columnIndex])

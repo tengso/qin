@@ -114,21 +114,6 @@ const hanPort = yargs.argv.hanPort ? yargs.argv.hanPort : 6383
 
 const channel = `strategy_${strategy}_${today}_analytics_channel`
 
-const tableColumns = [
-    "strategy_name",
-    "pnl", 
-    "position", 
-    "future_price", 
-    "index_price", 
-    "future_open_price", 
-    "future_price_at_stock_match", 
-    "index_future_spread", 
-    "future_price_moving_average", 
-    "future_price_lower_bound", 
-    "future_price_upper_bound",
-    "update_time",
-]
-
 export class RedisSubscriber {
     private client = new Client(WebSocket)
 
@@ -162,12 +147,22 @@ const callback = (channel, message, client) => {
     const future_price_lower_bound = content?.analysis?.future_price_lower_bound
     const future_price_upper_bound = content?.analysis?.future_price_upper_bound
 
+    const future_return = content?.analysis?.future_return
+    const future_return_moving_average = content?.analysis?.future_return_moving_average
+    const future_return_lower_bound = content?.analysis?.future_return_lower_bound
+    const future_return_upper_bound = content?.analysis?.future_return_upper_bound
+
     console.log(ts, pnl, position, future_price, index_price, future_open_price, future_price_at_stock_match, index_future_spread, future_price_moving_average,
         future_price_lower_bound, future_price_upper_bound)
 
     const rowId = uuid()
-    const values = [strategy, pnl, position, future_price, index_price, future_open_price, future_price_at_stock_match, index_future_spread, 
-        future_price_moving_average, future_price_lower_bound, future_price_upper_bound, ts]
+    const values = [
+        strategy, pnl, position,
+        future_price, index_price, future_open_price, future_price_at_stock_match, index_future_spread,
+        future_price_moving_average, future_price_lower_bound, future_price_upper_bound,
+        future_return, future_return_moving_average, future_return_lower_bound, future_return_upper_bound,
+        ts
+    ]
 
     // console.log(values)
     client.appendRow(tableId, rowId, values)
