@@ -81,7 +81,7 @@ export class SeriesViewer {
                 })
                 // console.log(this.data)
                 this.chart.update()
-                this.valueElements[seriesName].innerText = seriesValue
+                this.valueElements[seriesName].innerText = seriesValue.toFixed(2)
                 // this.updateCurrentValue(seriesName, seriesValue)
             }
         }
@@ -203,7 +203,7 @@ class DashboardCallback extends DefaultClientCallback {
             { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_return },
             { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_moving_average },
             { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_lower_bound },
-            { name: 'upper bound', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound },
+            { name: 'upper bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound },
         ]
 
     private pnlProperties: Array<SeriesProperties> = [
@@ -235,7 +235,7 @@ class DashboardCallback extends DefaultClientCallback {
             viewerContainerList,
             'analysis',
             this.analysisProperties,
-            startHour, startMinute, true)
+            startHour, startMinute, false)
 
         this.pnlViewer = new SeriesViewer(
             viewerContainerList,
@@ -327,7 +327,7 @@ class DashboardCallback extends DefaultClientCallback {
     // }
 }
 
-const analysisTableId = 'strategy_table_v5_id'
+const analysisTableId = 'strategy_table_v6_id'
 const actionTableId = 'action_table_v1_id'
 const user = 'hv_dashboard_client'
 const password = 'hv_dashboard_client'
