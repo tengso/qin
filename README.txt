@@ -11,6 +11,10 @@
 - sudo npm install -g typescript
 - sudo npm install -g npx
 
+- manage node version
+* sudo npm install n -g
+* sudo n stable or sudo n latest
+
 * BUILD
 - npm install
 - tsc -p tsconfig.json 
