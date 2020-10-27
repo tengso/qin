@@ -96,16 +96,6 @@ class RedisSubscriberCallback extends DefaultClientCallback {
     }
 }
 
-export class RedisSubscriber {
-    private client = new Client(WebSocket)
-
-    constructor(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart) {
-        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId, 
-            cleanStart))
-        this.client.connect('127.0.0.1', 8080)
-    }
-}
-
 const date = new Date()
 const dateTimeFormat = new Intl.DateTimeFormat('en', { year: 'numeric', month: '2-digit', day: '2-digit' }) 
 const [{ value: month },,{ value: day },,{ value: year }] = dateTimeFormat.formatToParts(date) 
@@ -119,8 +109,21 @@ const user = yargs.argv.user ? yargs.argv.user : 'hv'
 const password = yargs.argv.password ? yargs.argv.password : 'hv'
 const strategy = yargs.argv.strategy ? yargs.argv.strategy : 'dawn'
 const cleanStart = yargs.argv.cleanStart ? yargs.argv.cleanStart : 'no'
+const hanHost = yargs.argv.hanHost ? yargs.argv.hanHost : 'localhost'
+const hanPort = yargs.argv.hanPort ? yargs.argv.hanPort : 8080
 
 const channel = `strategy_${strategy}_${today}_analytics_channel`
+
+export class RedisSubscriber {
+    private client = new Client(WebSocket)
+
+    constructor(redisHost, redisPort, user, password, channel, callback, tableId, cleanStart) {
+        this.client.addCallback(new RedisSubscriberCallback(redisHost, redisPort, user, password, channel, callback, tableId,
+            cleanStart))
+        this.client.connect(hanHost, hanPort)
+    }
+}
+
 
 const tableColumns = [
     "strategy_name",
