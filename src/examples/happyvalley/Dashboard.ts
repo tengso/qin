@@ -27,7 +27,7 @@ export class SeriesViewer {
     private startTime
     private skipZero: boolean
 
-    constructor(parentElement: HTMLElement, name: string, seriesList: Array<SeriesProperties>, startHour: number, startMinute: number,
+    constructor(parentElement: HTMLElement, name: string, id, seriesList: Array<SeriesProperties>, startHour: number, startMinute: number,
                 skipZero) {
         this.name = name
         this.seriesList = seriesList
@@ -36,20 +36,21 @@ export class SeriesViewer {
         this.skipZero = skipZero
 
         this.viewerElement = document.createElement('div')
+        this.viewerElement.id = id
         parentElement.appendChild(this.viewerElement)
-        this.viewerElement.classList.add('series_viewer_container')
-        this.viewerElement.id = 'series_viewer_container_' + name
+        this.viewerElement.classList.add('series_viewer')
+        // this.viewerElement.id = 'series_viewer_container_' + name
         this.plotElement = document.createElement('div')
-        this.plotElement.classList.add('series_viewer_plot_container')
+        this.plotElement.classList.add('series_plot_viewer')
         this.viewerElement.appendChild(this.plotElement)
 
         const valueListElement = document.createElement('div')
-        valueListElement.classList.add('series_viewer_value_container_list')
+        valueListElement.classList.add('series_value_viewer_list')
         this.viewerElement.appendChild(valueListElement)
 
         for (const prop of this.seriesList) {
             const element = document.createElement('div')
-            element.classList.add('series_viewer_value_container')
+            element.classList.add('series_value_viewer')
             valueListElement.appendChild(element)
 
             const labelElement = document.createElement('label')
@@ -108,8 +109,8 @@ export class SeriesViewer {
             xRange: 'auto',
             yRange: 'auto',
             realTime: false,
-            paddingLeft: 270,
-            paddingRight: 20,
+            paddingLeft: 30,
+            paddingRight: 30,
             zoom: {
                 x: {
                     autoRange: true,
@@ -187,6 +188,32 @@ class ActionSender {
         const values = ['unwind_risk', content, sender, sentTime]
         client.appendRow(this.actionTableId, rowId, values)
     }
+
+    enableStrategyAction(strategy) {
+        const name = 'enable_strategy'
+        const sender = this.user
+        const sentTime = this.getDateTime()
+
+        const content = JSON.stringify({
+            strategy: strategy,
+        })
+        const values = [name, content, sender, sentTime]
+        const rowId = uuid()
+        client.appendRow(this.actionTableId, rowId, values)
+    }
+
+    disableStrategyAction(strategy) {
+        const name = 'disable_strategy'
+        const sender = this.user
+        const sentTime = this.getDateTime()
+
+        const content = JSON.stringify({
+            strategy: strategy,
+        })
+        const values = [name, content, sender, sentTime]
+        const rowId = uuid()
+        client.appendRow(this.actionTableId, rowId, values)
+    }
 }
 
 
@@ -225,27 +252,42 @@ class DashboardCallback extends DefaultClientCallback {
 
         const appElement = document.getElementById('app')
         const viewerContainerList = document.createElement('div')
-        viewerContainerList.classList.add('series_viewer_container_list')
+        viewerContainerList.classList.add('viewer_list')
         appElement.appendChild(viewerContainerList)
+
+        const tradingContainer = document.createElement('div')
+        tradingContainer.id = 'trading_viewer'
+        viewerContainerList.appendChild(tradingContainer)
+
+        const tradingPnlPositionContainer = document.createElement('div')
+        tradingPnlPositionContainer.id = 'trading_pnl_position_viewer'
+        tradingContainer.appendChild(tradingPnlPositionContainer)
+
+        const tradingAnalysisContainer = document.createElement('div')
+        tradingAnalysisContainer.id = 'trading_analysis_viewer'
+        tradingContainer.appendChild(tradingAnalysisContainer)
 
         const startHour = 9
         const startMinute = 13
 
         this.analysisViewer = new SeriesViewer(
-            viewerContainerList,
+            tradingAnalysisContainer,
             'analysis',
+            '',
             this.analysisProperties,
             startHour, startMinute, false)
 
         this.pnlViewer = new SeriesViewer(
-            viewerContainerList,
+            tradingPnlPositionContainer,
             'pnl',
+            'trading_pnl_viewer',
             this.pnlProperties,
             startHour, startMinute, false)
 
         this.positionViewer = new SeriesViewer(
-            viewerContainerList,
+            tradingPnlPositionContainer,
             'position',
+            'trading_position_viewer',
             this.positionProperties,
             startHour, startMinute, false)
     }
@@ -302,6 +344,25 @@ class DashboardCallback extends DefaultClientCallback {
         // console.log('row', values)
         const strategy = values[AnalysisTableColumns.strategy_name]
         const ts = new Date(values[AnalysisTableColumns.update_time] as string)
+        const enabled = values[AnalysisTableColumns.enabled] as string == 'true'
+
+        console.log(values)
+
+        let tradeInStartTime = values[AnalysisTableColumns.trade_in_start_time]
+        let tradeInEndTime = values[AnalysisTableColumns.trade_in_end_time]
+        let forceTradeOutTime = values[AnalysisTableColumns.force_trade_out_time]
+
+        this.updateTime(tradeInStartTime, 'trade_in_start_time')
+        this.updateTime(tradeInEndTime, 'trade_in_end_time')
+        this.updateTime(forceTradeOutTime, 'force_trade_out_time')
+
+        const enableDisableButton = document.getElementById('enable_disable_strategy') as HTMLButtonElement
+        if (enabled && (enableDisableButton.innerText == 'Enable')) {
+            enableDisableButton.innerText = 'Disable'
+        }
+        else if (!enabled && (enableDisableButton.innerText == 'Disable')) {
+            enableDisableButton.innerText = 'Enable'
+        }
 
         for (const prop of this.analysisProperties) {
             const value = Number(values[prop.columnIndex])
@@ -319,6 +380,17 @@ class DashboardCallback extends DefaultClientCallback {
         }
     }
 
+    updateTime(timestamp, elementId) {
+        if (timestamp) {
+            const element = document.getElementById(elementId) as HTMLLabelElement
+            const time = new Date(timestamp * 1000)
+            const hours = String(time.getHours()).padStart(2, '0')
+            const minutes = String(time.getMinutes()).padStart(2, '0')
+            const seconds = String(time.getSeconds()).padStart(2, '0')
+            element.innerText = `${hours}:${minutes}:${seconds}`
+        }
+    }
+
     // updateLabel(value: number | string, className: string) {
     //     const labels = document.getElementsByClassName(className)
     //     for (let i = 0; i < labels.length; i++) {
@@ -327,7 +399,7 @@ class DashboardCallback extends DefaultClientCallback {
     // }
 }
 
-const analysisTableId = 'strategy_table_v6_id'
+const analysisTableId = 'strategy_table_v7_id'
 const actionTableId = 'action_table_v1_id'
 const user = 'hv_dashboard_client'
 const password = 'hv_dashboard_client'
@@ -369,6 +441,18 @@ function unwindRisk() {
     actionSender.unwindRiskAction(strategy)
 }
 
+function enableOrDisable() {
+    const enableDisableButton = document.getElementById('enable_disable_strategy') as HTMLButtonElement
+    const strategy = (document.getElementById('strategy') as HTMLInputElement).value.trim()
+    if (enableDisableButton.innerText == 'Enable') {
+        actionSender.enableStrategyAction(strategy)
+    }
+    else if (enableDisableButton.innerText == 'Disable') {
+        actionSender.disableStrategyAction(strategy)
+    }
+}
+
 window['takeLongPosition'] = takeLongPosition
 window['takeShortPosition'] = takeShortPosition
 window['unwindRisk'] = unwindRisk
+window['enableOrDisable'] = enableOrDisable

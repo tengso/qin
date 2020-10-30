@@ -19,6 +19,18 @@
         /*width: 20%;*/
     }
 
+    #strategy {
+        width: 5%
+    }
+
+    #symbol {
+        width: 7%
+    }
+
+    #quantity {
+        width: 2%
+    }
+
     .action_container {
         display: flex;
         border: 1px solid;
@@ -33,52 +45,66 @@
         width: 20%;
     }
 
-    .series_viewer_container_list {
+    .viewer_list {
         display: flex;
         flex-flow: column;
         height: 700px;
     }
 
-    .series_viewer_container {
+    #trading_viewer {
         display: flex;
         border: solid 1px;
-        /*height: 200px;*/
-        width: 95%;
-        margin: 20px;
-        flex-flow: column;
+        width: 100%;
+        flex-flow: row;
         align-items: center;
-    }
-
-    #series_viewer_container_analysis {
-        /*height: 300px;*/
         height: 50%;
     }
 
-    #series_viewer_container_position {
-        /*height: 100px;*/
-        height: 25%;
-    }
-
-    #series_viewer_container_pnl {
-        /*height: 100px;*/
-        height: 25%;
-    }
-
-    .series_viewer_plot_container {
-        width: 100%;
+    #trading_pnl_position_viewer {
+        /*border: solid 1px;*/
+        width: 30%;
         height: 100%;
-        /*height: 250px;*/
-        max-height: 90vh;
     }
 
-    .series_viewer_value_container_list {
+    #trading_pnl_viewer {
+        height: 50%;
+        width: 100%;
+    }
+
+    #trading_position_viewer {
+        height: 50%;
+        width: 100%;
+    }
+
+    #trading_analysis_viewer {
+        border: solid 1px;
+        width: 70%;
+        height: 100%;
+    }
+
+    .series_viewer {
+        display: flex;
+        /*border: solid 1px;*/
+        width: 100%;
+        flex-flow: column;
+        align-items: center;
+        height: 100%;
+    }
+
+    .series_plot_viewer {
+        width: 100%;
+        height: 90%;
+        /*max-height: 80vh;*/
+    }
+
+    .series_value_viewer_list {
         display: flex;
         flex-flow: row;
         margin-left: 10px;
         margin-right: 10px;
     }
 
-    .series_viewer_value_container {
+    .series_value_viewer {
         margin: 10px
     }
 
@@ -89,14 +115,25 @@
         <label class="instrument">Strategy</label>
         <input class="instrument" type="text" id="strategy" value="dawn">
         <label class="instrument">Symbol</label>
-        <input class="instrument" type="text" id="symbol" value="HK.MHI2010">
+        <input class="instrument" type="text" id="symbol" value="HK.MHI2011">
         <label class="instrument">Quantity</label>
         <input class="instrument" type="text" id="quantity" value="1">
+        <label class="instrument">TradeIn Interval</label>
+        <label class="instrument" type="text">[</label>
+        <label class="instrument" type="text" id="trade_in_start_time">00:00:00</label>
+        <label class="instrument" type="text">-</label>
+        <label class="instrument" type="text" id="trade_in_end_time">00:00:00</label>
+        <label class="instrument" type="text">]</label>
+        <label class="instrument">Last TradeOut Time</label>
+        <label class="instrument" type="text">[</label>
+        <label class="instrument" type="text" id="force_trade_out_time">00:00:00</label>
+        <label class="instrument" type="text">]</label>
     </div>
     <div class="action_container">
+        <button class="action" id="enable_disable_strategy" type="button" onclick="enableOrDisable()">Enable</button>
         <button class="action" type="button" onclick="takeLongPosition()">Long</button>
         <button class="action" type="button" onclick="takeShortPosition()">Short</button>
-        <button class="action" type="button" onclick="unwindRisk()">Unwind</button>
+<!--        <button class="action" type="button" onclick="unwindRisk()">Unwind</button>-->
     </div>
 </body>
 <script src="../../../dist/happy_valley_dashboard.js"></script>
