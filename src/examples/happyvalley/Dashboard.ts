@@ -11,6 +11,7 @@ export interface SeriesProperties {
     color: string
     lineWidth: number
     columnIndex: number
+    decimal: number
 }
 
 export class SeriesViewer {
@@ -26,14 +27,20 @@ export class SeriesViewer {
     private readonly valueElements = {}
     private startTime
     private skipZero: boolean
+    private paddingLeft
+    private paddingRight
+    private decimals
 
     constructor(parentElement: HTMLElement, name: string, id, seriesList: Array<SeriesProperties>, startHour: number, startMinute: number,
-                skipZero) {
+                skipZero, paddingLeft=30, paddingRight=30) {
         this.name = name
         this.seriesList = seriesList
         this.startHour = startHour
         this.startMinute = startMinute
         this.skipZero = skipZero
+        this.paddingLeft = paddingLeft
+        this.paddingRight = paddingRight
+        this.decimals = {}
 
         this.viewerElement = document.createElement('div')
         this.viewerElement.id = id
@@ -61,6 +68,7 @@ export class SeriesViewer {
             element.appendChild(valueElement)
 
             this.valueElements[prop.name] = valueElement
+            this.decimals[prop.name] = prop.decimal
         }
     }
 
@@ -82,7 +90,8 @@ export class SeriesViewer {
                 })
                 // console.log(this.data)
                 this.chart.update()
-                this.valueElements[seriesName].innerText = seriesValue.toFixed(2)
+                const decimal = this.decimals[seriesName]
+                this.valueElements[seriesName].innerText = seriesValue.toFixed(decimal)
                 // this.updateCurrentValue(seriesName, seriesValue)
             }
         }
@@ -109,8 +118,8 @@ export class SeriesViewer {
             xRange: 'auto',
             yRange: 'auto',
             realTime: false,
-            paddingLeft: 30,
-            paddingRight: 30,
+            paddingLeft: this.paddingLeft,
+            paddingRight: this.paddingRight,
             zoom: {
                 x: {
                     autoRange: true,
@@ -225,20 +234,27 @@ class DashboardCallback extends DefaultClientCallback {
     private analysisViewer
     private pnlViewer
     private positionViewer
+    private priceSeriesViewer
+
+    private priceProperties: Array<SeriesProperties> = [
+        { name: 'future price at open', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_open_price, decimal: 0},
+        { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_price, decimal: 0},
+        { name: 'future price at stock auction', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match, decimal: 0},
+    ]
 
     private analysisProperties: Array<SeriesProperties> = [
-            { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_return },
-            { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_moving_average },
-            { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_lower_bound },
-            { name: 'upper bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound },
+            { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_return, decimal: 2},
+            { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_moving_average, decimal: 2},
+            { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_lower_bound, decimal: 2},
+            { name: 'upper bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound, decimal: 2},
         ]
 
     private pnlProperties: Array<SeriesProperties> = [
-            { name: 'pnl', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.pnl }
+            { name: 'pnl', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.pnl, decimal: 0}
         ]
 
     private positionProperties: Array<SeriesProperties> = [
-            { name: 'position', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.position }
+            { name: 'position', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.position, decimal: 0}
         ]
 
     // // private spreadChart = new Chart('spread_chart', [ {name: 'spread', color: '#000000'} ], 0, 0)
@@ -255,6 +271,10 @@ class DashboardCallback extends DefaultClientCallback {
         viewerContainerList.classList.add('viewer_list')
         appElement.appendChild(viewerContainerList)
 
+        const priceViewer = document.createElement('div')
+        priceViewer.id = 'price_viewer'
+        viewerContainerList.appendChild(priceViewer)
+
         const tradingContainer = document.createElement('div')
         tradingContainer.id = 'trading_viewer'
         viewerContainerList.appendChild(tradingContainer)
@@ -269,6 +289,13 @@ class DashboardCallback extends DefaultClientCallback {
 
         const startHour = 9
         const startMinute = 13
+
+        this.priceSeriesViewer = new SeriesViewer(
+            priceViewer,
+            'price',
+            '',
+            this.priceProperties,
+            startHour, startMinute, true, 45, 30)
 
         this.analysisViewer = new SeriesViewer(
             tradingAnalysisContainer,
@@ -377,6 +404,11 @@ class DashboardCallback extends DefaultClientCallback {
         for (const prop of this.positionProperties) {
             const value = Number(values[prop.columnIndex])
             this.positionViewer.push(ts, prop.name, value)
+        }
+
+        for (const prop of this.priceProperties) {
+            const value = Number(values[prop.columnIndex])
+            this.priceSeriesViewer.push(ts, prop.name, value)
         }
     }
 
