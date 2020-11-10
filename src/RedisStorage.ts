@@ -17,6 +17,8 @@ export class RedisStorage implements Storage {
   private client
   private hash: Hash
 
+  private tables = {}
+
   constructor(namespace: string = 'test', host = 'localhost', port = 6379) {
     this.client = redis.createClient(port, host)
     console.log(`using db: ${namespace}`, host, port)
@@ -153,27 +155,40 @@ export class RedisStorage implements Storage {
   }
 
   setTableSnap(tableId: string, table: Table, callback: any): void {
-    this.client.hset(this.hash.Tables, tableId, JSON.stringify(table), (err, res) => {
-      if (!err) {
-        callback(res)
-      }
-      else {
-        console.log(`failed to set table snap ${tableId}`)
-        callback(undefined)
-      }
-    })
+    this.tables[tableId] = table
+    if (table.rows.length == 0) {
+      this.client.hset(this.hash.Tables, tableId, JSON.stringify(table), (err, res) => {
+        if (!err) {
+          callback(res)
+        }
+        else {
+          console.log(`failed to set table snap ${tableId}`)
+          callback(undefined)
+        }
+      })
+    }
+    else {
+      callback('')
+    }
   }
 
   getTableSnap(tableId: string, callback: any): void {
-    this.client.hget(this.hash.Tables, tableId, (err, res) => {
-      if (!err) {
-        callback(JSON.parse(res))
-      }
-      else {
-        console.log(`failed to get table snap ${tableId}`)
-        callback(undefined)
-      }
-    })
+    if (tableId in this.tables) {
+      callback(this.tables[tableId])
+    }
+    else {
+      this.client.hget(this.hash.Tables, tableId, (err, res) => {
+        if (!err) {
+          const table = JSON.parse(res)
+          this.tables[tableId] = table
+          callback(table)
+        }
+        else {
+          console.log(`failed to get table snap ${tableId}`)
+          callback(undefined)
+        }
+      })
+    }
   }
 
   removeTableSnap(tableId: string, callback: any): void {
