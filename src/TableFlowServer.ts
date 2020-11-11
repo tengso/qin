@@ -681,4 +681,24 @@ export class TableFlowServer {
 
 if (require.main === module) {
   const s = new TableFlowServer()
+  process.once('SIGTERM', function () {
+    db.close()
+    setTimeout(() => {
+      process.exit(1)
+    }, 2000)
+  })
+  process.once('SIGINT', function () {
+    db.close()
+    setTimeout(() => {
+      process.exit(1)
+    }, 2000)
+  })
+
+  setInterval(() => {
+    const mu = process.memoryUsage();
+    const mbNow = mu['heapUsed'] / 1024 / 1024 / 1024;
+    //console.log(`Total allocated       ${Math.round(mbNow * 100) / 100} GB`);
+    console.log(`Allocated since start ${Math.round((mbNow) * 100) / 100} GB`);
+
+  }, 10000)
 }

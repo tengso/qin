@@ -2,6 +2,33 @@ import {Client, DefaultClientCallback} from "../../TableFlowClient";
 import {RowId, SessionId, TableId} from "../../Core";
 import {ErrorCode, Table} from "../../TableFlowMessages";
 
+// [
+// "strategy_name",
+// "enabled",
+// "pnl",
+// "position",
+// "future_price",
+// "index_price",
+// "future_open_price",
+// "future_price_at_stock_match_end",
+// "index_future_spread",
+// "future_price_moving_average",
+// "future_price_lower_bound",
+// "future_price_upper_bound",
+// "future_return",
+// "future_return_moving_average",
+// "future_return_lower_bound",
+// "future_return_upper_bound",
+// "trade_in_start_time",
+// "trade_in_end_time",
+// "force_trade_out_time",
+// "trade_in_threshold",
+// "take_profit",
+// "cut_loss",
+// "future_price_at_stock_match_start",
+// "update_time"
+// ]
+
 export enum AnalysisTableColumns {
     strategy_name = 0,
     enabled = 1,
@@ -10,7 +37,7 @@ export enum AnalysisTableColumns {
     future_price = 4,
     index_price = 5,
     future_open_price = 6,
-    future_price_at_stock_match = 7,
+    future_price_at_stock_match_end = 7,
     index_future_spread = 8,
     future_price_moving_average = 9,
     future_price_lower_bound = 10,
@@ -22,7 +49,11 @@ export enum AnalysisTableColumns {
     trade_in_start_time = 16,
     trade_in_end_time = 17,
     force_trade_out_time = 18,
-    update_time = 19,
+    trade_in_threshold= 19,
+    take_profit = 20,
+    cut_loss = 21,
+    future_price_at_stock_match_start = 22,
+    update_time = 23,
 }
 
 

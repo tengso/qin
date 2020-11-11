@@ -239,7 +239,8 @@ class DashboardCallback extends DefaultClientCallback {
     private priceProperties: Array<SeriesProperties> = [
         { name: 'future price at open', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_open_price, decimal: 0},
         { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_price, decimal: 0},
-        { name: 'future price at stock auction', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match, decimal: 0},
+        { name: 'future price at stock auction start', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match_start, decimal: 0},
+        { name: 'future price at stock auction end', color: '#6114dc', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match_end, decimal: 0},
     ]
 
     private analysisProperties: Array<SeriesProperties> = [
@@ -287,15 +288,18 @@ class DashboardCallback extends DefaultClientCallback {
         tradingAnalysisContainer.id = 'trading_analysis_viewer'
         tradingContainer.appendChild(tradingAnalysisContainer)
 
-        const startHour = 9
-        const startMinute = 13
+        const priceStartHour = 8
+        const priceStartMinute = 45
 
         this.priceSeriesViewer = new SeriesViewer(
             priceViewer,
             'price',
             '',
             this.priceProperties,
-            startHour, startMinute, true, 45, 30)
+            priceStartHour, priceStartMinute, true, 45, 30)
+
+        const startHour = 9
+        const startMinute = 13
 
         this.analysisViewer = new SeriesViewer(
             tradingAnalysisContainer,
@@ -383,6 +387,14 @@ class DashboardCallback extends DefaultClientCallback {
         this.updateTime(tradeInEndTime, 'trade_in_end_time')
         this.updateTime(forceTradeOutTime, 'force_trade_out_time')
 
+        let tradeInThreshold = values[AnalysisTableColumns.trade_in_threshold]
+        let takeProfit = values[AnalysisTableColumns.take_profit]
+        let cutLoss = values[AnalysisTableColumns.cut_loss]
+
+        this.updateElement(tradeInThreshold, 'trade_in_threshold' )
+        this.updateElement(takeProfit, 'take_profit' )
+        this.updateElement(cutLoss, 'cut_loss' )
+
         const enableDisableButton = document.getElementById('enable_disable_strategy') as HTMLButtonElement
         if (enabled && (enableDisableButton.innerText == 'Enable')) {
             enableDisableButton.innerText = 'Disable'
@@ -423,6 +435,13 @@ class DashboardCallback extends DefaultClientCallback {
         }
     }
 
+    updateElement(value, elementId) {
+        if (value) {
+            const element = document.getElementById(elementId) as HTMLLabelElement
+            element.innerText = value
+        }
+    }
+
     // updateLabel(value: number | string, className: string) {
     //     const labels = document.getElementsByClassName(className)
     //     for (let i = 0; i < labels.length; i++) {
@@ -431,7 +450,7 @@ class DashboardCallback extends DefaultClientCallback {
     // }
 }
 
-const analysisTableId = 'strategy_table_v7_id'
+const analysisTableId = 'strategy_table_v8_id'
 const actionTableId = 'action_table_v1_id'
 const user = 'hv_dashboard_client'
 const password = 'hv_dashboard_client'

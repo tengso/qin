@@ -30,7 +30,17 @@ export class RedisStorage implements Storage {
   }
  
   close(): void {
-    this.client.quit()
+    Object.entries(this.tables).forEach(([tableId, table]) => {
+      console.log(`save table ${tableId}`)
+      this.client.hset(this.hash.Tables, tableId, JSON.stringify(table), (err, res) => {
+        if (!err) {
+        }
+        else {
+          console.log(`failed to save table snap ${tableId}`)
+        }
+      })
+    });
+    // this.client.quit()
   }
 
   beginTransaction(callback: any): void {
@@ -204,23 +214,29 @@ export class RedisStorage implements Storage {
   }
 
   getTables(callback): void {
-    this.client.hgetall(this.hash.Tables, (err, res) => {
-      if (!err) {
-        if (res) {
-          Object.keys(res).forEach(key => {
-            res[key] = JSON.parse(res[key])
-          })
-          callback(res)
+    if (Object.keys(this.tables).length === 0) {
+      this.client.hgetall(this.hash.Tables, (err, res) => {
+        if (!err) {
+          if (res) {
+            Object.keys(res).forEach(key => {
+              res[key] = JSON.parse(res[key])
+            })
+            this.tables = res
+            callback(res)
+          }
+          else {
+            callback(null)
+          }
         }
         else {
-          callback(null)
+          console.log(`failed to get tables`)
+          callback(undefined)
         }
-      }
-      else {
-        console.log(`failed to get tables`)
-        callback(undefined)
-      }
-    })
+      })
+    }
+    else {
+      callback(this.tables)
+    }
   }
 
   setTableUpdate(tableId: TableId, version: Version, update: any, callback: any): void {

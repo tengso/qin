@@ -31,6 +31,18 @@
         width: 2%
     }
 
+    #trade_in_threshold {
+        width: 1%
+    }
+
+    #cut_loss {
+        width: 1%
+    }
+
+    #take_profit {
+        width: 1%
+    }
+
     .action_container {
         display: flex;
         border: 1px solid;
@@ -136,6 +148,18 @@
         <label class="instrument">Last TradeOut Time</label>
         <label class="instrument" type="text">[</label>
         <label class="instrument" type="text" id="force_trade_out_time">00:00:00</label>
+        <label class="instrument" type="text">]</label>
+        <label class="instrument">Threshold</label>
+        <label class="instrument" type="text">[</label>
+        <label class="instrument" type="text" id="trade_in_threshold" value=""></label>
+        <label class="instrument" type="text">]</label>
+        <label class="instrument">Take Profit</label>
+        <label class="instrument" type="text">[</label>
+        <label class="instrument" type="text" id="take_profit" value=""></label>
+        <label class="instrument" type="text">]</label>
+        <label class="instrument">Cut Loss</label>
+        <label class="instrument" type="text">[</label>
+        <label class="instrument" type="text" id="cut_loss" value=""></label>
         <label class="instrument" type="text">]</label>
     </div>
     <div class="action_container">
