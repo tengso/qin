@@ -63,16 +63,14 @@ const tableFlowPassword = yargs.argv.user ? yargs.argv.user : 'hv_action'
 const tableFlowHost = yargs.argv.hanHost ? yargs.argv.hanHost : 'localhost'
 const tableFlowPort = yargs.argv.hanPort ? yargs.argv.hanPort : 8080
 
-const strategy = yargs.argv.strategy ? yargs.argv.strategy : 'test_place_order'
-
 const now = new Date()
 const year = now.getFullYear()
 const month = (now.getMonth() + 1).toString().padStart(2, '0')
 const day = now.getDate().toString().padStart(2, '0')
 const date = `${year}${month}${day}`
 
-const redisChannel = `${strategy}_${date}_action_channel`
-const redisKey = `${strategy}_${date}_action_key`
+const redisChannel = `${date}_action_channel`
+const redisKey = `${date}_action_key`
 
 const client = new Client(WebSocket)
 const callback = new Callback(tableFlowUser, tableFlowPassword, redisHost, redisPort, redisChannel, redisKey, actionTableId)
