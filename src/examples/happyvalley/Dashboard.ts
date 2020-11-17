@@ -1,7 +1,7 @@
 import {Client, DefaultClientCallback} from '../../TableFlowClient'
 import {RowId, SessionId, TableId} from '../../Core'
 import {ErrorCode, Table} from '../../TableFlowMessages'
-import {AnalysisTableColumns} from './Common'
+import {AnalysisNames} from './Common'
 import TimeChart from "timechart";
 
 const uuid = require('uuid')
@@ -10,7 +10,7 @@ export interface SeriesProperties {
     name: string
     color: string
     lineWidth: number
-    columnIndex: number
+    analysis_name: string
     decimal: number
 }
 
@@ -237,25 +237,25 @@ class DashboardCallback extends DefaultClientCallback {
     private priceSeriesViewer
 
     private priceProperties: Array<SeriesProperties> = [
-        { name: 'future price at open', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_open_price, decimal: 0},
-        { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_price, decimal: 0},
-        { name: 'future price at stock auction start', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match_start, decimal: 0},
-        { name: 'future price at stock auction end', color: '#6114dc', lineWidth: 1, columnIndex: AnalysisTableColumns.future_price_at_stock_match_end, decimal: 0},
+        { name: 'future price at open', color: '#33cc33', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_open_price], decimal: 0},
+        { name: 'future price', color: '#0000FF', lineWidth: 2, analysis_name: AnalysisNames[AnalysisNames.future_price], decimal: 0},
+        { name: 'future price at stock auction start', color: '#DC143C', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_price_at_stock_match_start], decimal: 0},
+        { name: 'future price at stock auction end', color: '#6114dc', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_price_at_stock_match_end], decimal: 0},
     ]
 
     private analysisProperties: Array<SeriesProperties> = [
-            { name: 'future price', color: '#0000FF', lineWidth: 2, columnIndex: AnalysisTableColumns.future_return, decimal: 2},
-            { name: 'moving average', color: '#DC143C', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_moving_average, decimal: 2},
-            { name: 'lower bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_lower_bound, decimal: 2},
-            { name: 'upper bound', color: '#33cc33', lineWidth: 1, columnIndex: AnalysisTableColumns.future_return_upper_bound, decimal: 2},
+            { name: 'future price', color: '#0000FF', lineWidth: 2, analysis_name: AnalysisNames[AnalysisNames.future_return], decimal: 2},
+            { name: 'moving average', color: '#DC143C', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_return_moving_average], decimal: 2},
+            { name: 'lower bound', color: '#33cc33', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_return_lower_bound], decimal: 2},
+            { name: 'upper bound', color: '#33cc33', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.future_return_upper_bound], decimal: 2},
         ]
 
     private pnlProperties: Array<SeriesProperties> = [
-            { name: 'pnl', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.pnl, decimal: 0}
+            { name: 'pnl', color: '#000000', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.pnl], decimal: 0}
         ]
 
     private positionProperties: Array<SeriesProperties> = [
-            { name: 'position', color: '#000000', lineWidth: 1, columnIndex: AnalysisTableColumns.position, decimal: 0}
+            { name: 'position', color: '#000000', lineWidth: 1, analysis_name: AnalysisNames[AnalysisNames.position], decimal: 0}
         ]
 
     // // private spreadChart = new Chart('spread_chart', [ {name: 'spread', color: '#000000'} ], 0, 0)
@@ -296,7 +296,7 @@ class DashboardCallback extends DefaultClientCallback {
             'price',
             '',
             this.priceProperties,
-            priceStartHour, priceStartMinute, true, 45, 30)
+            priceStartHour, priceStartMinute, true, 49, 30)
 
         const startHour = 9
         const startMinute = 13
@@ -373,23 +373,24 @@ class DashboardCallback extends DefaultClientCallback {
 
     updateViewer(values) {
         // console.log('row', values)
-        const strategy = values[AnalysisTableColumns.strategy_name]
-        const ts = new Date(values[AnalysisTableColumns.update_time] as string)
-        const enabled = values[AnalysisTableColumns.enabled] as string == 'true'
+        const strategy = values[0]
+        const enabled = values[1] as string == 'true'
+        const ts = new Date(values[3] as string)
+        const analysis = JSON.parse(values[2])
 
         console.log(values)
 
-        let tradeInStartTime = values[AnalysisTableColumns.trade_in_start_time]
-        let tradeInEndTime = values[AnalysisTableColumns.trade_in_end_time]
-        let forceTradeOutTime = values[AnalysisTableColumns.force_trade_out_time]
+        let tradeInStartTime = analysis[AnalysisNames[AnalysisNames.trade_in_time_interval_start]]
+        let tradeInEndTime = analysis[AnalysisNames[AnalysisNames.trade_in_time_interval_end]]
+        let forceTradeOutTime = analysis[AnalysisNames[AnalysisNames.force_trade_out_time]]
 
         this.updateTime(tradeInStartTime, 'trade_in_start_time')
         this.updateTime(tradeInEndTime, 'trade_in_end_time')
         this.updateTime(forceTradeOutTime, 'force_trade_out_time')
 
-        let tradeInThreshold = values[AnalysisTableColumns.trade_in_threshold]
-        let takeProfit = values[AnalysisTableColumns.take_profit]
-        let cutLoss = values[AnalysisTableColumns.cut_loss]
+        let tradeInThreshold = analysis[AnalysisNames[AnalysisNames.trade_in_threshold]]
+        let takeProfit = analysis[AnalysisNames[AnalysisNames.take_profit]]
+        let cutLoss = analysis[AnalysisNames[AnalysisNames.cut_loss]]
 
         this.updateElement(tradeInThreshold, 'trade_in_threshold' )
         this.updateElement(takeProfit, 'take_profit' )
@@ -404,23 +405,31 @@ class DashboardCallback extends DefaultClientCallback {
         }
 
         for (const prop of this.analysisProperties) {
-            const value = Number(values[prop.columnIndex])
-            this.analysisViewer.push(ts, prop.name, value)
+            const value = Number(analysis[prop.analysis_name])
+            if (!isNaN(value)) {
+                this.analysisViewer.push(ts, prop.name, value)
+            }
         }
 
         for (const prop of this.pnlProperties) {
-            const value = Number(values[prop.columnIndex])
-            this.pnlViewer.push(ts, prop.name, value)
+            const value = Number(analysis[prop.analysis_name])
+            if (!isNaN(value)) {
+                this.pnlViewer.push(ts, prop.name, value)
+            }
         }
 
         for (const prop of this.positionProperties) {
-            const value = Number(values[prop.columnIndex])
-            this.positionViewer.push(ts, prop.name, value)
+            const value = Number(analysis[prop.analysis_name])
+            if (!isNaN(value)) {
+                this.positionViewer.push(ts, prop.name, value)
+            }
         }
 
         for (const prop of this.priceProperties) {
-            const value = Number(values[prop.columnIndex])
-            this.priceSeriesViewer.push(ts, prop.name, value)
+            const value = Number(analysis[prop.analysis_name])
+            if (!isNaN(value)) {
+                this.priceSeriesViewer.push(ts, prop.name, value)
+            }
         }
     }
 
@@ -450,7 +459,7 @@ class DashboardCallback extends DefaultClientCallback {
     // }
 }
 
-const analysisTableId = 'strategy_table_v8_id'
+const analysisTableId = 'strategy_table_v9_id'
 const actionTableId = 'action_table_v1_id'
 const user = 'hv_dashboard_client'
 const password = 'hv_dashboard_client'
