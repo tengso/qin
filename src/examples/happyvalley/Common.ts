@@ -29,7 +29,7 @@ import {ErrorCode, Table} from "../../TableFlowMessages";
 // "update_time"
 // ]
 
-export enum AnalysisTableColumns {
+export enum AnalysisNames {
     strategy_name = 0,
     enabled = 1,
     pnl = 2,
@@ -46,10 +46,10 @@ export enum AnalysisTableColumns {
     future_return_moving_average = 13,
     future_return_lower_bound = 14,
     future_return_upper_bound = 15,
-    trade_in_start_time = 16,
-    trade_in_end_time = 17,
+    trade_in_time_interval_start = 16,
+    trade_in_time_interval_end = 17,
     force_trade_out_time = 18,
-    trade_in_threshold= 19,
+    trade_in_threshold = 19,
     take_profit = 20,
     cut_loss = 21,
     future_price_at_stock_match_start = 22,
