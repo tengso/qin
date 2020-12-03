@@ -111,7 +111,7 @@ const cleanStart = yargs.argv.cleanStart ? yargs.argv.cleanStart : 'no'
 const hanHost = yargs.argv.hanHost ? yargs.argv.hanHost : 'localhost'
 const hanPort = yargs.argv.hanPort ? yargs.argv.hanPort : 6383
 
-const channel = `strategy_${today}_analytics_channel`
+const channel = `strategy_analytics_channel`
 
 export class RedisSubscriber {
     private client = new Client(WebSocket)
